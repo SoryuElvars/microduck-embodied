@@ -70,22 +70,22 @@ infer_policy
 
 ### 任务清单
 
-- [ ] 完成项目环境与依赖安装。
-- [ ] 跑通官方 `Mjlab-Velocity-Flat-MicroDuck` 任务。
-- [ ] 成功保存并加载 Checkpoint。
-- [ ] 在仿真中播放训练后的行走策略。
-- [ ] 将策略导出为 ONNX 模型。
-- [ ] 使用导出的 ONNX 模型完成推理。
+- [x] 完成项目环境与依赖安装。
+- [x] 跑通官方 `Mjlab-Velocity-Flat-MicroDuck` 任务（4096 environments，训练至 iteration 5999）。
+- [x] 成功保存并加载 Checkpoint（最终为 `model_5999.pt`）。
+- [x] 在 MuJoCo 中播放训练后的行走策略，并完成纯前进人工检查。
+- [x] 将策略导出为 ONNX 模型。
+- [x] 使用导出的 ONNX 模型完成推理。
 - [ ] 若时间充足，再运行 `Mjlab-VelStand-Flat-MicroDuck`。
-- [ ] 建立自己的项目仓库和结果目录，不把所有实验直接堆在官方仓库中。
+- [x] 建立自己的项目仓库和结果目录，不把所有实验直接堆在官方仓库中。
 
 ### 必须弄清楚的问题
 
-- [ ] Observation 包含哪些信息？
-- [ ] Policy 输出什么？
-- [ ] Action 如何转换为舵机或关节命令？
-- [ ] Reward 如何引导机器人学会行走？
-- [ ] Policy 的运行频率是多少？
+- [x] Observation 包含哪些信息？（当前 ONNX 输入为 61 维观测。）
+- [x] Policy 输出什么？（14 个关节的连续动作。）
+- [x] Action 如何转换为舵机或关节命令？（默认姿态与动作缩放形成位置目标，再由 BAM M6 执行器模型产生控制。）
+- [x] Reward 如何引导机器人学会行走？（已结合 W&B 分项 Reward 与速度误差进行检查。）
+- [x] Policy 的运行频率是多少？（50 Hz，MuJoCo timestep 0.005 s、decimation 4。）
 
 ### 建议的项目目录
 
@@ -101,11 +101,11 @@ microduck_embodied/
 
 ### 本周交付物
 
-- [ ] Training Curve
+- [x] Training Curve（W&B：主训练与 5000 次后的续训 Run）
 - [ ] Walking Video
-- [ ] Checkpoint
-- [ ] ONNX Model
-- [ ] 一份官方链路运行记录，包括命令、配置、结果路径和遇到的问题
+- [x] Checkpoint（`model_5999.pt`，仅保留在本地官方仓库日志中）
+- [x] ONNX Model（`microduck_velocity_flat_5999.onnx`，仅保留在本地）
+- [x] 一份官方链路运行记录，包括命令、配置、结果路径和遇到的问题：[`results/week01_official_locomotion_chain.md`](./results/week01_official_locomotion_chain.md)
 
 ### 验收标准
 
@@ -116,6 +116,17 @@ microduck_embodied/
 ```
 
 > 阶段门禁：如果第 1 周结束时仍卡在环境安装或官方流程，不进入 M2，先把完整链路补齐。
+
+### 第 1 周复盘（2026-09-06）
+
+- **工程链路：已完成。** 环境、训练、Checkpoint、ONNX 导出和 CPU MuJoCo 推理均已跑通。
+- **策略质量：未通过直线行走检查。** 在 `vx=+0.30 m/s, vy=0, wz=0` 下，第 2 秒实际偏航角速度约 `+0.250 rad/s`，10 秒累计航向约 `+166.5°`。
+- **训练趋势：已进入失败平台。** `Metrics/twist/error_vel_yaw` 从约 2000 iterations 起长期维持在约 `1.06～1.15`，追加训练到 6000 没有解决问题。
+- **导出链路：排除为主要原因。** 自动导出与显式导出的 ONNX 在 100 组随机输入下最大输出差为 `0.0`。
+- **阶段判断：允许进入第 2 周。** 当前模型作为失败 Baseline 保留；第 2 周先把直行、转向和跌倒检查固化为可重复 Benchmark，再进行第二轮训练配置实验。
+- **未完成的非阻塞交付物：** Walking Video；待获得具有代表性的可展示策略后补充。
+
+完整记录见：[`results/week01_official_locomotion_chain.md`](./results/week01_official_locomotion_chain.md)。
 
 ---
 
@@ -693,7 +704,7 @@ results/
 
 ### M1：Locomotion 与鲁棒性
 
-- [ ] 官方训练、Play、ONNX 导出和推理全链路跑通
+- [x] 官方训练、Play、ONNX 导出和推理全链路跑通（策略质量缺陷另行记录）
 - [ ] Locomotion Benchmark 可自动运行
 - [ ] Nominal 指标与速度跟踪曲线齐全
 - [ ] 四类 Reality Gap 实验完成
@@ -728,4 +739,3 @@ results/
 3. 有 Baseline、有对比、有失败案例；
 4. 能明确解释官方工作与个人贡献；
 5. README、图表、视频和简历材料共同形成完整证据链。
-
