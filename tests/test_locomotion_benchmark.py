@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 import json
+import math
 import tempfile
 import unittest
 from pathlib import Path
 
-from evaluation.locomotion_benchmark import DEFAULT_COMMAND_SET, load_command_set
+from evaluation.locomotion_benchmark import (
+    DEFAULT_COMMAND_SET,
+    load_command_set,
+    quaternion_to_euler,
+    wrapped_angle_delta,
+)
 
 
 class CommandSetTests(unittest.TestCase):
@@ -34,6 +40,18 @@ class CommandSetTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "unique"):
                 load_command_set(path)
+
+    def test_identity_quaternion_has_zero_euler_angles(self) -> None:
+        roll, pitch, yaw = quaternion_to_euler((1.0, 0.0, 0.0, 0.0))
+
+        self.assertAlmostEqual(roll, 0.0)
+        self.assertAlmostEqual(pitch, 0.0)
+        self.assertAlmostEqual(yaw, 0.0)
+
+    def test_wrapped_angle_delta_crosses_pi_continuously(self) -> None:
+        delta = wrapped_angle_delta(math.radians(-179.0), math.radians(179.0))
+
+        self.assertAlmostEqual(math.degrees(delta), 2.0)
 
 
 if __name__ == "__main__":

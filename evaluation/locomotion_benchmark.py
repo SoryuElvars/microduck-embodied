@@ -9,18 +9,32 @@ after this skeleton is verified against the known straight-line failure case.
 from __future__ import annotations
 
 import argparse
+import csv
+import hashlib
+import importlib.util
 import json
 import math
+import random
+import subprocess
+import sys
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path
+from statistics import fmean
 from typing import Any, Sequence
 
 
 EXPECTED_OBSERVATION_SIZE = 61
 EXPECTED_ACTION_SIZE = 14
+PHYSICS_TIMESTEP_S = 0.005
+DECIMATION = 4
+BAM_VIN = 7.4
+BAM_VIN_DROP_GAIN = 0.1
+FALL_TILT_DEG = 70.0
+PROJECT_ROOT = Path(__file__).parents[1]
 DEFAULT_MICRODUCK_RL_ROOT = Path.home() / "projects" / "microduck_rl"
 DEFAULT_COMMAND_SET = Path(__file__).parent / "command_sets" / "straight_only.json"
-DEFAULT_OUTPUT_DIR = Path(__file__).parents[1] / "results" / "week02"
+DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "results" / "week02"
 
 
 @dataclass(frozen=True)
@@ -84,6 +98,20 @@ class BenchmarkConfig:
     seed: int
 
 
+@dataclass
+class Runtime:
+    """Official deployment-rehearsal components for one fresh episode."""
+
+    official: Any
+    model: Any
+    data: Any
+    bam_ctrl: Any
+    policy: Any
+    qpos_adr: int
+    qvel_adr: int
+    control_dt: float
+
+
 def load_command_set(path: Path) -> list[CommandCase]:
     """Load and validate a versioned JSON command set."""
 
@@ -129,20 +157,358 @@ def validate_artifacts(config: BenchmarkConfig) -> None:
         raise ValueError(f"policy must be an .onnx file: {config.policy_path}")
 
 
-def run_episode(config: BenchmarkConfig, command: CommandCase, episode: int) -> None:
-    """Run one headless MuJoCo/BAM episode.
+def load_official_inference_module(microduck_rl_root: Path) -> Any:
+    """Load the upstream inference script without copying its implementation."""
 
-    Next implementation step:
-      1. import the official inference helpers;
-      2. create and reset MuJoCo, BAM and PolicyInference state;
-      3. run a 50 Hz control loop without a viewer or wall-clock sleep;
-      4. return per-step samples for metric aggregation.
+    module_name = "_microduck_official_infer_policy"
+    if module_name in sys.modules:
+        return sys.modules[module_name]
+
+    script_path = microduck_rl_root / "scripts" / "infer_policy.py"
+    spec = importlib.util.spec_from_file_location(module_name, script_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load official inference module: {script_path}")
+
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def create_runtime(config: BenchmarkConfig, episode_seed: int) -> Runtime:
+    """Create a fresh nominal CPU MuJoCo + BAM + ONNX runtime."""
+
+    official = load_official_inference_module(config.microduck_rl_root)
+    np = official.np
+    mujoco = official.mujoco
+
+    random.seed(episode_seed)
+    np.random.seed(episode_seed)
+
+    xml_path = config.microduck_rl_root / official.MICRODUCK_XML
+    bam_model = official.load_bam_model(
+        official.BAM_KP_FW,
+        BAM_VIN,
+        0.0,
+    )
+    model, data, bam_ctrl, _ = official.load_mujoco_with_bam(
+        str(xml_path),
+        bam_model,
+        PHYSICS_TIMESTEP_S,
+        BAM_VIN_DROP_GAIN,
+        official.BAM_VIN_MIN,
+    )
+    policy = official.PolicyInference(
+        model,
+        data,
+        walking_onnx_path=str(config.policy_path),
+        action_scale=1.0,
+        bam_ctrl=bam_ctrl,
+        use_projected_gravity=True,
+        new_cmd_obs=True,
+    )
+
+    freejoint_id = mujoco.mj_name2id(
+        model,
+        mujoco.mjtObj.mjOBJ_JOINT,
+        "trunk_base_freejoint",
+    )
+    if freejoint_id < 0:
+        raise ValueError("official scene has no trunk_base_freejoint")
+    qpos_adr = int(model.jnt_qposadr[freejoint_id])
+    qvel_adr = int(model.jnt_dofadr[freejoint_id])
+
+    data.qpos[qpos_adr : qpos_adr + 3] = (0.0, 0.0, 0.125)
+    data.qpos[qpos_adr + 3 : qpos_adr + 7] = (1.0, 0.0, 0.0, 0.0)
+    for index, joint_qpos_index in enumerate(policy.joint_qpos_indices):
+        data.qpos[joint_qpos_index] = policy.default_pose[index]
+    bam_ctrl.reset(data.qpos)
+    policy.last_action[:] = 0.0
+    policy.set_position_targets(policy.default_pose)
+    policy.set_vel_cmd(0.0, 0.0, 0.0)
+    mujoco.mj_forward(model, data)
+
+    observation = policy.get_observations()
+    if observation.size != EXPECTED_OBSERVATION_SIZE:
+        raise ValueError(
+            f"unexpected observation size: {observation.size}; "
+            f"expected {EXPECTED_OBSERVATION_SIZE}"
+        )
+    output_shape = policy.walking_session.get_outputs()[0].shape
+    if output_shape[-1] != EXPECTED_ACTION_SIZE:
+        raise ValueError(
+            f"unexpected action size: {output_shape}; expected [1, {EXPECTED_ACTION_SIZE}]"
+        )
+
+    return Runtime(
+        official=official,
+        model=model,
+        data=data,
+        bam_ctrl=bam_ctrl,
+        policy=policy,
+        qpos_adr=qpos_adr,
+        qvel_adr=qvel_adr,
+        control_dt=DECIMATION * model.opt.timestep,
+    )
+
+
+def quaternion_to_euler(quaternion: Sequence[float]) -> tuple[float, float, float]:
+    """Convert a MuJoCo ``[w, x, y, z]`` quaternion to roll, pitch and yaw."""
+
+    w, x, y, z = quaternion
+    roll = math.atan2(2.0 * (w * x + y * z), 1.0 - 2.0 * (x * x + y * y))
+    pitch_sine = max(-1.0, min(1.0, 2.0 * (w * y - z * x)))
+    pitch = math.asin(pitch_sine)
+    yaw = math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+    return roll, pitch, yaw
+
+
+def wrapped_angle_delta(current: float, previous: float) -> float:
+    """Return the shortest signed angular displacement between two samples."""
+
+    return math.atan2(math.sin(current - previous), math.cos(current - previous))
+
+
+def _base_state(runtime: Runtime) -> dict[str, Any]:
+    np = runtime.official.np
+    data = runtime.data
+    policy = runtime.policy
+    qpos_adr = runtime.qpos_adr
+    qvel_adr = runtime.qvel_adr
+
+    position = data.qpos[qpos_adr : qpos_adr + 3].copy()
+    quaternion = data.qpos[qpos_adr + 3 : qpos_adr + 7].copy()
+    roll, pitch, yaw = quaternion_to_euler(quaternion)
+    world_velocity = np.asarray(data.qvel[qvel_adr : qvel_adr + 3], dtype=np.float32)
+    body_velocity = policy.quat_rotate_inverse(
+        np.asarray(quaternion, dtype=np.float32),
+        world_velocity,
+    )
+    projected_gravity = policy.get_projected_gravity()
+    tilt = math.acos(max(-1.0, min(1.0, -float(projected_gravity[2]))))
+    return {
+        "position": position,
+        "quaternion": quaternion,
+        "roll": roll,
+        "pitch": pitch,
+        "yaw": yaw,
+        "tilt": tilt,
+        "body_velocity": body_velocity,
+        "yaw_rate": float(data.qvel[qvel_adr + 5]),
+    }
+
+
+def _advance_control_step(runtime: Runtime) -> tuple[Any, Any, dict[str, Any]]:
+    observation = runtime.policy.get_observations().copy()
+    action = runtime.policy.infer()
+    runtime.policy.apply_action(action)
+    for _ in range(DECIMATION):
+        runtime.bam_ctrl.update()
+        runtime.official.mujoco.mj_step(runtime.model, runtime.data)
+    return observation, action, _base_state(runtime)
+
+
+def _write_step_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _rmse(values: Sequence[float], target: float) -> float:
+    return math.sqrt(fmean((value - target) ** 2 for value in values))
+
+
+def run_episode(
+    config: BenchmarkConfig,
+    command: CommandCase,
+    episode: int,
+) -> dict[str, Any]:
+    """Run one deterministic, headless MuJoCo/BAM deployment episode.
+
+    This loop intentionally does not calculate the training reward.  It tests
+    the exported actor in the same nominal CPU/BAM deployment rehearsal used by
+    the upstream interactive inference script.
     """
 
-    raise NotImplementedError(
-        "Phase 0 only validates the benchmark contract; "
-        "the headless episode loop is the next implementation gate."
+    episode_seed = config.seed + episode
+    runtime = create_runtime(config, episode_seed)
+    np = runtime.official.np
+    rows: list[dict[str, Any]] = []
+
+    runtime.policy.set_vel_cmd(0.0, 0.0, 0.0)
+    warmup_steps = round(command.warmup_s / runtime.control_dt)
+    for step in range(warmup_steps):
+        observation, action, state = _advance_control_step(runtime)
+        row: dict[str, Any] = {
+            "phase": "warmup",
+            "step": step,
+            "time_s": (step + 1) * runtime.control_dt,
+            "cmd_vx": 0.0,
+            "cmd_vy": 0.0,
+            "cmd_wz": 0.0,
+            "actual_vx": float(state["body_velocity"][0]),
+            "actual_vy": float(state["body_velocity"][1]),
+            "actual_wz": state["yaw_rate"],
+            "world_x": float(state["position"][0]),
+            "world_y": float(state["position"][1]),
+            "trunk_z": float(state["position"][2]),
+            "roll_rad": state["roll"],
+            "pitch_rad": state["pitch"],
+            "yaw_rad": state["yaw"],
+            "tilt_rad": state["tilt"],
+            "net_yaw_rad": 0.0,
+            "forward_distance_m": 0.0,
+            "lateral_displacement_m": 0.0,
+            "fallen": state["tilt"] >= math.radians(FALL_TILT_DEG),
+        }
+        row.update({f"obs_{index:02d}": float(value) for index, value in enumerate(observation)})
+        row.update({f"action_{index:02d}": float(value) for index, value in enumerate(action)})
+        rows.append(row)
+
+    start_state = _base_state(runtime)
+    start_position = start_state["position"].copy()
+    start_yaw = start_state["yaw"]
+    previous_yaw = start_yaw
+    net_yaw = 0.0
+    fall_time_s: float | None = None
+
+    runtime.policy.set_vel_cmd(command.vx, command.vy, command.wz)
+    test_steps = round(command.duration_s / runtime.control_dt)
+    for step in range(test_steps):
+        observation, action, state = _advance_control_step(runtime)
+        net_yaw += wrapped_angle_delta(state["yaw"], previous_yaw)
+        previous_yaw = state["yaw"]
+
+        displacement = state["position"][:2] - start_position[:2]
+        forward_distance = (
+            math.cos(start_yaw) * float(displacement[0])
+            + math.sin(start_yaw) * float(displacement[1])
+        )
+        lateral_displacement = (
+            -math.sin(start_yaw) * float(displacement[0])
+            + math.cos(start_yaw) * float(displacement[1])
+        )
+        finite = bool(
+            np.isfinite(observation).all()
+            and np.isfinite(action).all()
+            and np.isfinite(runtime.data.qpos).all()
+            and np.isfinite(runtime.data.qvel).all()
+        )
+        fallen = not finite or state["tilt"] >= math.radians(FALL_TILT_DEG)
+        time_s = (step + 1) * runtime.control_dt
+        if fallen and fall_time_s is None:
+            fall_time_s = time_s
+
+        row = {
+            "phase": "test",
+            "step": step,
+            "time_s": time_s,
+            "cmd_vx": command.vx,
+            "cmd_vy": command.vy,
+            "cmd_wz": command.wz,
+            "actual_vx": float(state["body_velocity"][0]),
+            "actual_vy": float(state["body_velocity"][1]),
+            "actual_wz": state["yaw_rate"],
+            "world_x": float(state["position"][0]),
+            "world_y": float(state["position"][1]),
+            "trunk_z": float(state["position"][2]),
+            "roll_rad": state["roll"],
+            "pitch_rad": state["pitch"],
+            "yaw_rad": state["yaw"],
+            "tilt_rad": state["tilt"],
+            "net_yaw_rad": net_yaw,
+            "forward_distance_m": forward_distance,
+            "lateral_displacement_m": lateral_displacement,
+            "fallen": fallen,
+        }
+        row.update({f"obs_{index:02d}": float(value) for index, value in enumerate(observation)})
+        row.update({f"action_{index:02d}": float(value) for index, value in enumerate(action)})
+        rows.append(row)
+        if fallen:
+            break
+
+    raw_path = (
+        config.output_dir
+        / "raw"
+        / f"{command.name}_seed{episode_seed}_episode{episode:03d}_steps.csv"
     )
+    _write_step_csv(raw_path, rows)
+
+    test_rows = [row for row in rows if row["phase"] == "test"]
+    final = test_rows[-1]
+    summary = {
+        "episode": episode,
+        "seed": episode_seed,
+        "steps_completed": len(test_rows),
+        "duration_completed_s": len(test_rows) * runtime.control_dt,
+        "rmse_vx": _rmse([row["actual_vx"] for row in test_rows], command.vx),
+        "rmse_vy": _rmse([row["actual_vy"] for row in test_rows], command.vy),
+        "rmse_wz": _rmse([row["actual_wz"] for row in test_rows], command.wz),
+        "mean_actual_vx": fmean(row["actual_vx"] for row in test_rows),
+        "mean_actual_vy": fmean(row["actual_vy"] for row in test_rows),
+        "mean_actual_wz": fmean(row["actual_wz"] for row in test_rows),
+        "net_yaw_rad": final["net_yaw_rad"],
+        "net_yaw_deg": math.degrees(final["net_yaw_rad"]),
+        "forward_distance_m": final["forward_distance_m"],
+        "lateral_displacement_m": final["lateral_displacement_m"],
+        "fallen": fall_time_s is not None,
+        "fall_time_s": fall_time_s,
+        "raw_steps_csv": str(raw_path.relative_to(PROJECT_ROOT)),
+    }
+    return summary
+
+
+def write_summary(
+    config: BenchmarkConfig,
+    command: CommandCase,
+    episodes: list[dict[str, Any]],
+) -> Path:
+    """Write a reviewable result artifact separate from ignored raw samples."""
+
+    summary_dir = config.output_dir / "summary"
+    summary_dir.mkdir(parents=True, exist_ok=True)
+    path = summary_dir / f"{command.name}_{config.policy_path.stem}.json"
+    official_commit = subprocess.run(
+        ["git", "-C", str(config.microduck_rl_root), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    policy_hash = hashlib.sha256(config.policy_path.read_bytes()).hexdigest()
+    document = {
+        "schema_version": 1,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "benchmark_kind": "onnx_cpu_bam_deployment_rehearsal",
+        "reward_available": False,
+        "microduck_rl_commit": official_commit,
+        "policy_path": str(config.policy_path.relative_to(config.microduck_rl_root)),
+        "policy_sha256": policy_hash,
+        "command_set_path": str(config.command_set_path.relative_to(PROJECT_ROOT)),
+        "runtime": {
+            "observation_size": EXPECTED_OBSERVATION_SIZE,
+            "action_size": EXPECTED_ACTION_SIZE,
+            "physics_timestep_s": PHYSICS_TIMESTEP_S,
+            "decimation": DECIMATION,
+            "control_frequency_hz": 1.0 / (PHYSICS_TIMESTEP_S * DECIMATION),
+            "actuator": "BAM M6 XL330",
+            "bam_vin": BAM_VIN,
+            "bam_vin_drop_gain": BAM_VIN_DROP_GAIN,
+            "fall_proxy_tilt_deg": FALL_TILT_DEG,
+        },
+        "command": {
+            "name": command.name,
+            "vx": command.vx,
+            "vy": command.vy,
+            "wz": command.wz,
+            "warmup_s": command.warmup_s,
+            "duration_s": command.duration_s,
+        },
+        "episodes": episodes,
+    }
+    path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return path
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -213,8 +579,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     for case in commands:
+        episode_summaries = []
         for episode in range(case.episodes):
-            run_episode(config, case, episode)
+            episode_summary = run_episode(config, case, episode)
+            episode_summaries.append(episode_summary)
+            print(
+                f"episode {episode}: yaw={episode_summary['net_yaw_deg']:+.1f} deg, "
+                f"mean_vx={episode_summary['mean_actual_vx']:+.3f} m/s, "
+                f"mean_wz={episode_summary['mean_actual_wz']:+.3f} rad/s, "
+                f"fallen={episode_summary['fallen']}"
+            )
+        summary_path = write_summary(config, case, episode_summaries)
+        print(f"summary: {summary_path}")
     return 0
 
 
