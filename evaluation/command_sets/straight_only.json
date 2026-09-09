@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "description": "Phase 0 deterministic reproduction of the model_5999 straight-line yaw failure.",
+  "defaults": {
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "episodes": 1
+  },
+  "commands": [
+    {
+      "name": "straight_030",
+      "vx": 0.3,
+      "vy": 0.0,
+      "wz": 0.0
+    }
+  ]
+}
