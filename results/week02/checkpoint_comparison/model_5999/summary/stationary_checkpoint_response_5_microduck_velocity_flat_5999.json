@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-10T13:38:57.551001+00:00",
+  "benchmark_kind": "onnx_cpu_bam_deployment_rehearsal",
+  "reward_available": false,
+  "microduck_rl_commit": "53b8971b61baf5b7f3c16d135dd7cac37623de4b",
+  "policy_path": "logs/rsl_rl/velocity/2026-09-05_22-08-33_baseline-flat-resume-5000/microduck_velocity_flat_5999.onnx",
+  "policy_sha256": "4d7847ae5099bd3c0e816ddadcd1f441f839127cf134d16b1b5a125d594457e3",
+  "command_set_path": "evaluation/command_sets/checkpoint_response_5.json",
+  "runtime": {
+    "observation_size": 61,
+    "action_size": 14,
+    "physics_timestep_s": 0.005,
+    "decimation": 4,
+    "control_frequency_hz": 50.0,
+    "actuator": "BAM M6 XL330",
+    "bam_vin": 7.4,
+    "bam_vin_drop_gain": 0.1,
+    "fall_proxy_tilt_deg": 70.0
+  },
+  "command": {
+    "name": "stationary_checkpoint_response_5",
+    "vx": 0.0,
+    "vy": 0.0,
+    "wz": 0.0,
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "episodes": 5,
+    "initial_state_mode": "official_reset",
+    "official_reset_ranges": {
+      "x": [
+        -0.5,
+        0.5
+      ],
+      "y": [
+        -0.5,
+        0.5
+      ],
+      "z": [
+        0.12,
+        0.13
+      ],
+      "yaw": [
+        -3.141592653589793,
+        3.141592653589793
+      ]
+    }
+  },
+  "aggregate": {
+    "episode_count": 5,
+    "fall_rate": 0.0,
+    "yaw_direction_counts": {
+      "positive": 0,
+      "near_zero": 5,
+      "negative": 0,
+      "near_zero_threshold_deg": 1.0
+    },
+    "net_yaw_deg": {
+      "mean": 0.06200879985609971,
+      "median": 0.05455641278764989,
+      "std": 0.033423695569727976,
+      "min": 0.03128845957460692,
+      "max": 0.12532425991279234
+    },
+    "mean_actual_vx": {
+      "mean": 8.342023458794756e-06,
+      "median": 8.595604102083598e-06,
+      "std": 1.290199733738557e-05,
+      "min": -1.4718413080117897e-05,
+      "max": 2.2647279967713985e-05
+    },
+    "mean_actual_vy": {
+      "mean": -1.2743182543727016e-05,
+      "median": -9.868664494661062e-06,
+      "std": 1.6993924813962615e-05,
+      "min": -4.3179917896850387e-05,
+      "max": 9.4955473432492e-06
+    },
+    "mean_actual_wz": {
+      "mean": 0.00010244167807997805,
+      "median": 9.884639876464024e-05,
+      "std": 6.471300207075653e-05,
+      "min": 2.468738484455352e-05,
+      "max": 0.00021856923172873868
+    },
+    "rmse_vx": {
+      "mean": 0.00017335195760289352,
+      "median": 0.00016003438627281664,
+      "std": 3.5599030920484444e-05,
+      "min": 0.00014712423218625608,
+      "max": 0.00024274942977522686
+    },
+    "rmse_vy": {
+      "mean": 0.00028921825982249863,
+      "median": 0.00027046141300394246,
+      "std": 8.079914228217383e-05,
+      "min": 0.00017310111836526078,
+      "max": 0.0004224975629455285
+    },
+    "rmse_wz": {
+      "mean": 0.00025839574213464906,
+      "median": 0.00017790889033574827,
+      "std": 0.000192538650594307,
+      "min": 0.00011607658409529981,
+      "max": 0.0006351079896626344
+    },
+    "forward_distance_m": {
+      "mean": 9.349987760602189e-05,
+      "median": 9.453724547895728e-05,
+      "std": 6.714174583473265e-05,
+      "min": -2.1045811600364354e-05,
+      "max": 0.00018751899038672976
+    },
+    "lateral_displacement_m": {
+      "mean": -0.00014557415261287702,
+      "median": -0.00015032023529142248,
+      "std": 3.773147953661457e-05,
+      "min": -0.000196153146349562,
+      "max": -9.862106769308087e-05
+    }
+  },
+  "episodes": [
+    {
+      "episode": 0,
+      "seed": 42,
+      "initial_state": {
+        "x": 0.13942679845788375,
+        "y": -0.47498924477733306,
+        "z": 0.12275029318369118,
+        "yaw": -1.7391182232484002
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.00014818823361516497,
+      "rmse_vy": 0.0002671808375263099,
+      "rmse_wz": 0.00013211159163441807,
+      "mean_actual_vx": 8.595604102083598e-06,
+      "mean_actual_vy": -9.543468660922372e-06,
+      "mean_actual_wz": 0.00010492533624825957,
+      "net_yaw_rad": 0.0010624225992916791,
+      "net_yaw_deg": 0.06087233099873186,
+      "forward_distance_m": 0.00011718670063931558,
+      "lateral_displacement_m": -0.0001752845101175174,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/stationary_checkpoint_response_5_seed42_episode000_steps.csv"
+    },
+    {
+      "episode": 1,
+      "seed": 43,
+      "initial_state": {
+        "x": -0.46144816066261996,
+        "y": 0.1962243226370528,
+        "z": 0.1214393322139536,
+        "yaw": -0.2354167859510259
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.00016003438627281664,
+      "rmse_vy": 0.00027046141300394246,
+      "rmse_wz": 0.00011607658409529981,
+      "mean_actual_vx": 7.130191913006456e-06,
+      "mean_actual_vy": -9.868664494661062e-06,
+      "mean_actual_wz": 6.518003881369824e-05,
+      "net_yaw_rad": 0.0006632693774249188,
+      "net_yaw_deg": 0.038002536006717526,
+      "forward_distance_m": 8.930226312547123e-05,
+      "lateral_displacement_m": -0.00015032023529142248,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/stationary_checkpoint_response_5_seed43_episode001_steps.csv"
+    },
+    {
+      "episode": 2,
+      "seed": 44,
+      "initial_state": {
+        "x": -0.09146412074550625,
+        "y": 0.0419720091045962,
+        "z": 0.12862036616479272,
+        "yaw": -2.0315696736975637
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.00024274942977522686,
+      "rmse_vy": 0.0004224975629455285,
+      "rmse_wz": 0.0006351079896626344,
+      "mean_actual_vx": -1.4718413080117897e-05,
+      "mean_actual_vy": 9.4955473432492e-06,
+      "mean_actual_wz": 2.468738484455352e-05,
+      "net_yaw_rad": 0.0005460866374540352,
+      "net_yaw_deg": 0.03128845957460692,
+      "forward_distance_m": -2.1045811600364354e-05,
+      "lateral_displacement_m": -0.00010749180361280243,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/stationary_checkpoint_response_5_seed44_episode002_steps.csv"
+    },
+    {
+      "episode": 3,
+      "seed": 45,
+      "initial_state": {
+        "x": -0.2281245856159092,
+        "y": -0.011971792149092164,
+        "z": 0.12081879342371166,
+        "yaw": -1.0132673850715133
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.00014712423218625608,
+      "rmse_vy": 0.00017310111836526078,
+      "rmse_wz": 0.00023077365494514478,
+      "mean_actual_vx": 1.805545439128764e-05,
+      "mean_actual_vy": -1.0619409009450465e-05,
+      "mean_actual_wz": 0.00021856923172873868,
+      "net_yaw_rad": 0.002187320968103368,
+      "net_yaw_deg": 0.12532425991279234,
+      "forward_distance_m": 0.00018751899038672976,
+      "lateral_displacement_m": -9.862106769308087e-05,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/stationary_checkpoint_response_5_seed45_episode003_steps.csv"
+    },
+    {
+      "episode": 4,
+      "seed": 46,
+      "initial_state": {
+        "x": 0.38826807645248806,
+        "y": -0.10000560402898706,
+        "z": 0.12588620182774232,
+        "yaw": 2.260606340922897
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.0001686635061650031,
+      "rmse_vy": 0.0003128503672714515,
+      "rmse_wz": 0.00017790889033574827,
+      "mean_actual_vx": 2.2647279967713985e-05,
+      "mean_actual_vy": -4.3179917896850387e-05,
+      "mean_actual_wz": 9.884639876464024e-05,
+      "net_yaw_rad": 0.0009521890312216286,
+      "net_yaw_deg": 0.05455641278764989,
+      "forward_distance_m": 9.453724547895728e-05,
+      "lateral_displacement_m": -0.000196153146349562,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/stationary_checkpoint_response_5_seed46_episode004_steps.csv"
+    }
+  ]
+}

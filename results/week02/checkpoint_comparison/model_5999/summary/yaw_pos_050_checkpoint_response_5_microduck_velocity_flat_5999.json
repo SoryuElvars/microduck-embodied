@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-10T13:39:13.574414+00:00",
+  "benchmark_kind": "onnx_cpu_bam_deployment_rehearsal",
+  "reward_available": false,
+  "microduck_rl_commit": "53b8971b61baf5b7f3c16d135dd7cac37623de4b",
+  "policy_path": "logs/rsl_rl/velocity/2026-09-05_22-08-33_baseline-flat-resume-5000/microduck_velocity_flat_5999.onnx",
+  "policy_sha256": "4d7847ae5099bd3c0e816ddadcd1f441f839127cf134d16b1b5a125d594457e3",
+  "command_set_path": "evaluation/command_sets/checkpoint_response_5.json",
+  "runtime": {
+    "observation_size": 61,
+    "action_size": 14,
+    "physics_timestep_s": 0.005,
+    "decimation": 4,
+    "control_frequency_hz": 50.0,
+    "actuator": "BAM M6 XL330",
+    "bam_vin": 7.4,
+    "bam_vin_drop_gain": 0.1,
+    "fall_proxy_tilt_deg": 70.0
+  },
+  "command": {
+    "name": "yaw_pos_050_checkpoint_response_5",
+    "vx": 0.0,
+    "vy": 0.0,
+    "wz": 0.5,
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "episodes": 5,
+    "initial_state_mode": "official_reset",
+    "official_reset_ranges": {
+      "x": [
+        -0.5,
+        0.5
+      ],
+      "y": [
+        -0.5,
+        0.5
+      ],
+      "z": [
+        0.12,
+        0.13
+      ],
+      "yaw": [
+        -3.141592653589793,
+        3.141592653589793
+      ]
+    }
+  },
+  "aggregate": {
+    "episode_count": 5,
+    "fall_rate": 0.0,
+    "yaw_direction_counts": {
+      "positive": 5,
+      "near_zero": 0,
+      "negative": 0,
+      "near_zero_threshold_deg": 1.0
+    },
+    "net_yaw_deg": {
+      "mean": 208.2415693282107,
+      "median": 209.89502805445295,
+      "std": 3.503020899661111,
+      "min": 201.35709690675716,
+      "max": 211.0503952357937
+    },
+    "mean_actual_vx": {
+      "mean": 0.005844615185371367,
+      "median": 0.005951065641129389,
+      "std": 0.00042308394692196986,
+      "min": 0.005100513781333575,
+      "max": 0.006376807729917345
+    },
+    "mean_actual_vy": {
+      "mean": 0.007321561258644214,
+      "median": 0.007748202997725457,
+      "std": 0.0007947498923954193,
+      "min": 0.005917702971259132,
+      "max": 0.008069221040816046
+    },
+    "mean_actual_wz": {
+      "mean": 0.36543560897729355,
+      "median": 0.3674369007877228,
+      "std": 0.00736461609603627,
+      "min": 0.3512753528628685,
+      "max": 0.3724943706085452
+    },
+    "rmse_vx": {
+      "mean": 0.015633563392759654,
+      "median": 0.015489436787952046,
+      "std": 0.0003523082625867415,
+      "min": 0.015229570772170511,
+      "max": 0.016265285172397496
+    },
+    "rmse_vy": {
+      "mean": 0.11539724361204315,
+      "median": 0.11604072584611343,
+      "std": 0.0011687683504468035,
+      "min": 0.1132649461482027,
+      "max": 0.11643892478257117
+    },
+    "rmse_wz": {
+      "mean": 0.41381932095435314,
+      "median": 0.4144976201995827,
+      "std": 0.004906603983211505,
+      "min": 0.40641216657149837,
+      "max": 0.4208532128293879
+    },
+    "forward_distance_m": {
+      "mean": -0.034391140725344285,
+      "median": -0.03470733686282551,
+      "std": 0.003772106137615609,
+      "min": -0.04080296703525984,
+      "max": -0.030054338431569287
+    },
+    "lateral_displacement_m": {
+      "mean": 0.010033221842596507,
+      "median": 0.005744517360918893,
+      "std": 0.010526010886714373,
+      "min": 0.0010826963798794744,
+      "max": 0.030458836109540453
+    }
+  },
+  "episodes": [
+    {
+      "episode": 0,
+      "seed": 42,
+      "initial_state": {
+        "x": 0.13942679845788375,
+        "y": -0.47498924477733306,
+        "z": 0.12275029318369118,
+        "yaw": -1.7391182232484002
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.015229570772170511,
+      "rmse_vy": 0.11503588700106387,
+      "rmse_wz": 0.40641216657149837,
+      "mean_actual_vx": 0.005100513781333575,
+      "mean_actual_vy": 0.006978108047202113,
+      "mean_actual_wz": 0.3724943706085452,
+      "net_yaw_rad": 3.683524284499954,
+      "net_yaw_deg": 211.0503952357937,
+      "forward_distance_m": -0.03470733686282551,
+      "lateral_displacement_m": 0.00893521061149151,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/yaw_pos_050_checkpoint_response_5_seed42_episode000_steps.csv"
+    },
+    {
+      "episode": 1,
+      "seed": 43,
+      "initial_state": {
+        "x": -0.46144816066261996,
+        "y": 0.1962243226370528,
+        "z": 0.1214393322139536,
+        "yaw": -0.2354167859510259
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.015489436787952046,
+      "rmse_vy": 0.1132649461482027,
+      "rmse_wz": 0.4144976201995827,
+      "mean_actual_vx": 0.005951065641129389,
+      "mean_actual_vy": 0.005917702971259132,
+      "mean_actual_wz": 0.3512753528628685,
+      "net_yaw_rad": 3.514344313280202,
+      "net_yaw_deg": 201.35709690675716,
+      "forward_distance_m": -0.035228460294938785,
+      "lateral_displacement_m": 0.030458836109540453,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/yaw_pos_050_checkpoint_response_5_seed43_episode001_steps.csv"
+    },
+    {
+      "episode": 2,
+      "seed": 44,
+      "initial_state": {
+        "x": -0.09146412074550625,
+        "y": 0.0419720091045962,
+        "z": 0.12862036616479272,
+        "yaw": -2.0315696736975637
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.01572225338608271,
+      "rmse_vy": 0.11620573428226463,
+      "rmse_wz": 0.410880619828941,
+      "mean_actual_vx": 0.00575383151366259,
+      "mean_actual_vy": 0.008069221040816046,
+      "mean_actual_wz": 0.36937093225527207,
+      "net_yaw_rad": 3.6634721059693804,
+      "net_yaw_deg": 209.90149003594897,
+      "forward_distance_m": -0.031162601002128018,
+      "lateral_displacement_m": 0.003944848751152202,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/yaw_pos_050_checkpoint_response_5_seed44_episode002_steps.csv"
+    },
+    {
+      "episode": 3,
+      "seed": 45,
+      "initial_state": {
+        "x": -0.2281245856159092,
+        "y": -0.011971792149092164,
+        "z": 0.12081879342371166,
+        "yaw": -1.0132673850715133
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.016265285172397496,
+      "rmse_vy": 0.11604072584611343,
+      "rmse_wz": 0.4208532128293879,
+      "mean_actual_vx": 0.006376807729917345,
+      "mean_actual_vy": 0.007894571236218326,
+      "mean_actual_wz": 0.3674369007877228,
+      "net_yaw_rad": 3.663359323116072,
+      "net_yaw_deg": 209.89502805445295,
+      "forward_distance_m": -0.030054338431569287,
+      "lateral_displacement_m": 0.0010826963798794744,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/yaw_pos_050_checkpoint_response_5_seed45_episode003_steps.csv"
+    },
+    {
+      "episode": 4,
+      "seed": 46,
+      "initial_state": {
+        "x": 0.38826807645248806,
+        "y": -0.10000560402898706,
+        "z": 0.12588620182774232,
+        "yaw": 2.260606340922897
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.015461270845195507,
+      "rmse_vy": 0.11643892478257117,
+      "rmse_wz": 0.4164529853423556,
+      "mean_actual_vx": 0.006040857260813937,
+      "mean_actual_vy": 0.007748202997725457,
+      "mean_actual_wz": 0.36660048837205905,
+      "net_yaw_rad": 3.647805094620955,
+      "net_yaw_deg": 209.00383640810065,
+      "forward_distance_m": -0.04080296703525984,
+      "lateral_displacement_m": 0.005744517360918893,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/yaw_pos_050_checkpoint_response_5_seed46_episode004_steps.csv"
+    }
+  ]
+}

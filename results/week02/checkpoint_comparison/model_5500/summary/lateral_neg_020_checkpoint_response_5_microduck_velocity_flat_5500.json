@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-10T13:37:58.262357+00:00",
+  "benchmark_kind": "onnx_cpu_bam_deployment_rehearsal",
+  "reward_available": false,
+  "microduck_rl_commit": "53b8971b61baf5b7f3c16d135dd7cac37623de4b",
+  "policy_path": "logs/rsl_rl/velocity/2026-09-05_22-08-33_baseline-flat-resume-5000/microduck_velocity_flat_5500.onnx",
+  "policy_sha256": "03e28dac49cbe4f12181277f3cb196a411a755a8e83513faff4002bd0d64f1f3",
+  "command_set_path": "evaluation/command_sets/checkpoint_response_5.json",
+  "runtime": {
+    "observation_size": 61,
+    "action_size": 14,
+    "physics_timestep_s": 0.005,
+    "decimation": 4,
+    "control_frequency_hz": 50.0,
+    "actuator": "BAM M6 XL330",
+    "bam_vin": 7.4,
+    "bam_vin_drop_gain": 0.1,
+    "fall_proxy_tilt_deg": 70.0
+  },
+  "command": {
+    "name": "lateral_neg_020_checkpoint_response_5",
+    "vx": 0.0,
+    "vy": -0.2,
+    "wz": 0.0,
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "episodes": 5,
+    "initial_state_mode": "official_reset",
+    "official_reset_ranges": {
+      "x": [
+        -0.5,
+        0.5
+      ],
+      "y": [
+        -0.5,
+        0.5
+      ],
+      "z": [
+        0.12,
+        0.13
+      ],
+      "yaw": [
+        -3.141592653589793,
+        3.141592653589793
+      ]
+    }
+  },
+  "aggregate": {
+    "episode_count": 5,
+    "fall_rate": 0.0,
+    "yaw_direction_counts": {
+      "positive": 4,
+      "near_zero": 0,
+      "negative": 1,
+      "near_zero_threshold_deg": 1.0
+    },
+    "net_yaw_deg": {
+      "mean": 7.226482689271341,
+      "median": 8.833705686993937,
+      "std": 5.630601943302618,
+      "min": -2.711653395350068,
+      "max": 12.514003527849791
+    },
+    "mean_actual_vx": {
+      "mean": 0.0006854935770795692,
+      "median": 0.0004892443243586513,
+      "std": 0.0004461987429224233,
+      "min": 0.00042718896456062793,
+      "max": 0.0015760979861952364
+    },
+    "mean_actual_vy": {
+      "mean": -0.029591490019353055,
+      "median": -0.036251411512028424,
+      "std": 0.014345490579604237,
+      "min": -0.03778674228489399,
+      "max": -0.0009315202853546794
+    },
+    "mean_actual_wz": {
+      "mean": 0.011019640848098035,
+      "median": 0.014093100614957775,
+      "std": 0.009481285467180684,
+      "min": -0.005159710010044719,
+      "max": 0.020431393486645025
+    },
+    "rmse_vx": {
+      "mean": 0.010256187703639745,
+      "median": 0.011638784880619339,
+      "std": 0.0030808791613395666,
+      "min": 0.004101469679139156,
+      "max": 0.011974485367940654
+    },
+    "rmse_vy": {
+      "mean": 0.205457295398771,
+      "median": 0.20619729396654757,
+      "std": 0.0029221916034082034,
+      "min": 0.1997862277696791,
+      "max": 0.2077887045172336
+    },
+    "rmse_wz": {
+      "mean": 0.24860752239786618,
+      "median": 0.2881975301660995,
+      "std": 0.08744130278106185,
+      "min": 0.0740061317372126,
+      "max": 0.300400145390545
+    },
+    "forward_distance_m": {
+      "mean": 0.01646795833487451,
+      "median": 0.016566954267059758,
+      "std": 0.009768188968146792,
+      "min": 0.004799032620650931,
+      "max": 0.03032112649630259
+    },
+    "lateral_displacement_m": {
+      "mean": -0.2972427385664337,
+      "median": -0.3645902910014782,
+      "std": 0.14391923901848938,
+      "min": -0.3799592752848026,
+      "max": -0.009706274342146663
+    }
+  },
+  "episodes": [
+    {
+      "episode": 0,
+      "seed": 42,
+      "initial_state": {
+        "x": 0.13942679845788375,
+        "y": -0.47498924477733306,
+        "z": 0.12275029318369118,
+        "yaw": -1.7391182232484002
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.011943549036055753,
+      "rmse_vy": 0.20599134847246053,
+      "rmse_wz": 0.2862334347354319,
+      "mean_actual_vx": 0.0004989746294450014,
+      "mean_actual_vy": -0.03711385766090825,
+      "mean_actual_wz": 0.019303009641697216,
+      "net_yaw_rad": 0.21841056416716476,
+      "net_yaw_deg": 12.514003527849791,
+      "forward_distance_m": 0.03032112649630259,
+      "lateral_displacement_m": -0.37143205915612953,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5500/raw/lateral_neg_020_checkpoint_response_5_seed42_episode000_steps.csv"
+    },
+    {
+      "episode": 1,
+      "seed": 43,
+      "initial_state": {
+        "x": -0.46144816066261996,
+        "y": 0.1962243226370528,
+        "z": 0.1214393322139536,
+        "yaw": -0.2354167859510259
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.004101469679139156,
+      "rmse_vy": 0.1997862277696791,
+      "rmse_wz": 0.0740061317372126,
+      "mean_actual_vx": 0.0004892443243586513,
+      "mean_actual_vy": -0.0009315202853546794,
+      "mean_actual_wz": -0.005159710010044719,
+      "net_yaw_rad": -0.04732727992174218,
+      "net_yaw_deg": -2.711653395350068,
+      "forward_distance_m": 0.004799032620650931,
+      "lateral_displacement_m": -0.009706274342146663,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5500/raw/lateral_neg_020_checkpoint_response_5_seed43_episode001_steps.csv"
+    },
+    {
+      "episode": 2,
+      "seed": 44,
+      "initial_state": {
+        "x": -0.09146412074550625,
+        "y": 0.0419720091045962,
+        "z": 0.12862036616479272,
+        "yaw": -2.0315696736975637
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.011974485367940654,
+      "rmse_vy": 0.20752290226793413,
+      "rmse_wz": 0.300400145390545,
+      "mean_actual_vx": 0.0004359619808383286,
+      "mean_actual_vy": -0.036251411512028424,
+      "mean_actual_wz": 0.020431393486645025,
+      "net_yaw_rad": 0.2138703034564342,
+      "net_yaw_deg": 12.253865751235862,
+      "forward_distance_m": 0.023881954091257512,
+      "lateral_displacement_m": -0.3645902910014782,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5500/raw/lateral_neg_020_checkpoint_response_5_seed44_episode002_steps.csv"
+    },
+    {
+      "episode": 3,
+      "seed": 45,
+      "initial_state": {
+        "x": -0.2281245856159092,
+        "y": -0.011971792149092164,
+        "z": 0.12081879342371166,
+        "yaw": -1.0132673850715133
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.011622649554443823,
+      "rmse_vy": 0.20619729396654757,
+      "rmse_wz": 0.2881975301660995,
+      "mean_actual_vx": 0.0015760979861952364,
+      "mean_actual_vy": -0.03778674228489399,
+      "mean_actual_wz": 0.006430410507234879,
+      "net_yaw_rad": 0.09149874423874749,
+      "net_yaw_deg": 5.242491875627188,
+      "forward_distance_m": 0.006770724199101769,
+      "lateral_displacement_m": -0.3799592752848026,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5500/raw/lateral_neg_020_checkpoint_response_5_seed45_episode003_steps.csv"
+    },
+    {
+      "episode": 4,
+      "seed": 46,
+      "initial_state": {
+        "x": 0.38826807645248806,
+        "y": -0.10000560402898706,
+        "z": 0.12588620182774232,
+        "yaw": 2.260606340922897
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.011638784880619339,
+      "rmse_vy": 0.2077887045172336,
+      "rmse_wz": 0.2942003699600419,
+      "mean_actual_vx": 0.00042718896456062793,
+      "mean_actual_vy": -0.03587391835357994,
+      "mean_actual_wz": 0.014093100614957775,
+      "net_yaw_rad": 0.15417724939019184,
+      "net_yaw_deg": 8.833705686993937,
+      "forward_distance_m": 0.016566954267059758,
+      "lateral_displacement_m": -0.3605257930476112,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5500/raw/lateral_neg_020_checkpoint_response_5_seed46_episode004_steps.csv"
+    }
+  ]
+}

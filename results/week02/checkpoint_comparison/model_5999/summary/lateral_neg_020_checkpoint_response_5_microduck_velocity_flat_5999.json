@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-10T13:39:10.978819+00:00",
+  "benchmark_kind": "onnx_cpu_bam_deployment_rehearsal",
+  "reward_available": false,
+  "microduck_rl_commit": "53b8971b61baf5b7f3c16d135dd7cac37623de4b",
+  "policy_path": "logs/rsl_rl/velocity/2026-09-05_22-08-33_baseline-flat-resume-5000/microduck_velocity_flat_5999.onnx",
+  "policy_sha256": "4d7847ae5099bd3c0e816ddadcd1f441f839127cf134d16b1b5a125d594457e3",
+  "command_set_path": "evaluation/command_sets/checkpoint_response_5.json",
+  "runtime": {
+    "observation_size": 61,
+    "action_size": 14,
+    "physics_timestep_s": 0.005,
+    "decimation": 4,
+    "control_frequency_hz": 50.0,
+    "actuator": "BAM M6 XL330",
+    "bam_vin": 7.4,
+    "bam_vin_drop_gain": 0.1,
+    "fall_proxy_tilt_deg": 70.0
+  },
+  "command": {
+    "name": "lateral_neg_020_checkpoint_response_5",
+    "vx": 0.0,
+    "vy": -0.2,
+    "wz": 0.0,
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "episodes": 5,
+    "initial_state_mode": "official_reset",
+    "official_reset_ranges": {
+      "x": [
+        -0.5,
+        0.5
+      ],
+      "y": [
+        -0.5,
+        0.5
+      ],
+      "z": [
+        0.12,
+        0.13
+      ],
+      "yaw": [
+        -3.141592653589793,
+        3.141592653589793
+      ]
+    }
+  },
+  "aggregate": {
+    "episode_count": 5,
+    "fall_rate": 0.0,
+    "yaw_direction_counts": {
+      "positive": 0,
+      "near_zero": 0,
+      "negative": 5,
+      "near_zero_threshold_deg": 1.0
+    },
+    "net_yaw_deg": {
+      "mean": -5.863265564672167,
+      "median": -4.515039731905689,
+      "std": 2.6802166085424135,
+      "min": -10.02585546313317,
+      "max": -3.1608866474954636
+    },
+    "mean_actual_vx": {
+      "mean": 0.005128573605261044,
+      "median": 0.00502558238315396,
+      "std": 0.0006013420238734588,
+      "min": 0.004542072815820575,
+      "max": 0.0061601910376921296
+    },
+    "mean_actual_vy": {
+      "mean": -0.030484519927328802,
+      "median": -0.030434480723692103,
+      "std": 0.0005382801625310465,
+      "min": -0.03106433875509538,
+      "max": -0.02962787477624079
+    },
+    "mean_actual_wz": {
+      "mean": -0.011663113222465167,
+      "median": -0.009297712979733006,
+      "std": 0.0043344384644256285,
+      "min": -0.019095072298324092,
+      "max": -0.007006105220260967
+    },
+    "rmse_vx": {
+      "mean": 0.013982091994140636,
+      "median": 0.01397105557967407,
+      "std": 0.0002853742608668269,
+      "min": 0.01367459725109593,
+      "max": 0.014465271951485302
+    },
+    "rmse_vy": {
+      "mean": 0.2091763473295579,
+      "median": 0.20918867258949175,
+      "std": 0.00045288784170047805,
+      "min": 0.2086654435832446,
+      "max": 0.20988635670763356
+    },
+    "rmse_wz": {
+      "mean": 0.41008217476750203,
+      "median": 0.4083717243637143,
+      "std": 0.0035881413561285025,
+      "min": 0.4063262854028068,
+      "max": 0.4156266461929768
+    },
+    "forward_distance_m": {
+      "mean": 0.03261820019426125,
+      "median": 0.029743234955608183,
+      "std": 0.008705896921249802,
+      "min": 0.019942658762544863,
+      "max": 0.04498752619731372
+    },
+    "lateral_displacement_m": {
+      "mean": -0.3045206512875752,
+      "median": -0.30341871047130325,
+      "std": 0.005365342988897631,
+      "min": -0.3108165102236532,
+      "max": -0.2958481228540558
+    }
+  },
+  "episodes": [
+    {
+      "episode": 0,
+      "seed": 42,
+      "initial_state": {
+        "x": 0.13942679845788375,
+        "y": -0.47498924477733306,
+        "z": 0.12275029318369118,
+        "yaw": -1.7391182232484002
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.01367459725109593,
+      "rmse_vy": 0.20918867258949175,
+      "rmse_wz": 0.4083717243637143,
+      "mean_actual_vx": 0.004550871403480415,
+      "mean_actual_vy": -0.030434480723692103,
+      "mean_actual_wz": -0.009077575269312004,
+      "net_yaw_rad": -0.06338997637509713,
+      "net_yaw_deg": -3.6319781097270627,
+      "forward_distance_m": 0.02911132795730357,
+      "lateral_displacement_m": -0.30341871047130325,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/lateral_neg_020_checkpoint_response_5_seed42_episode000_steps.csv"
+    },
+    {
+      "episode": 1,
+      "seed": 43,
+      "initial_state": {
+        "x": -0.46144816066261996,
+        "y": 0.1962243226370528,
+        "z": 0.1214393322139536,
+        "yaw": -0.2354167859510259
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.014080737259581354,
+      "rmse_vy": 0.20988635670763356,
+      "rmse_wz": 0.4156266461929768,
+      "mean_actual_vx": 0.005364150386158144,
+      "mean_actual_vy": -0.02962787477624079,
+      "mean_actual_wz": -0.009297712979733006,
+      "net_yaw_rad": -0.07880230918011634,
+      "net_yaw_deg": -4.515039731905689,
+      "forward_distance_m": 0.03930625309853594,
+      "lateral_displacement_m": -0.2958481228540558,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/lateral_neg_020_checkpoint_response_5_seed43_episode001_steps.csv"
+    },
+    {
+      "episode": 2,
+      "seed": 44,
+      "initial_state": {
+        "x": -0.09146412074550625,
+        "y": 0.0419720091045962,
+        "z": 0.12862036616479272,
+        "yaw": -2.0315696736975637
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.013718797928866523,
+      "rmse_vy": 0.20872574233049448,
+      "rmse_wz": 0.40716237719270176,
+      "mean_actual_vx": 0.004542072815820575,
+      "mean_actual_vy": -0.031049681716831402,
+      "mean_actual_wz": -0.007006105220260967,
+      "net_yaw_rad": -0.05516787928112121,
+      "net_yaw_deg": -3.1608866474954636,
+      "forward_distance_m": 0.029743234955608183,
+      "lateral_displacement_m": -0.3095629323260776,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/lateral_neg_020_checkpoint_response_5_seed44_episode002_steps.csv"
+    },
+    {
+      "episode": 3,
+      "seed": 45,
+      "initial_state": {
+        "x": -0.2281245856159092,
+        "y": -0.011971792149092164,
+        "z": 0.12081879342371166,
+        "yaw": -1.0132673850715133
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.014465271951485302,
+      "rmse_vy": 0.20941552143692502,
+      "rmse_wz": 0.4129238406853105,
+      "mean_actual_vx": 0.0061601910376921296,
+      "mean_actual_vy": -0.030246223664784338,
+      "mean_actual_wz": -0.013839100344695763,
+      "net_yaw_rad": -0.13932209211459967,
+      "net_yaw_deg": -7.982567871099448,
+      "forward_distance_m": 0.04498752619731372,
+      "lateral_displacement_m": -0.30295698056278614,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/lateral_neg_020_checkpoint_response_5_seed45_episode003_steps.csv"
+    },
+    {
+      "episode": 4,
+      "seed": 46,
+      "initial_state": {
+        "x": 0.38826807645248806,
+        "y": -0.10000560402898706,
+        "z": 0.12588620182774232,
+        "yaw": 2.260606340922897
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.01397105557967407,
+      "rmse_vy": 0.2086654435832446,
+      "rmse_wz": 0.4063262854028068,
+      "mean_actual_vx": 0.00502558238315396,
+      "mean_actual_vy": -0.03106433875509538,
+      "mean_actual_wz": -0.019095072298324092,
+      "net_yaw_rad": -0.1749841881607348,
+      "net_yaw_deg": -10.02585546313317,
+      "forward_distance_m": 0.019942658762544863,
+      "lateral_displacement_m": -0.3108165102236532,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/lateral_neg_020_checkpoint_response_5_seed46_episode004_steps.csv"
+    }
+  ]
+}

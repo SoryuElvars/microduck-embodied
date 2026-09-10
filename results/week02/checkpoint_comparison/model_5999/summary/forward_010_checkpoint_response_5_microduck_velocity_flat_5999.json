@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-10T13:39:00.365453+00:00",
+  "benchmark_kind": "onnx_cpu_bam_deployment_rehearsal",
+  "reward_available": false,
+  "microduck_rl_commit": "53b8971b61baf5b7f3c16d135dd7cac37623de4b",
+  "policy_path": "logs/rsl_rl/velocity/2026-09-05_22-08-33_baseline-flat-resume-5000/microduck_velocity_flat_5999.onnx",
+  "policy_sha256": "4d7847ae5099bd3c0e816ddadcd1f441f839127cf134d16b1b5a125d594457e3",
+  "command_set_path": "evaluation/command_sets/checkpoint_response_5.json",
+  "runtime": {
+    "observation_size": 61,
+    "action_size": 14,
+    "physics_timestep_s": 0.005,
+    "decimation": 4,
+    "control_frequency_hz": 50.0,
+    "actuator": "BAM M6 XL330",
+    "bam_vin": 7.4,
+    "bam_vin_drop_gain": 0.1,
+    "fall_proxy_tilt_deg": 70.0
+  },
+  "command": {
+    "name": "forward_010_checkpoint_response_5",
+    "vx": 0.1,
+    "vy": 0.0,
+    "wz": 0.0,
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "episodes": 5,
+    "initial_state_mode": "official_reset",
+    "official_reset_ranges": {
+      "x": [
+        -0.5,
+        0.5
+      ],
+      "y": [
+        -0.5,
+        0.5
+      ],
+      "z": [
+        0.12,
+        0.13
+      ],
+      "yaw": [
+        -3.141592653589793,
+        3.141592653589793
+      ]
+    }
+  },
+  "aggregate": {
+    "episode_count": 5,
+    "fall_rate": 0.0,
+    "yaw_direction_counts": {
+      "positive": 0,
+      "near_zero": 5,
+      "negative": 0,
+      "near_zero_threshold_deg": 1.0
+    },
+    "net_yaw_deg": {
+      "mean": 0.31545699026845864,
+      "median": 0.29265073846764167,
+      "std": 0.1098783145854935,
+      "min": 0.14203650187434222,
+      "max": 0.4371059323288444
+    },
+    "mean_actual_vx": {
+      "mean": 0.0006729838906491522,
+      "median": 0.000673304368441677,
+      "std": 1.5596860318656356e-05,
+      "min": 0.0006544050578741007,
+      "max": 0.0006949728507055397
+    },
+    "mean_actual_vy": {
+      "mean": -6.677706480961659e-05,
+      "median": -7.668212914541072e-05,
+      "std": 2.6093296866863495e-05,
+      "min": -9.23554079781752e-05,
+      "max": -2.0711271380264407e-05
+    },
+    "mean_actual_wz": {
+      "mean": 0.0004571296276491268,
+      "median": 0.000456538172872349,
+      "std": 0.00017457343637944375,
+      "min": 0.0002579176824917658,
+      "max": 0.0006981193851347232
+    },
+    "rmse_vx": {
+      "mean": 0.09939390242554458,
+      "median": 0.0993938687556746,
+      "std": 1.1998326714153721e-05,
+      "min": 0.09937801673518888,
+      "max": 0.09941068727562814
+    },
+    "rmse_vy": {
+      "mean": 0.002361158958300924,
+      "median": 0.0022191332930885962,
+      "std": 0.00036098700635000137,
+      "min": 0.0019714926630243954,
+      "max": 0.003006609557382937
+    },
+    "rmse_wz": {
+      "mean": 0.013934485390105672,
+      "median": 0.014256073757037665,
+      "std": 0.002148136275947277,
+      "min": 0.011418154385699592,
+      "max": 0.0173548547269702
+    },
+    "forward_distance_m": {
+      "mean": 0.006582082000786689,
+      "median": 0.006645980066335613,
+      "std": 0.00014819557528759726,
+      "min": 0.00637902216142834,
+      "max": 0.006764017237181187
+    },
+    "lateral_displacement_m": {
+      "mean": -0.0008499211027895002,
+      "median": -0.0008681249389935245,
+      "std": 0.00020621945180010435,
+      "min": -0.0010953720995959813,
+      "max": -0.000524855338392787
+    }
+  },
+  "episodes": [
+    {
+      "episode": 0,
+      "seed": 42,
+      "initial_state": {
+        "x": 0.13942679845788375,
+        "y": -0.47498924477733306,
+        "z": 0.12275029318369118,
+        "yaw": -1.7391182232484002
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.0993938687556746,
+      "rmse_vy": 0.0024723123630963034,
+      "rmse_wz": 0.014768582489441327,
+      "mean_actual_vx": 0.000684912816148426,
+      "mean_actual_vy": -7.668212914541072e-05,
+      "mean_actual_wz": 0.0006981193851347232,
+      "net_yaw_rad": 0.007519278147417152,
+      "net_yaw_deg": 0.4308229028319513,
+      "forward_distance_m": 0.006684141951791201,
+      "lateral_displacement_m": -0.0010953720995959813,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/forward_010_checkpoint_response_5_seed42_episode000_steps.csv"
+    },
+    {
+      "episode": 1,
+      "seed": 43,
+      "initial_state": {
+        "x": -0.46144816066261996,
+        "y": 0.1962243226370528,
+        "z": 0.1214393322139536,
+        "yaw": -0.2354167859510259
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.09937801673518888,
+      "rmse_vy": 0.0021362469149123903,
+      "rmse_wz": 0.01187476159137958,
+      "mean_actual_vx": 0.0006949728507055397,
+      "mean_actual_vy": -2.0711271380264407e-05,
+      "mean_actual_wz": 0.00027257082244919694,
+      "net_yaw_rad": 0.005107718944653172,
+      "net_yaw_deg": 0.29265073846764167,
+      "forward_distance_m": 0.006764017237181187,
+      "lateral_displacement_m": -0.000524855338392787,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/forward_010_checkpoint_response_5_seed43_episode001_steps.csv"
+    },
+    {
+      "episode": 2,
+      "seed": 44,
+      "initial_state": {
+        "x": -0.09146412074550625,
+        "y": 0.0419720091045962,
+        "z": 0.12862036616479272,
+        "yaw": -2.0315696736975637
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.09940309613373416,
+      "rmse_vy": 0.0022191332930885962,
+      "rmse_wz": 0.014256073757037665,
+      "mean_actual_vx": 0.0006573243600760179,
+      "mean_actual_vy": -5.667527238983894e-05,
+      "mean_actual_wz": 0.0006005020752975989,
+      "net_yaw_rad": 0.007628937699137861,
+      "net_yaw_deg": 0.4371059323288444,
+      "forward_distance_m": 0.00637902216142834,
+      "lateral_displacement_m": -0.0007314599877948384,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/forward_010_checkpoint_response_5_seed44_episode002_steps.csv"
+    },
+    {
+      "episode": 3,
+      "seed": 45,
+      "initial_state": {
+        "x": -0.2281245856159092,
+        "y": -0.011971792149092164,
+        "z": 0.12081879342371166,
+        "yaw": -1.0132673850715133
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.09938384322749713,
+      "rmse_vy": 0.0019714926630243954,
+      "rmse_wz": 0.011418154385699592,
+      "mean_actual_vx": 0.000673304368441677,
+      "mean_actual_vy": -9.23554079781752e-05,
+      "mean_actual_wz": 0.0002579176824917658,
+      "net_yaw_rad": 0.002479004615722369,
+      "net_yaw_deg": 0.14203650187434222,
+      "forward_distance_m": 0.006437248587197106,
+      "lateral_displacement_m": -0.0008681249389935245,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/forward_010_checkpoint_response_5_seed45_episode003_steps.csv"
+    },
+    {
+      "episode": 4,
+      "seed": 46,
+      "initial_state": {
+        "x": 0.38826807645248806,
+        "y": -0.10000560402898706,
+        "z": 0.12588620182774232,
+        "yaw": 2.260606340922897
+      },
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.09941068727562814,
+      "rmse_vy": 0.003006609557382937,
+      "rmse_wz": 0.0173548547269702,
+      "mean_actual_vx": 0.0006544050578741007,
+      "mean_actual_vy": -8.746124315439374e-05,
+      "mean_actual_wz": 0.000456538172872349,
+      "net_yaw_rad": 0.004793876236151018,
+      "net_yaw_deg": 0.27466887583951366,
+      "forward_distance_m": 0.006645980066335613,
+      "lateral_displacement_m": -0.0010297931491703698,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "results/week02/checkpoint_comparison/model_5999/raw/forward_010_checkpoint_response_5_seed46_episode004_steps.csv"
+    }
+  ]
+}
