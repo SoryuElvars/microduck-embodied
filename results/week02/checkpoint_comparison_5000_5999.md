@@ -1,29 +1,29 @@
-# Checkpoint comparison: model_5000 to model_5999
+# Checkpoint 对比：model_5000 至 model_5999
 
-## Outcome
+## 结论
 
-None of the five checkpoints is an acceptable general velocity controller. The behavior does not improve monotonically during the final 1000 training iterations:
+五个 checkpoint 都不能作为合格的通用速度控制器。最后 1000 次训练迭代期间，策略表现并没有随训练进度单调改善：
 
-- `model_5500` has the smallest straight-command yaw drift, but still turns `+74.4°` in 10 seconds and reaches only `0.145 m/s` for a `0.30 m/s` command.
-- `model_5750` regresses sharply to `+190.0°` straight-command yaw drift.
-- `model_5999` has the highest forward speed (`0.174 m/s`) and is the first checkpoint in this probe to respond materially to `wz=+0.5`, but it still ignores `wz=-0.5`. The late positive-turn skill therefore creates the strong left/right asymmetry seen in the final policy.
+- `model_5500` 的直行偏航最小，但 10 秒内仍偏转 `+74.4°`；在目标速度为 `0.30 m/s` 时，实际速度只有 `0.145 m/s`。
+- `model_5750` 明显退化，直行偏航增大到 `+190.0°`。
+- `model_5999` 的前进速度最高（`0.174 m/s`），也是本轮测试中第一个对 `wz=+0.5` 产生明显响应的 checkpoint，但它仍然忽略 `wz=-0.5`。因此，最终策略的强烈左右不对称来自训练后期只学会了正向旋转。
 
-## Protocol
+## 测试设置
 
-- Checkpoints: `5000`, `5250`, `5500`, `5750`, `5999`.
-- Policy format: official ONNX export with each checkpoint's observation normalizer baked in.
-- Commands: `(vx, vy, wz) = (0.30, 0, 0)`, `(0, 0, +0.50)`, `(0, 0, -0.50)`.
-- Episodes: 5 paired seeds per command and checkpoint, seeds `42–46`; 75 total episodes.
-- Reset: seeded `official_reset`; warm-up 1 second; measured duration 10 seconds.
-- Runtime: CPU MuJoCo deployment rehearsal with BAM M6 XL330 actuators at 50 Hz.
-- Result integrity: 75/75 episodes completed all 500 measured control steps; 0 falls; no missing raw CSV files.
-- Episode return is unavailable in this deployment-rehearsal benchmark.
+- Checkpoint：`5000`、`5250`、`5500`、`5750`、`5999`。
+- 策略格式：使用官方导出流程生成 ONNX，并将各 checkpoint 对应的 Observation Normalizer 写入模型。
+- 测试指令：`(vx, vy, wz) = (0.30, 0, 0)`、`(0, 0, +0.50)`、`(0, 0, -0.50)`。
+- 回合数量：每个 checkpoint 的每项指令使用 5 个配对随机种子，即 `42–46`；共 75 个回合。
+- 初始状态：使用带固定随机种子的 `official_reset`；预热 1 秒，正式测量 10 秒。
+- 运行环境：CPU MuJoCo 部署预演，使用 BAM M6 XL330 执行器模型，控制频率为 50 Hz。
+- 结果完整性：75/75 个回合均完成全部 500 个测量控制步；0 次跌倒；原始 CSV 文件无缺失。
+- 此部署预演基准不提供 Episode Return。
 
-## Results
+## 测试结果
 
-Values are mean ± population standard deviation across five seeds.
+表中数值为 5 个随机种子的均值 ± 总体标准差。
 
-| Checkpoint | Forward net yaw (deg) | Forward actual vx (m/s) | Actual wz at +0.5 | Actual wz at -0.5 | Turn mirror residual |
+| Checkpoint | 直行净偏航（度） | 直行实际 vx（m/s） | `wz=+0.5` 时的实际 wz | `wz=-0.5` 时的实际 wz | 转向镜像残差 |
 |---:|---:|---:|---:|---:|---:|
 | 5000 | +184.55 ± 2.51 | 0.14095 ± 0.00019 | +0.00521 ± 0.00033 | -0.01271 ± 0.00025 | 0.00750 ± 0.00052 |
 | 5250 | +98.24 ± 6.31 | 0.13414 ± 0.00028 | +0.00560 ± 0.00034 | -0.01247 ± 0.00028 | 0.00687 ± 0.00043 |
@@ -31,17 +31,17 @@ Values are mean ± population standard deviation across five seeds.
 | 5750 | +189.96 ± 3.71 | 0.15807 ± 0.00098 | +0.00161 ± 0.00071 | -0.01188 ± 0.00023 | 0.01026 ± 0.00055 |
 | 5999 | +165.15 ± 6.60 | 0.17361 ± 0.00077 | +0.36544 ± 0.00736 | -0.00584 ± 0.00065 | 0.35960 ± 0.00739 |
 
-The turn mirror residual is computed per paired seed as `|mean_wz(+0.5) + mean_wz(-0.5)|`. A low value is necessary for mirrored turning, but is not sufficient: checkpoints 5000–5750 score a low residual only because both turn commands are nearly ignored.
+转向镜像残差按配对随机种子计算，公式为 `|mean_wz(+0.5) + mean_wz(-0.5)|`。较低的残差是实现镜像转向的必要条件，但不是充分条件：checkpoint 5000–5750 的残差较低，只是因为策略几乎同时忽略了正、负两个转向指令。
 
-![Checkpoint comparison](figures/checkpoint_comparison_5000_5999.png)
+![Checkpoint 对比结果](figures/checkpoint_comparison_5000_5999.png)
 
-## Interpretation
+## 结果解读
 
-1. Straight walking and yaw control are not improving together. Forward speed generally increases after 5250, while straight-line yaw first improves, then collapses at 5750, and remains poor at 5999.
-2. The final one-sided turning behavior appears late. Checkpoints 5000–5750 do not meaningfully execute either turn direction; `model_5999` executes only the positive direction.
-3. `model_5500` is useful as a diagnostic checkpoint, not as a replacement controller. Its straight drift is less severe than the final policy, but `+74°/10 s` is still a large tracking failure and it lacks turning.
-4. Five seeds are enough to expose these large effects and locate the transition interval. They are not enough for final acceptance or a precise probability estimate of rare failures.
+1. 直行能力与偏航控制没有同步改善。5250 之后的前进速度整体提高，但直行偏航先减小，随后在 5750 出现严重退化，到 5999 时仍未恢复到 5500 的水平。
+2. 最终策略的单向转向能力是在训练后期出现的。Checkpoint 5000–5750 对两个方向的转向指令都没有明显响应；`model_5999` 则只会执行正方向转向。
+3. `model_5500` 可以作为有价值的诊断 checkpoint，但不能作为替代控制器。它的直行偏航小于最终策略，不过 `+74°/10 s` 仍然属于严重的跟踪失败，而且它不具备转向能力。
+4. 5 个随机种子足以暴露这些幅度很大的差异，并帮助定位策略发生变化的训练区间；但它不足以完成最终验收，也不足以准确估计低概率失败事件。
 
-## Next comparison
+## 下一步对比
 
-The most informative next step is to narrow the late transition using any available checkpoints between 5750 and 5999. If only the current five checkpoints exist, compare `model_5500`, `model_5750`, and `model_5999` on the full eight-command matrix before changing training configuration. That will distinguish a broad late-stage collapse from a yaw-specific one-sided skill transition.
+最有价值的下一步，是使用 5750 与 5999 之间的中间 checkpoint 进一步缩小策略突变发生的区间。如果目前只有这五个 checkpoint，则应在修改训练配置之前，对 `model_5500`、`model_5750` 和 `model_5999` 进行完整的八指令对比。这样可以判断后期变化属于全面性能退化，还是仅发生在偏航控制上的单向能力突变。
