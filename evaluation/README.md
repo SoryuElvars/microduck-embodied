@@ -105,6 +105,23 @@ uv run python \
   --output ~/projects/microduck-embodied/results/week02/figures/command_response_20_model_5999.png
 ```
 
+### 左右腿 Action 镜像诊断
+
+使用官方 `symmetry.py` 的 61 维 Observation 和 14 维 Action 镜像规则，分别
+计算 ONNX 本身的镜像等变误差，以及正负旋转、正负横移 Episode 的闭环成对
+误差。默认每 5 个控制步抽取一次 Observation 重新推理，即以 10 Hz 采样检查
+策略网络；闭环 Action 对比仍使用完整 50 Hz 数据。
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/analyze_action_symmetry.py \
+  --suite ~/projects/microduck-embodied/results/week02/summary/command_response_20_microduck_velocity_flat_5999.json \
+  --output-json ~/projects/microduck-embodied/results/week02/summary/action_symmetry_model_5999.json \
+  --output-figure ~/projects/microduck-embodied/results/week02/figures/action_symmetry_model_5999.png
+```
+
 ## 骨架校验
 
 从官方仓库的 `uv` 环境运行：
