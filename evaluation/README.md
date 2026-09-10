@@ -56,6 +56,22 @@ uv run python \
 汇总 JSON 会额外给出偏航方向计数、Fall Rate，以及偏航、速度、RMSE 和横向
 位移的均值、中位数、总体标准差、最小值和最大值。
 
+### 绘制 20-Episode 批次汇总图
+
+批次图包含累计航向、对齐后的 XY 轨迹、最终偏航分布，以及 Episode 平均
+`vx-wz` 关系。由于初始世界位置和朝向经过随机化，XY 轨迹会先转换到各自的
+初始机体坐标系，再进行叠加和求平均。
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/plot_locomotion_batch.py \
+  --summary ~/projects/microduck-embodied/results/week02/summary/straight_030_official_reset_20_microduck_velocity_flat_5999.json \
+  --output ~/projects/microduck-embodied/results/week02/figures/straight_030_official_reset_20_batch.png \
+  --smooth-window-s 1.0
+```
+
 ## 骨架校验
 
 从官方仓库的 `uv` 环境运行：
