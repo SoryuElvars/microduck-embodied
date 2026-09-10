@@ -20,6 +20,24 @@
 该部署形态评测不加载训练环境的 Reward Manager，因此汇总文件明确记录
 `reward_available: false`。Reward 和 Episode Return 将在后续官方环境式评测中加入。
 
+## 绘制单 Episode 诊断图
+
+使用 `matplotlib` 将原始 CSV 转换为四联图：前进速度、偏航角速度、累计航向和
+世界坐标系 XY 轨迹。浅色细线表示 50 Hz 原始数据，深色粗线表示默认 1 秒滑动
+平均，虚线表示目标命令或目标轨迹。
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/plot_locomotion_episode.py \
+  --input ~/projects/microduck-embodied/results/week02/raw/straight_030_seed42_episode000_steps.csv \
+  --output ~/projects/microduck-embodied/results/week02/figures/straight_030_model_5999.png \
+  --smooth-window-s 1.0
+```
+
+图像属于可审阅的实验结果，可以提交 Git；逐步原始 CSV 继续保持本地忽略。
+
 ## 骨架校验
 
 从官方仓库的 `uv` 环境运行：
