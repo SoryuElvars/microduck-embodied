@@ -138,31 +138,34 @@ microduck_embodied/
 
 ### 任务清单
 
-- [ ] 编写自动评测脚本，例如 `evaluation/locomotion_benchmark.py`。
+- [x] 编写自动评测脚本：[`evaluation/locomotion_benchmark.py`](./evaluation/locomotion_benchmark.py)。
 - [ ] 自动随机生成速度指令：
   - $v_x$
   - $v_y$
   - $\omega$
 - [ ] 连续运行 200～500 个 Episode。
-- [ ] 固定评测配置和随机种子，确保实验可以复现。
-- [ ] 自动保存逐 Episode 原始数据和汇总结果。
+- [x] 固定评测配置和随机种子，确保实验可以复现。
+- [x] 自动保存逐 Episode 原始数据和汇总结果。
 
 ### 必须统计的指标
 
-- [ ] $RMSE_{v_x}$
-- [ ] $RMSE_{v_y}$
-- [ ] $RMSE_{\omega}$
-- [ ] Fall Rate
+- [x] $RMSE_{v_x}$
+- [x] $RMSE_{v_y}$
+- [x] $RMSE_{\omega}$
+- [x] Fall Rate
 - [ ] Episode Return
-- [ ] Command Tracking Error
+- [x] Command Tracking Error（当前以三轴 RMSE 和平均实际速度表示）
 - [ ] Nominal Success Rate
 - [ ] 若 Torque 数据容易获取，再增加 Energy Proxy；否则暂缓。
 
 ### 必须生成的图表
 
-- [ ] Target Velocity vs Actual Velocity
+- [x] Target Velocity vs Actual Velocity
 - [ ] 典型成功轨迹
 - [ ] 典型失败轨迹或失稳案例
+
+当前 8 项固定指令、每项 20 Episode 的响应矩阵见：
+[`results/week02/command_response_20.md`](./results/week02/command_response_20.md)。
 
 ### 系统理解与说明材料
 

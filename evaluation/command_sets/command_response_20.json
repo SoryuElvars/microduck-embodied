@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "description": "Eight-command response matrix with twenty paired official-reset episodes per command.",
+  "defaults": {
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "episodes": 20,
+    "initial_state_mode": "official_reset"
+  },
+  "commands": [
+    {
+      "name": "stationary_official_reset_20",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": 0.0
+    },
+    {
+      "name": "forward_010_official_reset_20",
+      "vx": 0.1,
+      "vy": 0.0,
+      "wz": 0.0
+    },
+    {
+      "name": "forward_030_official_reset_20",
+      "vx": 0.3,
+      "vy": 0.0,
+      "wz": 0.0
+    },
+    {
+      "name": "backward_030_official_reset_20",
+      "vx": -0.3,
+      "vy": 0.0,
+      "wz": 0.0
+    },
+    {
+      "name": "lateral_pos_020_official_reset_20",
+      "vx": 0.0,
+      "vy": 0.2,
+      "wz": 0.0
+    },
+    {
+      "name": "lateral_neg_020_official_reset_20",
+      "vx": 0.0,
+      "vy": -0.2,
+      "wz": 0.0
+    },
+    {
+      "name": "yaw_pos_050_official_reset_20",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": 0.5
+    },
+    {
+      "name": "yaw_neg_050_official_reset_20",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": -0.5
+    }
+  ]
+}

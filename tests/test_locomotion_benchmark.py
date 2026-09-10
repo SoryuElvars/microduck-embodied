@@ -8,6 +8,7 @@ from pathlib import Path
 
 from evaluation.locomotion_benchmark import (
     DEFAULT_COMMAND_SET,
+    PROJECT_ROOT,
     load_command_set,
     quaternion_to_euler,
     sample_initial_state,
@@ -47,6 +48,29 @@ class CommandSetTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "unique"):
                 load_command_set(path)
+
+    def test_command_response_matrix_has_eight_paired_cases(self) -> None:
+        path = PROJECT_ROOT / "evaluation" / "command_sets" / "command_response_20.json"
+        commands = load_command_set(path)
+
+        self.assertEqual(len(commands), 8)
+        self.assertTrue(all(command.episodes == 20 for command in commands))
+        self.assertTrue(
+            all(command.initial_state_mode == "official_reset" for command in commands)
+        )
+        self.assertEqual(
+            [(command.vx, command.vy, command.wz) for command in commands],
+            [
+                (0.0, 0.0, 0.0),
+                (0.1, 0.0, 0.0),
+                (0.3, 0.0, 0.0),
+                (-0.3, 0.0, 0.0),
+                (0.0, 0.2, 0.0),
+                (0.0, -0.2, 0.0),
+                (0.0, 0.0, 0.5),
+                (0.0, 0.0, -0.5),
+            ],
+        )
 
     def test_identity_quaternion_has_zero_euler_angles(self) -> None:
         roll, pitch, yaw = quaternion_to_euler((1.0, 0.0, 0.0, 0.0))

@@ -540,9 +540,14 @@ def aggregate_episodes(episodes: list[dict[str, Any]]) -> dict[str, Any]:
         },
         "net_yaw_deg": describe(yaw_values),
         "mean_actual_vx": describe([episode["mean_actual_vx"] for episode in episodes]),
+        "mean_actual_vy": describe([episode["mean_actual_vy"] for episode in episodes]),
         "mean_actual_wz": describe([episode["mean_actual_wz"] for episode in episodes]),
         "rmse_vx": describe([episode["rmse_vx"] for episode in episodes]),
+        "rmse_vy": describe([episode["rmse_vy"] for episode in episodes]),
         "rmse_wz": describe([episode["rmse_wz"] for episode in episodes]),
+        "forward_distance_m": describe(
+            [episode["forward_distance_m"] for episode in episodes]
+        ),
         "lateral_displacement_m": describe(
             [episode["lateral_displacement_m"] for episode in episodes]
         ),
@@ -606,6 +611,47 @@ def write_summary(
     return path
 
 
+def write_suite_summary(
+    config: BenchmarkConfig,
+    results: list[tuple[CommandCase, list[dict[str, Any]], Path]],
+) -> Path:
+    """Write one compact index for comparing every command in a command set."""
+
+    summary_dir = config.output_dir / "summary"
+    summary_dir.mkdir(parents=True, exist_ok=True)
+    path = summary_dir / f"{config.command_set_path.stem}_{config.policy_path.stem}.json"
+    document = {
+        "schema_version": 1,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "benchmark_kind": "onnx_cpu_bam_command_response_suite",
+        "reward_available": False,
+        "command_set_path": str(config.command_set_path.relative_to(PROJECT_ROOT)),
+        "policy_path": str(config.policy_path.relative_to(config.microduck_rl_root)),
+        "policy_sha256": hashlib.sha256(config.policy_path.read_bytes()).hexdigest(),
+        "seed": config.seed,
+        "command_count": len(results),
+        "total_episodes": sum(len(episodes) for _, episodes, _ in results),
+        "paired_episode_seeds": True,
+        "commands": [
+            {
+                "name": command.name,
+                "vx": command.vx,
+                "vy": command.vy,
+                "wz": command.wz,
+                "warmup_s": command.warmup_s,
+                "duration_s": command.duration_s,
+                "episodes": command.episodes,
+                "initial_state_mode": command.initial_state_mode,
+                "summary_json": str(summary_path.relative_to(PROJECT_ROOT)),
+                "aggregate": aggregate_episodes(episodes),
+            }
+            for command, episodes, summary_path in results
+        ],
+    }
+    path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return path
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Validate or run the MicroDuck ONNX locomotion benchmark."
@@ -663,6 +709,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"  seed:               {config.seed}")
     print(f"  expected I/O:       {EXPECTED_OBSERVATION_SIZE} obs -> {EXPECTED_ACTION_SIZE} actions")
     print("  planned cases:")
+    suite_results = []
     for case in commands:
         print(
             f"    - {case.name}: cmd=({case.vx:+.2f}, {case.vy:+.2f}, "
@@ -686,7 +733,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                 f"fallen={episode_summary['fallen']}"
             )
         summary_path = write_summary(config, case, episode_summaries)
+        suite_results.append((case, episode_summaries, summary_path))
         print(f"summary: {summary_path}")
+    if len(suite_results) > 1:
+        suite_summary_path = write_suite_summary(config, suite_results)
+        print(f"suite summary: {suite_summary_path}")
     return 0
 
 

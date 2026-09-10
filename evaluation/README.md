@@ -4,7 +4,7 @@
 `microduck-embodied`，但继续复用官方 `microduck_rl` 的 MuJoCo 模型、BAM M6
 执行器、Observation 构造和 ONNX 推理组件。
 
-## 当前阶段：Phase 1 单 Episode
+## 当前阶段：8 项指令响应矩阵
 
 当前入口已经能够：
 
@@ -16,6 +16,8 @@
 - 无窗口执行 1 秒零命令预热和 10 秒固定命令；
 - 将 61 维 Observation、14 维 Action、速度、位置和姿态写入逐步 CSV；
 - 输出速度 RMSE、平均速度、净偏航、位移和跌倒代理指标。
+- 以相同的 20 个种子运行 8 项固定指令，共 160 个 Episode；
+- 生成每项指令的独立 summary 和跨指令 suite summary。
 
 该部署形态评测不加载训练环境的 Reward Manager，因此汇总文件明确记录
 `reward_available: false`。Reward 和 Episode Return 将在后续官方环境式评测中加入。
@@ -70,6 +72,37 @@ uv run python \
   --summary ~/projects/microduck-embodied/results/week02/summary/straight_030_official_reset_20_microduck_velocity_flat_5999.json \
   --output ~/projects/microduck-embodied/results/week02/figures/straight_030_official_reset_20_batch.png \
   --smooth-window-s 1.0
+```
+
+## 8 项指令响应矩阵
+
+在单一直行缺陷通过 20 个官方 reset 得到确认后，使用同一组种子 `42–61`
+分别评测静止、慢速/正常前进、后退、正负横移和正负旋转。每项运行 20 个
+Episode，共 160 个 Episode；相同 Episode 编号在各指令间共享初始状态，便于
+成对比较。
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/locomotion_benchmark.py \
+  --policy logs/rsl_rl/velocity/2026-09-05_22-08-33_baseline-flat-resume-5000/microduck_velocity_flat_5999.onnx \
+  --command-set ~/projects/microduck-embodied/evaluation/command_sets/command_response_20.json
+```
+
+评测器会为每项指令写出独立 JSON，并额外生成一个跨指令 suite summary。该
+矩阵用于判断单侧偏航是否存在于静止、前后运动、横移和正负旋转等不同命令
+区域，不把它误当成只与正常前进有关的问题。
+
+生成跨指令比较图：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/plot_command_response.py \
+  --suite ~/projects/microduck-embodied/results/week02/summary/command_response_20_microduck_velocity_flat_5999.json \
+  --output ~/projects/microduck-embodied/results/week02/figures/command_response_20_model_5999.png
 ```
 
 ## 骨架校验
