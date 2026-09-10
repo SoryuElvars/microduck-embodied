@@ -4,7 +4,8 @@
   "defaults": {
     "warmup_s": 1.0,
     "duration_s": 10.0,
-    "episodes": 1
+    "episodes": 1,
+    "initial_state_mode": "fixed"
   },
   "commands": [
     {

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "description": "Twenty straight-command episodes using the official velocity-task base reset pose ranges.",
+  "defaults": {
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "episodes": 20,
+    "initial_state_mode": "official_reset"
+  },
+  "commands": [
+    {
+      "name": "straight_030_official_reset_20",
+      "vx": 0.3,
+      "vy": 0.0,
+      "wz": 0.0
+    }
+  ]
+}

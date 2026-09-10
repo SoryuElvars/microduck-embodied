@@ -38,6 +38,24 @@ uv run python \
 
 图像属于可审阅的实验结果，可以提交 Git；逐步原始 CSV 继续保持本地忽略。
 
+## 20-Episode 官方 Reset 小批量
+
+该命令集使用官方 Velocity 基础环境的初始根状态范围：`x/y` 为
+`[-0.5, 0.5] m`、`z` 为 `[0.12, 0.13] m`、`yaw` 为 `[-π, π]`。官方配置的
+初始关节位置与速度扰动均为 0，因此这里不会额外编造关节扰动。
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/locomotion_benchmark.py \
+  --policy logs/rsl_rl/velocity/2026-09-05_22-08-33_baseline-flat-resume-5000/microduck_velocity_flat_5999.onnx \
+  --command-set ~/projects/microduck-embodied/evaluation/command_sets/straight_20_official_reset.json
+```
+
+汇总 JSON 会额外给出偏航方向计数、Fall Rate，以及偏航、速度、RMSE 和横向
+位移的均值、中位数、总体标准差、最小值和最大值。
+
 ## 骨架校验
 
 从官方仓库的 `uv` 环境运行：

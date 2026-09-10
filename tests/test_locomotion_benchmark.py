@@ -10,6 +10,7 @@ from evaluation.locomotion_benchmark import (
     DEFAULT_COMMAND_SET,
     load_command_set,
     quaternion_to_euler,
+    sample_initial_state,
     wrapped_angle_delta,
 )
 
@@ -24,11 +25,17 @@ class CommandSetTests(unittest.TestCase):
         self.assertEqual(commands[0].warmup_s, 1.0)
         self.assertEqual(commands[0].duration_s, 10.0)
         self.assertEqual(commands[0].episodes, 1)
+        self.assertEqual(commands[0].initial_state_mode, "fixed")
 
     def test_duplicate_command_names_are_rejected(self) -> None:
         document = {
             "schema_version": 1,
-            "defaults": {"warmup_s": 1.0, "duration_s": 10.0, "episodes": 1},
+            "defaults": {
+                "warmup_s": 1.0,
+                "duration_s": 10.0,
+                "episodes": 1,
+                "initial_state_mode": "fixed",
+            },
             "commands": [
                 {"name": "duplicate", "vx": 0.1, "vy": 0.0, "wz": 0.0},
                 {"name": "duplicate", "vx": 0.2, "vy": 0.0, "wz": 0.0},
@@ -52,6 +59,20 @@ class CommandSetTests(unittest.TestCase):
         delta = wrapped_angle_delta(math.radians(-179.0), math.radians(179.0))
 
         self.assertAlmostEqual(math.degrees(delta), 2.0)
+
+    def test_official_reset_sampling_is_seeded_and_in_range(self) -> None:
+        first = sample_initial_state("official_reset", 42)
+        repeated = sample_initial_state("official_reset", 42)
+
+        self.assertEqual(first, repeated)
+        self.assertGreaterEqual(first["x"], -0.5)
+        self.assertLessEqual(first["x"], 0.5)
+        self.assertGreaterEqual(first["y"], -0.5)
+        self.assertLessEqual(first["y"], 0.5)
+        self.assertGreaterEqual(first["z"], 0.12)
+        self.assertLessEqual(first["z"], 0.13)
+        self.assertGreaterEqual(first["yaw"], -math.pi)
+        self.assertLessEqual(first["yaw"], math.pi)
 
 
 if __name__ == "__main__":

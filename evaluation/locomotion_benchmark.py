@@ -20,7 +20,7 @@ import sys
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path
-from statistics import fmean
+from statistics import fmean, median, pstdev
 from typing import Any, Sequence
 
 
@@ -31,6 +31,13 @@ DECIMATION = 4
 BAM_VIN = 7.4
 BAM_VIN_DROP_GAIN = 0.1
 FALL_TILT_DEG = 70.0
+INITIAL_STATE_MODES = {"fixed", "official_reset"}
+OFFICIAL_RESET_RANGES = {
+    "x": (-0.5, 0.5),
+    "y": (-0.5, 0.5),
+    "z": (0.12, 0.13),
+    "yaw": (-math.pi, math.pi),
+}
 PROJECT_ROOT = Path(__file__).parents[1]
 DEFAULT_MICRODUCK_RL_ROOT = Path.home() / "projects" / "microduck_rl"
 DEFAULT_COMMAND_SET = Path(__file__).parent / "command_sets" / "straight_only.json"
@@ -48,6 +55,7 @@ class CommandCase:
     warmup_s: float
     duration_s: float
     episodes: int
+    initial_state_mode: str
 
     @classmethod
     def from_mapping(
@@ -70,6 +78,7 @@ class CommandCase:
             warmup_s=float(value("warmup_s")),
             duration_s=float(value("duration_s")),
             episodes=int(value("episodes")),
+            initial_state_mode=str(value("initial_state_mode")),
         )
         case.validate()
         return case
@@ -85,6 +94,11 @@ class CommandCase:
             raise ValueError(f"command {self.name!r} duration_s must be finite and > 0")
         if self.episodes < 1:
             raise ValueError(f"command {self.name!r} episodes must be >= 1")
+        if self.initial_state_mode not in INITIAL_STATE_MODES:
+            allowed = ", ".join(sorted(INITIAL_STATE_MODES))
+            raise ValueError(
+                f"command {self.name!r} initial_state_mode must be one of: {allowed}"
+            )
 
 
 @dataclass(frozen=True)
@@ -175,7 +189,26 @@ def load_official_inference_module(microduck_rl_root: Path) -> Any:
     return module
 
 
-def create_runtime(config: BenchmarkConfig, episode_seed: int) -> Runtime:
+def sample_initial_state(mode: str, episode_seed: int) -> dict[str, float]:
+    """Sample a documented reset pose without inventing joint perturbations."""
+
+    if mode == "fixed":
+        return {"x": 0.0, "y": 0.0, "z": 0.125, "yaw": 0.0}
+    if mode != "official_reset":
+        raise ValueError(f"unknown initial state mode: {mode}")
+
+    rng = random.Random(episode_seed)
+    return {
+        name: rng.uniform(lower, upper)
+        for name, (lower, upper) in OFFICIAL_RESET_RANGES.items()
+    }
+
+
+def create_runtime(
+    config: BenchmarkConfig,
+    episode_seed: int,
+    initial_state_mode: str,
+) -> tuple[Runtime, dict[str, float]]:
     """Create a fresh nominal CPU MuJoCo + BAM + ONNX runtime."""
 
     official = load_official_inference_module(config.microduck_rl_root)
@@ -218,8 +251,19 @@ def create_runtime(config: BenchmarkConfig, episode_seed: int) -> Runtime:
     qpos_adr = int(model.jnt_qposadr[freejoint_id])
     qvel_adr = int(model.jnt_dofadr[freejoint_id])
 
-    data.qpos[qpos_adr : qpos_adr + 3] = (0.0, 0.0, 0.125)
-    data.qpos[qpos_adr + 3 : qpos_adr + 7] = (1.0, 0.0, 0.0, 0.0)
+    initial_state = sample_initial_state(initial_state_mode, episode_seed)
+    half_yaw = initial_state["yaw"] / 2.0
+    data.qpos[qpos_adr : qpos_adr + 3] = (
+        initial_state["x"],
+        initial_state["y"],
+        initial_state["z"],
+    )
+    data.qpos[qpos_adr + 3 : qpos_adr + 7] = (
+        math.cos(half_yaw),
+        0.0,
+        0.0,
+        math.sin(half_yaw),
+    )
     for index, joint_qpos_index in enumerate(policy.joint_qpos_indices):
         data.qpos[joint_qpos_index] = policy.default_pose[index]
     bam_ctrl.reset(data.qpos)
@@ -240,15 +284,18 @@ def create_runtime(config: BenchmarkConfig, episode_seed: int) -> Runtime:
             f"unexpected action size: {output_shape}; expected [1, {EXPECTED_ACTION_SIZE}]"
         )
 
-    return Runtime(
-        official=official,
-        model=model,
-        data=data,
-        bam_ctrl=bam_ctrl,
-        policy=policy,
-        qpos_adr=qpos_adr,
-        qvel_adr=qvel_adr,
-        control_dt=DECIMATION * model.opt.timestep,
+    return (
+        Runtime(
+            official=official,
+            model=model,
+            data=data,
+            bam_ctrl=bam_ctrl,
+            policy=policy,
+            qpos_adr=qpos_adr,
+            qvel_adr=qvel_adr,
+            control_dt=DECIMATION * model.opt.timestep,
+        ),
+        initial_state,
     )
 
 
@@ -333,7 +380,11 @@ def run_episode(
     """
 
     episode_seed = config.seed + episode
-    runtime = create_runtime(config, episode_seed)
+    runtime, initial_state = create_runtime(
+        config,
+        episode_seed,
+        command.initial_state_mode,
+    )
     np = runtime.official.np
     rows: list[dict[str, Any]] = []
 
@@ -441,6 +492,7 @@ def run_episode(
     summary = {
         "episode": episode,
         "seed": episode_seed,
+        "initial_state": initial_state,
         "steps_completed": len(test_rows),
         "duration_completed_s": len(test_rows) * runtime.control_dt,
         "rmse_vx": _rmse([row["actual_vx"] for row in test_rows], command.vx),
@@ -458,6 +510,43 @@ def run_episode(
         "raw_steps_csv": str(raw_path.relative_to(PROJECT_ROOT)),
     }
     return summary
+
+
+def describe(values: Sequence[float]) -> dict[str, float]:
+    """Return compact population statistics for a completed episode batch."""
+
+    return {
+        "mean": fmean(values),
+        "median": median(values),
+        "std": pstdev(values),
+        "min": min(values),
+        "max": max(values),
+    }
+
+
+def aggregate_episodes(episodes: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize direction consistency and the main tracking metrics."""
+
+    yaw_values = [episode["net_yaw_deg"] for episode in episodes]
+    near_zero_deg = 1.0
+    return {
+        "episode_count": len(episodes),
+        "fall_rate": fmean(float(episode["fallen"]) for episode in episodes),
+        "yaw_direction_counts": {
+            "positive": sum(value > near_zero_deg for value in yaw_values),
+            "near_zero": sum(abs(value) <= near_zero_deg for value in yaw_values),
+            "negative": sum(value < -near_zero_deg for value in yaw_values),
+            "near_zero_threshold_deg": near_zero_deg,
+        },
+        "net_yaw_deg": describe(yaw_values),
+        "mean_actual_vx": describe([episode["mean_actual_vx"] for episode in episodes]),
+        "mean_actual_wz": describe([episode["mean_actual_wz"] for episode in episodes]),
+        "rmse_vx": describe([episode["rmse_vx"] for episode in episodes]),
+        "rmse_wz": describe([episode["rmse_wz"] for episode in episodes]),
+        "lateral_displacement_m": describe(
+            [episode["lateral_displacement_m"] for episode in episodes]
+        ),
+    }
 
 
 def write_summary(
@@ -504,7 +593,13 @@ def write_summary(
             "wz": command.wz,
             "warmup_s": command.warmup_s,
             "duration_s": command.duration_s,
+            "episodes": command.episodes,
+            "initial_state_mode": command.initial_state_mode,
+            "official_reset_ranges": (
+                OFFICIAL_RESET_RANGES if command.initial_state_mode == "official_reset" else None
+            ),
         },
+        "aggregate": aggregate_episodes(episodes),
         "episodes": episodes,
     }
     path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -572,7 +667,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(
             f"    - {case.name}: cmd=({case.vx:+.2f}, {case.vy:+.2f}, "
             f"{case.wz:+.2f}), warmup={case.warmup_s:.1f}s, "
-            f"duration={case.duration_s:.1f}s, episodes={case.episodes}"
+            f"duration={case.duration_s:.1f}s, episodes={case.episodes}, "
+            f"initial_state={case.initial_state_mode}"
         )
 
     if args.validate_only:
