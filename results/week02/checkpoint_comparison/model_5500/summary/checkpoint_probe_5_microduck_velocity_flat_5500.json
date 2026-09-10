@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-10T13:12:11.115021+00:00",
+  "benchmark_kind": "onnx_cpu_bam_command_response_suite",
+  "reward_available": false,
+  "command_set_path": "evaluation/command_sets/checkpoint_probe_5.json",
+  "policy_path": "logs/rsl_rl/velocity/2026-09-05_22-08-33_baseline-flat-resume-5000/microduck_velocity_flat_5500.onnx",
+  "policy_sha256": "03e28dac49cbe4f12181277f3cb196a411a755a8e83513faff4002bd0d64f1f3",
+  "seed": 42,
+  "command_count": 3,
+  "total_episodes": 15,
+  "paired_episode_seeds": true,
+  "commands": [
+    {
+      "name": "forward_030_checkpoint_probe_5",
+      "vx": 0.3,
+      "vy": 0.0,
+      "wz": 0.0,
+      "warmup_s": 1.0,
+      "duration_s": 10.0,
+      "episodes": 5,
+      "initial_state_mode": "official_reset",
+      "summary_json": "results/week02/checkpoint_comparison/model_5500/summary/forward_030_checkpoint_probe_5_microduck_velocity_flat_5500.json",
+      "aggregate": {
+        "episode_count": 5,
+        "fall_rate": 0.0,
+        "yaw_direction_counts": {
+          "positive": 5,
+          "near_zero": 0,
+          "negative": 0,
+          "near_zero_threshold_deg": 1.0
+        },
+        "net_yaw_deg": {
+          "mean": 74.37579406506998,
+          "median": 75.23141837075954,
+          "std": 4.631986375182894,
+          "min": 67.10755177210088,
+          "max": 80.30310641409663
+        },
+        "mean_actual_vx": {
+          "mean": 0.14524393183737994,
+          "median": 0.14513930781558157,
+          "std": 0.0006883926810355842,
+          "min": 0.14430973791331053,
+          "max": 0.1463953223004937
+        },
+        "mean_actual_vy": {
+          "mean": 0.003341834257962182,
+          "median": 0.003263517910381779,
+          "std": 0.00013121088358590305,
+          "min": 0.0032492394889704884,
+          "max": 0.003593726769089699
+        },
+        "mean_actual_wz": {
+          "mean": 0.13294030114137487,
+          "median": 0.1340534357092262,
+          "std": 0.00847623189651521,
+          "min": 0.12102106134384898,
+          "max": 0.14559022729620674
+        },
+        "rmse_vx": {
+          "mean": 0.1596807999695657,
+          "median": 0.15979088705006425,
+          "std": 0.0006354800241575561,
+          "min": 0.15861486332400684,
+          "max": 0.1605401924914639
+        },
+        "rmse_vy": {
+          "mean": 0.10322439508165612,
+          "median": 0.10332253673376016,
+          "std": 0.00042170589772595236,
+          "min": 0.10253819831981528,
+          "max": 0.10375383242952302
+        },
+        "rmse_wz": {
+          "mean": 0.9311234082661868,
+          "median": 0.930905323598637,
+          "std": 0.0037242470920557246,
+          "min": 0.9257040939058528,
+          "max": 0.9373520025166872
+        },
+        "forward_distance_m": {
+          "mean": 1.024225350389338,
+          "median": 1.0233371744139528,
+          "std": 0.06588074565377747,
+          "min": 0.9392335866011811,
+          "max": 1.0999688367602303
+        },
+        "lateral_displacement_m": {
+          "mean": 0.8138652841024461,
+          "median": 0.8252593708995697,
+          "std": 0.04489083485133231,
+          "min": 0.7587646401075592,
+          "max": 0.8674179798413726
+        }
+      }
+    },
+    {
+      "name": "yaw_pos_050_checkpoint_probe_5",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": 0.5,
+      "warmup_s": 1.0,
+      "duration_s": 10.0,
+      "episodes": 5,
+      "initial_state_mode": "official_reset",
+      "summary_json": "results/week02/checkpoint_comparison/model_5500/summary/yaw_pos_050_checkpoint_probe_5_microduck_velocity_flat_5500.json",
+      "aggregate": {
+        "episode_count": 5,
+        "fall_rate": 0.0,
+        "yaw_direction_counts": {
+          "positive": 5,
+          "near_zero": 0,
+          "negative": 0,
+          "near_zero_threshold_deg": 1.0
+        },
+        "net_yaw_deg": {
+          "mean": 2.8630412304591903,
+          "median": 2.9104422973860644,
+          "std": 0.12100519449957264,
+          "min": 2.6266046118096242,
+          "max": 2.969877943324253
+        },
+        "mean_actual_vx": {
+          "mean": 0.00026427275331589043,
+          "median": 0.0002453271793365275,
+          "std": 5.0443267831098e-05,
+          "min": 0.00020739807253266918,
+          "max": 0.0003372420740342932
+        },
+        "mean_actual_vy": {
+          "mean": 0.00018190898387074412,
+          "median": 0.00017663291819553707,
+          "std": 4.9634404492366826e-05,
+          "min": 0.00010461980351101374,
+          "max": 0.0002523218439455377
+        },
+        "mean_actual_wz": {
+          "mean": 0.004601702295392478,
+          "median": 0.0044619249716383565,
+          "std": 0.00036292888490872306,
+          "min": 0.004219409234116412,
+          "max": 0.00508073814960403
+        },
+        "rmse_vx": {
+          "mean": 0.0015388367853962,
+          "median": 0.0014668853525270538,
+          "std": 0.00018191853103055602,
+          "min": 0.001323863886696298,
+          "max": 0.0018559090361113487
+        },
+        "rmse_vy": {
+          "mean": 0.001995533201185798,
+          "median": 0.0019679562892475915,
+          "std": 0.00015951079431204222,
+          "min": 0.0017567072080388567,
+          "max": 0.0021943473564879586
+        },
+        "rmse_wz": {
+          "mean": 0.4959651643886548,
+          "median": 0.4961166763628209,
+          "std": 0.0003356137876436741,
+          "min": 0.49549627178068556,
+          "max": 0.49632427900191317
+        },
+        "forward_distance_m": {
+          "mean": 0.002685521763861941,
+          "median": 0.002750163499037777,
+          "std": 0.0003181571575978218,
+          "min": 0.002123609624410397,
+          "max": 0.0030544546572286867
+        },
+        "lateral_displacement_m": {
+          "mean": 0.0018624664051437485,
+          "median": 0.0018451330464112296,
+          "std": 6.25330438945624e-05,
+          "min": 0.0017679470068496606,
+          "max": 0.0019541378579044084
+        }
+      }
+    },
+    {
+      "name": "yaw_neg_050_checkpoint_probe_5",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": -0.5,
+      "warmup_s": 1.0,
+      "duration_s": 10.0,
+      "episodes": 5,
+      "initial_state_mode": "official_reset",
+      "summary_json": "results/week02/checkpoint_comparison/model_5500/summary/yaw_neg_050_checkpoint_probe_5_microduck_velocity_flat_5500.json",
+      "aggregate": {
+        "episode_count": 5,
+        "fall_rate": 0.0,
+        "yaw_direction_counts": {
+          "positive": 0,
+          "near_zero": 0,
+          "negative": 5,
+          "near_zero_threshold_deg": 1.0
+        },
+        "net_yaw_deg": {
+          "mean": -6.912359637188705,
+          "median": -6.829284428643867,
+          "std": 0.13613294550267271,
+          "min": -7.114962233406957,
+          "max": -6.784500164318147
+        },
+        "mean_actual_vx": {
+          "mean": 0.0003445135359948836,
+          "median": 0.00033358670801681003,
+          "std": 2.786860155130091e-05,
+          "min": 0.0003046147002460202,
+          "max": 0.00038063849200989353
+        },
+        "mean_actual_vy": {
+          "mean": -0.00025669869160501547,
+          "median": -0.0002750604561997534,
+          "std": 4.362584290854458e-05,
+          "min": -0.0003081284260551911,
+          "max": -0.00018857081850001122
+        },
+        "mean_actual_wz": {
+          "mean": -0.01224336009857763,
+          "median": -0.012082095569649736,
+          "std": 0.00046955059154206257,
+          "min": -0.013106865463222104,
+          "max": -0.011716545110035238
+        },
+        "rmse_vx": {
+          "mean": 0.0019177754009075138,
+          "median": 0.0019445047743725096,
+          "std": 5.351844006033632e-05,
+          "min": 0.0018143465008443652,
+          "max": 0.0019602771195718137
+        },
+        "rmse_vy": {
+          "mean": 0.0012317328246723787,
+          "median": 0.001200612388586107,
+          "std": 7.573358504522105e-05,
+          "min": 0.0011729188728168902,
+          "max": 0.001376492291888001
+        },
+        "rmse_wz": {
+          "mean": 0.4895040050219809,
+          "median": 0.4894911026927628,
+          "std": 0.0004426310678221204,
+          "min": 0.48880953883219924,
+          "max": 0.4901793391441875
+        },
+        "forward_distance_m": {
+          "mean": 0.002969861184241661,
+          "median": 0.003010386322241161,
+          "std": 0.00012364298219050965,
+          "min": 0.002728557094481405,
+          "max": 0.003068625482015823
+        },
+        "lateral_displacement_m": {
+          "mean": -0.0029971247462997376,
+          "median": -0.0030415556131244475,
+          "std": 0.0001889722868276394,
+          "min": -0.003283347368095304,
+          "max": -0.0027723464876327755
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "description": "Paired five-seed probe for comparing locomotion checkpoints 5000 through 5999.",
+  "defaults": {
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "episodes": 5,
+    "initial_state_mode": "official_reset"
+  },
+  "commands": [
+    {
+      "name": "forward_030_checkpoint_probe_5",
+      "vx": 0.3,
+      "vy": 0.0,
+      "wz": 0.0
+    },
+    {
+      "name": "yaw_pos_050_checkpoint_probe_5",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": 0.5
+    },
+    {
+      "name": "yaw_neg_050_checkpoint_probe_5",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": -0.5
+    }
+  ]
+}

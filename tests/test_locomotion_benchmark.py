@@ -72,6 +72,29 @@ class CommandSetTests(unittest.TestCase):
             ],
         )
 
+    def test_checkpoint_probe_has_three_paired_five_episode_cases(self) -> None:
+        path = (
+            PROJECT_ROOT
+            / "evaluation"
+            / "command_sets"
+            / "checkpoint_probe_5.json"
+        )
+        commands = load_command_set(path)
+
+        self.assertEqual(len(commands), 3)
+        self.assertTrue(all(command.episodes == 5 for command in commands))
+        self.assertTrue(
+            all(command.initial_state_mode == "official_reset" for command in commands)
+        )
+        self.assertEqual(
+            [(command.vx, command.vy, command.wz) for command in commands],
+            [
+                (0.3, 0.0, 0.0),
+                (0.0, 0.0, 0.5),
+                (0.0, 0.0, -0.5),
+            ],
+        )
+
     def test_identity_quaternion_has_zero_euler_angles(self) -> None:
         roll, pitch, yaw = quaternion_to_euler((1.0, 0.0, 0.0, 0.0))
 

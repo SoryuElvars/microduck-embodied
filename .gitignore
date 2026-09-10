@@ -28,6 +28,7 @@ checkpoints/
 
 # Raw experiment artifacts
 results/raw/
+results/week02/checkpoint_comparison/*/raw/
 videos/raw/
 
 # MuJoCo and native build artifacts
@@ -41,4 +42,3 @@ dist/
 .DS_Store
 Thumbs.db
 Desktop.ini
-
