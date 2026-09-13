@@ -157,8 +157,9 @@ def plot_command_response(suite_path: Path, output_path: Path) -> None:
         for episode in summary["episodes"]
     )
     total_episodes = int(suite["total_episodes"])
+    policy_label = Path(str(suite["policy_path"])).stem
     fig.suptitle(
-        f"MicroDuck model_5999 — 8-command response matrix "
+        f"MicroDuck {policy_label} — 8-command response matrix "
         f"({total_episodes} episodes, {fall_count} falls)"
     )
     fig.tight_layout()

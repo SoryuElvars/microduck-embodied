@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-13",
+  "model": {
+    "publisher": "pollen-robotics",
+    "repository": "pollen-robotics/microduck-policies",
+    "revision": "088524a64e2557dc453256b6071dbb9d23888802",
+    "filename": "alpha_walking.onnx",
+    "size_bytes": 793705,
+    "sha256": "e36332d383997d51401897734cd3e79cf5038406feddb18b4d57ecfb141daa6c",
+    "observation_size": 61,
+    "action_size": 14,
+    "control_frequency_hz": 50
+  },
+  "protocol": {
+    "microduck_rl_commit": "844acfd508f30d4260dafdee98a2d7c9dfbe6bd4",
+    "command_set": "evaluation/command_sets/checkpoint_response_5.json",
+    "command_count": 8,
+    "episodes_per_command": 5,
+    "total_episodes": 40,
+    "reset_seeds": [42, 43, 44, 45, 46],
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "runtime": "CPU MuJoCo + BAM M6 XL330",
+    "reward_available": false
+  },
+  "aggregate": {
+    "fall_count": 0,
+    "fall_rate": 0.0,
+    "standing_success_count": 5,
+    "standing_success_rate": 1.0,
+    "motion_success_count": 0,
+    "motion_episode_count": 35,
+    "motion_success_rate": 0.0,
+    "overall_success_count": 5,
+    "overall_success_rate": 0.125
+  },
+  "commands": [
+    {"name": "stationary", "target": [0.0, 0.0, 0.0], "actual_mean": [-0.0000, 0.0000, -0.0006], "net_yaw_deg": -0.3, "rmse": [0.0007, 0.0002, 0.0029]},
+    {"name": "vx_pos_010", "target": [0.1, 0.0, 0.0], "actual_mean": [0.0004, 0.0001, -0.0013], "net_yaw_deg": -0.7, "rmse": [0.0997, 0.0011, 0.0132]},
+    {"name": "vx_pos_030", "target": [0.3, 0.0, 0.0], "actual_mean": [0.1078, 0.0048, -0.0764], "net_yaw_deg": -42.9, "rmse": [0.1938, 0.1173, 0.7087]},
+    {"name": "vx_neg_030", "target": [-0.3, 0.0, 0.0], "actual_mean": [-0.0003, 0.0003, -0.0006], "net_yaw_deg": -0.3, "rmse": [0.2997, 0.0015, 0.0093]},
+    {"name": "vy_pos_020", "target": [0.0, 0.2, 0.0], "actual_mean": [0.0001, 0.0002, -0.0042], "net_yaw_deg": -2.4, "rmse": [0.0007, 0.1998, 0.0189]},
+    {"name": "vy_neg_020", "target": [0.0, -0.2, 0.0], "actual_mean": [0.0002, 0.0001, 0.0018], "net_yaw_deg": 1.1, "rmse": [0.0015, 0.2001, 0.0133]},
+    {"name": "wz_pos_050", "target": [0.0, 0.0, 0.5], "actual_mean": [0.0002, 0.0003, 0.0080], "net_yaw_deg": 4.8, "rmse": [0.0011, 0.0018, 0.4928]},
+    {"name": "wz_neg_050", "target": [0.0, 0.0, -0.5], "actual_mean": [0.0002, 0.0001, -0.0080], "net_yaw_deg": -4.7, "rmse": [0.0010, 0.0004, 0.4926]}
+  ],
+  "source_suite": "artifacts/week03/01_official_alpha_walking/quick_screen/summary/checkpoint_response_5_alpha_walking.json",
+  "gate": {
+    "passed": false,
+    "decision": "Do not promote to 8x20, random-400, or full OOD testing before compatibility investigation."
+  }
+}

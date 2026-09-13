@@ -44,6 +44,18 @@ DEFAULT_COMMAND_SET = Path(__file__).parent / "command_sets" / "straight_only.js
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "artifacts" / "week02" / "01_baseline_5999"
 
 
+def path_for_record(path: Path, *roots: Path) -> str:
+    """Return a stable relative path when possible, otherwise an absolute path."""
+
+    resolved_path = path.resolve()
+    for root in roots:
+        try:
+            return str(resolved_path.relative_to(root.resolve()))
+        except ValueError:
+            continue
+    return str(resolved_path)
+
+
 @dataclass(frozen=True)
 class CommandCase:
     """One reproducible velocity-command evaluation case."""
@@ -577,7 +589,11 @@ def write_summary(
         "benchmark_kind": "onnx_cpu_bam_deployment_rehearsal",
         "reward_available": False,
         "microduck_rl_commit": official_commit,
-        "policy_path": str(config.policy_path.relative_to(config.microduck_rl_root)),
+        "policy_path": path_for_record(
+            config.policy_path,
+            config.microduck_rl_root,
+            PROJECT_ROOT,
+        ),
         "policy_sha256": policy_hash,
         "command_set_path": str(config.command_set_path.relative_to(PROJECT_ROOT)),
         "runtime": {
@@ -626,7 +642,11 @@ def write_suite_summary(
         "benchmark_kind": "onnx_cpu_bam_command_response_suite",
         "reward_available": False,
         "command_set_path": str(config.command_set_path.relative_to(PROJECT_ROOT)),
-        "policy_path": str(config.policy_path.relative_to(config.microduck_rl_root)),
+        "policy_path": path_for_record(
+            config.policy_path,
+            config.microduck_rl_root,
+            PROJECT_ROOT,
+        ),
         "policy_sha256": hashlib.sha256(config.policy_path.read_bytes()).hexdigest(),
         "seed": config.seed,
         "command_count": len(results),

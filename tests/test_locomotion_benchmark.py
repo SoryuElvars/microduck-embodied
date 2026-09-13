@@ -10,6 +10,7 @@ from evaluation.locomotion_benchmark import (
     DEFAULT_COMMAND_SET,
     PROJECT_ROOT,
     load_command_set,
+    path_for_record,
     quaternion_to_euler,
     sample_initial_state,
     wrapped_angle_delta,
@@ -17,6 +18,27 @@ from evaluation.locomotion_benchmark import (
 
 
 class CommandSetTests(unittest.TestCase):
+    def test_policy_path_can_be_recorded_from_official_or_project_root(self) -> None:
+        official_root = Path("/workspace/microduck_rl")
+        project_root = Path("/workspace/microduck-embodied")
+
+        self.assertEqual(
+            path_for_record(
+                official_root / "logs" / "velocity" / "policy.onnx",
+                official_root,
+                project_root,
+            ),
+            "logs/velocity/policy.onnx",
+        )
+        self.assertEqual(
+            path_for_record(
+                project_root / "artifacts" / "week03" / "policy.onnx",
+                official_root,
+                project_root,
+            ),
+            "artifacts/week03/policy.onnx",
+        )
+
     def test_straight_only_contract(self) -> None:
         commands = load_command_set(DEFAULT_COMMAND_SET)
 

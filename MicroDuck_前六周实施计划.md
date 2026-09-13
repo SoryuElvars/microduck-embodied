@@ -34,8 +34,8 @@ MuJoCo
 |---|---|---|---|
 | 第 1 周 | 跑通官方 `microduck_rl` 全链路 | Train → Play → ONNX Export → Inference | 证明掌握官方 RL 技术栈 |
 | 第 2 周 | 理解并评测 Locomotion | Observation/Action/Reward 梳理 + Benchmark | 从“运行 Demo”升级为“分析策略” |
-| 第 3 周 | Reality Gap / 鲁棒性实验 | Friction、Delay、Motor Strength、Backlash | 形成 Sim2Real-ready 实验能力 |
-| 第 4 周 | PointGoal + 传统控制 Baseline | 随机 Start/Goal 条件下自主到达 | 完成第一个自己的核心模块 |
+| 第 3 周 | 底层模型选择、训练与鲁棒性实验 | 官方模型与自训练候选完成 Nominal/OOD 对比并冻结导航底层 | 形成 Sim2Real-ready 实验能力 |
+| 第 4 周 | PointGoal + 传统控制对比 | Naive P 与受限 Go-to-Goal 在随机 Start/Goal 下统一评测 | 完成第一个自己的核心模块 |
 | 第 5 周 | RL Navigator | PPO：Goal → 速度指令 | 形成分层 RL 系统 |
 | 第 6 周 | 对比实验与项目整理 | Classical vs RL + OOD + README + 视频 | 达到可正式投递的项目版本 |
 
@@ -214,13 +214,73 @@ State Feedback
 
 ---
 
-## 5. 第 3 周：Reality Gap 与鲁棒性实验
+## 5. 第 3 周：底层模型选择、训练与鲁棒性实验
 
 ### 本周目标
 
-完成真正的敏感性测试，并比较 Baseline Policy 与 Robust Policy 在相同 OOD 条件下的表现。
+在进入导航开发前，评测官方推理模型、训练自己的单变量候选模型，并在统一的
+Nominal/OOD 协议下选择一个可冻结的底层 Locomotion Policy。第三周完成的是
+控制器级 Reality Gap 敏感性实验；没有真机数据时，结论应标记为
+`Sim2Real proxy`，不得写成已经完成真实 Reality Gap 验证。
 
-### 必做实验参数
+候选模型分为：
+
+- 已有失败基线：自训练 `model_5999`；
+- 官方参考模型：固定 Hugging Face revision 和 SHA-256 的
+  `alpha_walking.onnx`；
+- 自训练候选：只收紧 angular-velocity tracking std 的新模型。
+
+`model_5999` 用于保留失败基线，不再为它投入与优胜候选相同规模的完整 OOD
+预算。官方模型是否用于第四周，必须由本项目的统一评测决定，不能因“官方”身份
+免除验收。
+
+### 5.1 官方模型接入与 Nominal 评测
+
+- [x] 固定官方模型 revision、SHA-256、下载来源和本地结果路径。
+- [x] 验证 ONNX 的 `Observation 61 → Action 14` 合约。
+- [x] 核对 50 Hz 控制频率、Observation 排列和 command encoding。
+- [x] 运行固定八指令 × 5 seeds 快筛，并完成 MJCF、Normalizer、执行器和运行时兼容性排查。
+- [ ] 快筛通过后，运行固定八指令 × 20 seeds 正式对比。
+- [ ] 运行独立的 400-Episode 随机速度指令协议。
+- [ ] 运行 Action 镜像诊断，记录正负转向和横移的不对称性。
+
+固定八指令、随机速度指令和官方 PT Reward Manager Return 继续作为不同协议
+分别报告，不合并 Episode 数或成功率。
+
+### 5.2 自训练候选模型
+
+第一轮只验证一个假设：当前转向不对称和直行偏航是否主要来自角速度跟踪奖励
+过宽。按单变量原则使用：
+
+```text
+Control:   track_angular_velocity.std = sqrt(0.5)
+Candidate: track_angular_velocity.std = sqrt(0.1)
+
+保持不变：reward weight、command sampling、PPO 参数、seed、环境数量
+暂不叠加：mirror loss 或其他新参数
+```
+
+训练顺序：
+
+- [ ] 为候选配置建立独立 Task/Run 名称，保留原始 baseline。
+- [ ] 用测试锁定新旧配置只有 angular tracking std 不同。
+- [ ] 运行 `64 envs × 5 iterations` CUDA 冒烟测试。
+- [ ] 运行 `64 envs × 25 iterations` 预运行，检查 NaN、跌倒和 Reward 异常。
+- [ ] 使用 4096 envs 从头训练，按固定间隔保存 checkpoint。
+- [ ] 在 `500 / 1000 / 1500 / 2000` iterations 进行三指令 × 5 seeds 快筛。
+- [ ] 只有 2000-iteration Gate 通过后，才继续到 `4000 / 6000`。
+- [ ] 候选有效后，再增加 1～2 个独立 training seeds 判断训练随机性；不得用
+  evaluation seeds 代替 training seeds。
+
+训练中使用的三条核心诊断指令：
+
+```text
+vx=+0.3
+wz=+0.5
+wz=-0.5
+```
+
+### 5.3 必做鲁棒性参数
 
 | 不确定因素 | 推荐测试值 |
 |---|---|
@@ -235,59 +295,86 @@ State Feedback
 - [ ] IMU Noise
 - [ ] Joint Encoder Noise
 
-### 任务清单
+### 5.4 控制器级鲁棒性评测
 
-- [ ] 为四类必做不确定因素建立统一的配置入口。
-- [ ] 使用固定测试集分别评测每一个参数档位。
-- [ ] 记录每次实验的配置、随机种子、Checkpoint 和结果路径。
-- [ ] 生成敏感性曲线，例如 Delay vs Fall Rate、Friction vs Success Rate。
-- [ ] 训练或使用一个带 Domain Randomization 的 Robust Policy。
-- [ ] 在完全相同的 OOD 测试条件下比较 Baseline Policy 与 Robust Policy。
-- [ ] 分析 MicroDuck 对哪类 Reality Gap 最敏感。
+- [ ] 为四类必做不确定因素建立统一配置入口。
+- [ ] 所有候选先用静止、前进、正负转向和前进加转向做 OOD 快筛。
+- [ ] 只对 Nominal 表现最好的两个模型运行完整四因素矩阵。
+- [ ] 所有模型共享指令、seeds、终止条件和参数档位。
+- [ ] 记录配置、模型 revision/checkpoint、种子和结果路径。
+- [ ] 统计 Tracking RMSE、方向成功率、直行偏航、Fall Rate、恢复时间和停止漂移。
+- [ ] 生成 Delay/Friction/Motor Strength/Backlash 敏感性曲线。
+- [ ] 分析 MicroDuck 对哪类 Reality Gap 因素最敏感。
+
+400-Episode 随机速度指令只代表 Nominal 指令覆盖；若物理参数没有改变，不能将
+它单独称为鲁棒性测试。
 
 ### 对比表模板
 
-| Test Condition | Baseline SR | Robust SR | 主要现象 |
-|---|---:|---:|---|
-| Nominal |  |  |  |
-| Low Friction |  |  |  |
-| 40 ms Delay |  |  |  |
-| 80% Motor Strength |  |  |  |
-| Backlash |  |  |  |
+| Test Condition | `model_5999` | Official | Self-trained Candidate | 主要现象 |
+|---|---:|---:|---:|---|
+| Nominal |  |  |  |  |
+| Low Friction |  |  |  |  |
+| 40 ms Delay |  |  |  |  |
+| 80% Motor Strength |  |  |  |  |
+| Backlash |  |  |  |  |
 
 ### 本周交付物
 
-- [ ] 四类不确定因素的完整实验数据
-- [ ] Baseline vs Robust 汇总表
+- [ ] 官方 `alpha_walking.onnx` 独立评测报告
+- [ ] angular tracking 单变量训练报告
+- [ ] `model_5999` / 官方模型 / 自训练候选的 Nominal 对比表
+- [ ] 四类不确定因素的统一配置入口和完整实验数据
+- [ ] 最优两个模型的鲁棒性汇总表
 - [ ] 2～4 张敏感性或对比曲线
-- [ ] Reality Gap 影响分析
+- [ ] Reality Gap / Sim2Real proxy 影响分析
 - [ ] 典型 Failure Cases
+- [ ] 一个冻结供第四周使用的 Locomotion Policy
 
 ### 验收标准
+
+导航候选至少满足：
+
+- 正负转向方向均正确，且不是单个 checkpoint 的偶然行为；
+- 直行偏航显著低于 `model_5999`；
+- 低速命令存在可预测响应，静止保持稳定；
+- Nominal 条件无明显跌倒；
+- OOD 退化能够量化，且不是轻微扰动下立即全面失效。
 
 至少完成：
 
 ```text
+官方模型评测
+    +
+自训练单变量候选
+    +
 4 类 Uncertainty
     +
-Baseline vs Robust
+最优两个底层模型统一对比
     +
-2～4 张曲线
-    +
-结果分析
+冻结第四周底层策略
 ```
 
-> 完成本周后结束 M1，不继续无限调步态，立即转入 M2。
+若官方模型通过门禁，可先冻结官方模型进入第四周；自训练模型仍作为研究和替换
+候选。若所有模型均未通过，第四周可先实现接口与控制器单元测试，但不得把使用
+不合格底层得到的 PointGoal 结果写成最终导航结论。
+
+> 完成本周后结束 M1 的主要实验，不继续无限调步态，立即转入 M2。
 
 ---
 
-## 6. 第 4 周：PointGoal Navigation 与传统控制基线
+## 6. 第 4 周：PointGoal Navigation 与传统控制对比
 
 ### 本周目标
 
-建立第一个真正属于自己的算法模块：随机 Start/Goal 条件下的自主目标点导航。
+使用第三周冻结的底层策略，建立随机 Start/Goal 条件下的自主目标点导航，并形成
+一个可由第五周 RL Navigator 直接复用的 Classical Navigation Benchmark。
 
-### 任务定义
+这里的 Go-to-Goal Controller 本身就是传统控制基线。第四周先比较简单比例控制
+与加入工程约束的实用控制器；真正的 Classical Navigator vs RL Navigator 统一
+对比仍放在第五周训练完成后的第六周。
+
+### 6.1 任务定义
 
 高层接收：
 
@@ -301,29 +388,30 @@ $$
 [v_x,\ v_y,\ \omega]
 $$
 
-底层继续调用官方 Locomotion Policy：
+底层调用第三周冻结的 Locomotion Policy：
 
 ```text
 Goal
  ↓
-Go-to-Goal Controller
+Classical Navigator
  ↓
 vx, vy, ω
  ↓
-Official PPO Locomotion
+Frozen Locomotion Policy
  ↓
 MicroDuck
 ```
 
-第一版建议只使用：
+第一版只使用：
 
 ```text
 vx + yaw rate
+vy = 0
 ```
 
-暂时令 $v_y=0$，降低双足机器人控制和调试难度。
+避免在第一版同时引入横移跟踪缺陷，降低双足机器人控制和调试难度。
 
-### 软件接口边界
+### 6.2 软件接口边界
 
 建立清晰的数据和模块接口：
 
@@ -343,9 +431,10 @@ RobotState
 Navigator
 ```
 
-这样未来迁移真机时，只需替换状态来源和底层执行后端。
+Navigator 与具体 ONNX 解耦。未来迁移真机或替换底层策略时，只替换状态来源和
+执行后端，不重写导航算法。
 
-### 传统控制器
+### 6.3 传统控制器 A：Naive P
 
 距离与朝向误差：
 
@@ -367,34 +456,93 @@ $$
 \omega=k_\alpha \alpha
 $$
 
-必须增加：
+Naive P 只增加必要的速度限幅，作为最简单、可解释的传统基线。
+
+### 6.4 传统控制器 B：Constrained Go-to-Goal
+
+在相同误差定义上增加：
 
 - [ ] Velocity Limit
 - [ ] Acceleration Limit
 - [ ] Goal Tolerance
-- [ ] 到达目标后的减速和停止逻辑
+- [ ] 大航向误差时优先转向并抑制前进速度
+- [ ] 接近目标时连续减速
+- [ ] 到达目标后的停止保持
+- [ ] 指令低通或变化率限制
+- [ ] 超时、跌倒和失败判定
 
-### 评测任务
+第四周首先回答：加入这些工程约束是否相对 Naive P 提高成功率、减少过冲并改善
+停止稳定性。
+
+### 6.5 底层策略替换对比
+
+如果第三周同时得到合格的官方模型和自训练模型，则保持 Constrained
+Go-to-Goal 的所有参数不变，只替换底层 ONNX：
+
+```text
+Constrained Go-to-Goal + Official Locomotion
+                       vs
+Constrained Go-to-Goal + Self-trained Locomotion
+```
+
+该实验用于隔离底层控制质量对导航的影响，报告名称应为
+`Official vs Self-trained Low-level Policy under the same Classical Navigator`。
+不得将它称为 Classical vs RL Navigator，因为两组使用的高层仍是传统控制器。
+
+### 6.6 评测任务
+
+开发阶段先使用固定 Goal：
+
+- [ ] 正前方
+- [ ] 左前方
+- [ ] 右前方
+- [ ] 后方
+- [ ] 不同初始 yaw
+
+逻辑通过后冻结 controller 参数，再运行：
 
 - [ ] 随机 Start Position
 - [ ] 随机 Start Yaw
 - [ ] 随机 Goal Position
-- [ ] 运行至少 200 个 Episode
+- [ ] 至少 200 个共享 Episode
 
 统计：
 
 - [ ] Success Rate
 - [ ] Final Position Error
-- [ ] Path Length
+- [ ] Final Yaw Error
+- [ ] Path Length / Path Efficiency
 - [ ] Completion Time
 - [ ] Fall Rate
+- [ ] Timeout Rate
+- [ ] 到达后的停止漂移
+
+两种传统控制器及不同底层模型组合必须使用完全相同的 Start/Goal、seeds、终止
+条件和成功门槛。
+
+### 6.7 导航系统轻量 OOD 验证
+
+第四周不重复第三周的完整四因素敏感性矩阵，只对最终 Classical Controller 选择
+三个代表条件运行小规模闭环测试：
+
+- [ ] Low Friction
+- [ ] 40 ms Control Delay
+- [ ] 80% Motor Strength
+
+这一步验证底层鲁棒性是否能够转化为 Goal 到达能力。完整的 Classical vs RL
+常规/OOD 统一对比仍保留到第六周。
 
 ### 本周交付物
 
-- [ ] Robot / Goal / Command 抽象接口
-- [ ] Go-to-Goal Controller
+- [ ] Robot / Goal / Command / Navigator 抽象接口
+- [ ] Naive P Controller
+- [ ] Constrained Go-to-Goal Controller
 - [ ] PointGoal 自动评测脚本
-- [ ] 200 个 Episode 的评测结果
+- [ ] 两种传统控制器的统一对比表
+- [ ] 必要时完成官方 vs 自训练底层模型替换对比
+- [ ] 200 个随机 Start/Goal 的冻结参数评测结果
+- [ ] 轨迹、位置误差和完成时间图表
+- [ ] 典型成功与失败案例
 - [ ] 随机 Start/Goal 自主导航视频
 
 ### 验收标准
@@ -406,7 +554,7 @@ $$
    ↓
 收到 Goal
    ↓
-自主转向
+自主调整航向
    ↓
 自主行走
    ↓
@@ -414,6 +562,13 @@ $$
    ↓
 停在目标容差范围内
 ```
+
+同时要求：
+
+- Constrained Go-to-Goal 相对 Naive P 有明确改善，或提供无改善的定量解释；
+- 结果来自冻结参数后的统一 200-Episode 测试；
+- 传统控制器与底层 ONNX 解耦；
+- 第五周可直接复用相同接口和 Benchmark 训练 RL Navigator。
 
 > 本周结束时形成“构建 MicroDuck 分层目标导航框架”的第一版可展示成果，并开始正式投递第一批实习。
 
