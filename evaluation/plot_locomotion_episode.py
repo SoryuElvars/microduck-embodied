@@ -16,6 +16,7 @@ REQUIRED_COLUMNS = {
     "cmd_vy",
     "cmd_wz",
     "actual_vx",
+    "actual_vy",
     "actual_wz",
     "world_x",
     "world_y",
@@ -58,6 +59,7 @@ def plot_episode(
     output_path: Path,
     smooth_window_s: float,
     sample_rate_hz: float,
+    title: str | None = None,
 ) -> None:
     """Generate the four-panel locomotion diagnostic figure."""
 
@@ -77,17 +79,42 @@ def plot_episode(
     cmd_vy = values("cmd_vy")
     cmd_wz = values("cmd_wz")
     actual_vx = values("actual_vx")
+    actual_vy = values("actual_vy")
     actual_wz = values("actual_wz")
-    net_yaw_deg = np.degrees(values("net_yaw_rad"))
     world_x = values("world_x")
     world_y = values("world_y")
+    yaw_rad = values("yaw_rad")
+    net_yaw_rad = values("net_yaw_rad")
+    net_yaw_deg = np.degrees(net_yaw_rad)
 
     window_samples = max(1, round(smooth_window_s * sample_rate_hz))
     smooth_vx = centered_moving_average(actual_vx, window_samples, np)
+    smooth_vy = centered_moving_average(actual_vy, window_samples, np)
     smooth_wz = centered_moving_average(actual_wz, window_samples, np)
-    smooth_yaw_deg = centered_moving_average(net_yaw_deg, window_samples, np)
-    smooth_x = centered_moving_average(world_x, window_samples, np)
-    smooth_y = centered_moving_average(world_y, window_samples, np)
+
+    # Align every trajectory with its initial body frame so randomized reset
+    # positions and headings do not change the geometric interpretation.
+    initial_yaw = yaw_rad[0] - net_yaw_rad[0]
+    dx = world_x - world_x[0]
+    dy = world_y - world_y[0]
+    body_x = np.cos(initial_yaw) * dx + np.sin(initial_yaw) * dy
+    body_y = -np.sin(initial_yaw) * dx + np.cos(initial_yaw) * dy
+    smooth_x = centered_moving_average(body_x, window_samples, np)
+    smooth_y = centered_moving_average(body_y, window_samples, np)
+
+    # Integrate the body-frame velocity command while its target heading turns.
+    # The midpoint rule handles both straight and combined vx/vy/wz commands.
+    elapsed = time_s - time_s[0]
+    target_heading = cmd_wz * elapsed
+    target_x = np.zeros_like(elapsed)
+    target_y = np.zeros_like(elapsed)
+    if len(elapsed) > 1:
+        dt = np.diff(elapsed)
+        mid_heading = 0.5 * (target_heading[:-1] + target_heading[1:])
+        target_world_vx = cmd_vx[:-1] * np.cos(mid_heading) - cmd_vy[:-1] * np.sin(mid_heading)
+        target_world_vy = cmd_vx[:-1] * np.sin(mid_heading) + cmd_vy[:-1] * np.cos(mid_heading)
+        target_x[1:] = np.cumsum(target_world_vx * dt)
+        target_y[1:] = np.cumsum(target_world_vy * dt)
 
     raw_style = {"linewidth": 0.7, "alpha": 0.25}
     smooth_style = {"linewidth": 2.4, "alpha": 0.95}
@@ -110,6 +137,20 @@ def plot_episode(
     ax.legend(loc="best")
 
     ax = axes[0, 1]
+    ax.plot(time_s, actual_vy, color="#A6CEE3", label="Actual vy — 50 Hz raw", **raw_style)
+    ax.plot(
+        time_s,
+        smooth_vy,
+        color="#1F78B4",
+        label=f"Actual vy — {smooth_window_s:g} s mean",
+        **smooth_style,
+    )
+    ax.plot(time_s, cmd_vy, label="Target vy", **target_style)
+    ax.set_title("Lateral velocity tracking")
+    ax.set_ylabel("Velocity (m/s)")
+    ax.legend(loc="best")
+
+    ax = axes[1, 0]
     ax.plot(time_s, actual_wz, color="#F4A582", label="Actual wz — 50 Hz raw", **raw_style)
     ax.plot(
         time_s,
@@ -120,63 +161,37 @@ def plot_episode(
     )
     ax.plot(time_s, cmd_wz, label="Target wz", **target_style)
     ax.set_title("Yaw-rate tracking")
+    ax.set_xlabel("Time (s)")
     ax.set_ylabel("Yaw rate (rad/s)")
     ax.legend(loc="best")
 
-    ax = axes[1, 0]
-    target_yaw_deg = np.degrees(cmd_wz * time_s)
-    ax.plot(time_s, net_yaw_deg, color="#CAB2D6", label="Net yaw — 50 Hz raw", **raw_style)
-    ax.plot(
-        time_s,
-        smooth_yaw_deg,
-        color="#6A3D9A",
-        label=f"Net yaw — {smooth_window_s:g} s mean",
-        **smooth_style,
-    )
-    ax.plot(time_s, target_yaw_deg, label="Target integrated yaw", **target_style)
-    ax.set_title("Accumulated heading change")
-    ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Net yaw (deg)")
-    ax.legend(loc="best")
-
     ax = axes[1, 1]
-    ax.plot(world_x, world_y, color="#9BD3AE", label="XY path — 50 Hz raw", **raw_style)
+    ax.plot(body_x, body_y, color="#9BD3AE", label="Actual XY — 50 Hz raw", **raw_style)
     ax.plot(
         smooth_x,
         smooth_y,
         color="#1B7837",
-        label=f"XY path — {smooth_window_s:g} s mean",
+        label=f"Actual XY — {smooth_window_s:g} s mean",
         **smooth_style,
     )
-    initial_yaw = values("yaw_rad")[0] - values("net_yaw_rad")[0]
-    elapsed = time_s - time_s[0]
-    target_body_x = cmd_vx * elapsed
-    target_body_y = cmd_vy * elapsed
-    target_world_x = (
-        world_x[0]
-        + np.cos(initial_yaw) * target_body_x
-        - np.sin(initial_yaw) * target_body_y
-    )
-    target_world_y = (
-        world_y[0]
-        + np.sin(initial_yaw) * target_body_x
-        + np.cos(initial_yaw) * target_body_y
-    )
-    ax.plot(target_world_x, target_world_y, label="Target straight path", **target_style)
-    ax.scatter(world_x[0], world_y[0], color="#333333", s=35, label="Start", zorder=4)
-    ax.scatter(world_x[-1], world_y[-1], color="#D62728", s=35, label="End", zorder=4)
-    ax.set_title("World-frame XY trajectory")
-    ax.set_xlabel("World X (m)")
-    ax.set_ylabel("World Y (m)")
+    ax.plot(target_x, target_y, label="Target XY", **target_style)
+    ax.scatter(body_x[0], body_y[0], color="#333333", s=35, label="Start", zorder=4)
+    ax.scatter(body_x[-1], body_y[-1], color="#D62728", s=35, label="End", zorder=4)
+    ax.set_title("Initial-body-frame XY trajectory")
+    ax.set_xlabel("Forward X (m)")
+    ax.set_ylabel("Left Y (m)")
     ax.set_aspect("equal", adjustable="box")
     ax.legend(loc="best")
 
     for ax in axes.flat:
         ax.grid(True, alpha=0.25)
 
+    figure_title = title or "MicroDuck model_5999 — command-tracking episode"
     fig.suptitle(
-        "MicroDuck model_5999 — straight command "
-        f"(final yaw {net_yaw_deg[-1]:+.1f} deg, mean vx {actual_vx.mean():.3f} m/s)"
+        f"{figure_title}\n"
+        f"command=({cmd_vx.mean():+.3f}, {cmd_vy.mean():+.3f}, {cmd_wz.mean():+.3f}), "
+        f"actual mean=({actual_vx.mean():+.3f}, {actual_vy.mean():+.3f}, {actual_wz.mean():+.3f}), "
+        f"final yaw={net_yaw_deg[-1]:+.1f}°"
     )
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -204,6 +219,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=50.0,
         help="CSV control sample rate (default: %(default)s)",
     )
+    parser.add_argument("--title", help="Optional first line for the figure title")
     return parser
 
 
@@ -218,6 +234,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.output.expanduser().resolve(),
         args.smooth_window_s,
         args.sample_rate_hz,
+        args.title,
     )
     return 0
 

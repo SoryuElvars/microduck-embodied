@@ -139,11 +139,11 @@ microduck_embodied/
 ### 任务清单
 
 - [x] 编写自动评测脚本：[`evaluation/locomotion_benchmark.py`](./evaluation/locomotion_benchmark.py)。
-- [ ] 自动随机生成速度指令：
+- [x] 自动随机生成速度指令：
   - $v_x$
   - $v_y$
   - $\omega$
-- [ ] 连续运行 200～500 个 Episode。
+- [x] 连续运行 200～500 个 Episode（已完成 400 个随机指令 Episode）。
 - [x] 固定评测配置和随机种子，确保实验可以复现。
 - [x] 自动保存逐 Episode 原始数据和汇总结果。
 
@@ -153,29 +153,29 @@ microduck_embodied/
 - [x] $RMSE_{v_y}$
 - [x] $RMSE_{\omega}$
 - [x] Fall Rate
-- [ ] Episode Return
+- [x] Episode Return（使用官方 PT checkpoint + Reward Manager，完成 8 指令 × 5 个成对初始状态）
 - [x] Command Tracking Error（当前以三轴 RMSE 和平均实际速度表示）
-- [ ] Nominal Success Rate
+- [x] Nominal Success Rate（项目定义门槛；与上游官方指标区分）
 - [ ] 若 Torque 数据容易获取，再增加 Energy Proxy；否则暂缓。
 
 ### 必须生成的图表
 
 - [x] Target Velocity vs Actual Velocity
-- [ ] 典型成功轨迹
-- [ ] 典型失败轨迹或失稳案例
+- [x] 典型成功轨迹（当前仅站立静止成功；不宣称存在运动成功样本）
+- [x] 典型失败轨迹或失稳案例（随机基准 Episode 322 和 362）
 
 当前 8 项固定指令、每项 20 Episode 的响应矩阵见：
-[`results/week02/command_response_20.md`](./results/week02/command_response_20.md)。
+[`results/week02/01_baseline_5999/README.md`](./results/week02/01_baseline_5999/README.md)。
 
 ### 系统理解与说明材料
 
 整理清楚以下内容，并形成文档或示意图：
 
-- [ ] Observation
-- [ ] Action
-- [ ] Reward
-- [ ] Control Frequency
-- [ ] Policy Architecture
+- [x] Observation
+- [x] Action
+- [x] Reward
+- [x] Control Frequency
+- [x] Policy Architecture
 
 建议系统图：
 
@@ -195,12 +195,12 @@ State Feedback
 
 ### 本周交付物
 
-- [ ] `Official Locomotion Baseline Report`
-- [ ] 自动评测脚本
-- [ ] 原始评测数据
-- [ ] 汇总指标表
-- [ ] Target vs Actual 速度跟踪曲线
-- [ ] Locomotion 系统架构图
+- [x] [`Official Locomotion Baseline Report`](./results/week02/01_baseline_5999/README.md)
+- [x] 自动评测脚本
+- [x] 原始评测数据（本地 `artifacts/week02/`）
+- [x] 汇总指标表
+- [x] Target vs Actual 速度跟踪曲线
+- [x] Locomotion 系统架构图
 
 ### 验收标准
 

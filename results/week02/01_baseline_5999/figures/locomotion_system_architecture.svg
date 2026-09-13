@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="850" viewBox="0 0 1600 850">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/>
+    </marker>
+    <style>
+      .title { font: 700 34px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 20px Arial, sans-serif; fill: #475569; }
+      .label { font: 700 21px Arial, sans-serif; fill: #0f172a; }
+      .body { font: 17px Arial, sans-serif; fill: #334155; }
+      .small { font: 15px Arial, sans-serif; fill: #475569; }
+      .box { stroke: #334155; stroke-width: 2; rx: 16; }
+      .runtime { fill: #eff6ff; }
+      .policy { fill: #ecfdf5; }
+      .plant { fill: #fff7ed; }
+      .train { fill: #f5f3ff; }
+      .arrow { stroke: #334155; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .feedback { stroke: #2563eb; stroke-width: 3; fill: none; marker-end: url(#arrow-blue); }
+      .dashed { stroke-dasharray: 9 7; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="850" fill="#ffffff"/>
+  <text x="800" y="55" text-anchor="middle" class="title">MicroDuck Locomotion System Architecture</text>
+  <text x="800" y="88" text-anchor="middle" class="subtitle">50 Hz policy loop; training-only components are shown below the dashed boundary</text>
+
+  <text x="55" y="145" class="label">Runtime / deployment path</text>
+
+  <rect x="55" y="185" width="230" height="150" class="box runtime"/>
+  <text x="170" y="220" text-anchor="middle" class="label">Commands</text>
+  <text x="170" y="254" text-anchor="middle" class="body">Twist: 3D</text>
+  <text x="170" y="282" text-anchor="middle" class="body">Head pose: 4D</text>
+  <text x="170" y="310" text-anchor="middle" class="body">Body pose: 6D</text>
+
+  <rect x="345" y="165" width="250" height="190" class="box runtime"/>
+  <text x="470" y="200" text-anchor="middle" class="label">Actor Observation</text>
+  <text x="470" y="233" text-anchor="middle" class="body">61 dimensions</text>
+  <text x="470" y="264" text-anchor="middle" class="small">IMU + joints + previous action</text>
+  <text x="470" y="290" text-anchor="middle" class="small">twist + head/body commands</text>
+  <text x="470" y="326" text-anchor="middle" class="body">Observation normalizer</text>
+
+  <rect x="655" y="185" width="250" height="150" class="box policy"/>
+  <text x="780" y="220" text-anchor="middle" class="label">PPO Actor</text>
+  <text x="780" y="254" text-anchor="middle" class="body">MLP 512 → 256 → 128</text>
+  <text x="780" y="282" text-anchor="middle" class="body">ELU activations</text>
+  <text x="780" y="310" text-anchor="middle" class="small">Gaussian during training</text>
+
+  <rect x="965" y="185" width="230" height="150" class="box plant"/>
+  <text x="1080" y="220" text-anchor="middle" class="label">Joint Action</text>
+  <text x="1080" y="254" text-anchor="middle" class="body">14 position targets</text>
+  <text x="1080" y="282" text-anchor="middle" class="body">scale = 1.0</text>
+  <text x="1080" y="310" text-anchor="middle" class="small">50 Hz output</text>
+
+  <rect x="1255" y="165" width="290" height="190" class="box plant"/>
+  <text x="1400" y="200" text-anchor="middle" class="label">BAM M6 + MicroDuck</text>
+  <text x="1400" y="234" text-anchor="middle" class="body">Motor / friction dynamics</text>
+  <text x="1400" y="263" text-anchor="middle" class="body">MuJoCo physics at 200 Hz</text>
+  <text x="1400" y="292" text-anchor="middle" class="body">decimation = 4</text>
+  <text x="1400" y="326" text-anchor="middle" class="small">State and sensor feedback</text>
+
+  <path d="M285 260 L345 260" class="arrow"/>
+  <path d="M595 260 L655 260" class="arrow"/>
+  <path d="M905 260 L965 260" class="arrow"/>
+  <path d="M1195 260 L1255 260" class="arrow"/>
+  <path d="M1400 355 L1400 420 L470 420 L470 355" class="feedback"/>
+  <text x="935" y="449" text-anchor="middle" class="small" fill="#2563eb">closed-loop state feedback</text>
+
+  <line x1="55" y1="500" x2="1545" y2="500" stroke="#94a3b8" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="55" y="545" class="label">Training and official-environment evaluation only</text>
+
+  <rect x="110" y="585" width="300" height="155" class="box train"/>
+  <text x="260" y="622" text-anchor="middle" class="label">Critic Observation</text>
+  <text x="260" y="657" text-anchor="middle" class="body">76 dimensions</text>
+  <text x="260" y="686" text-anchor="middle" class="small">Actor inputs + privileged state</text>
+  <text x="260" y="715" text-anchor="middle" class="small">Critic MLP estimates V(s)</text>
+
+  <rect x="520" y="585" width="300" height="155" class="box train"/>
+  <text x="670" y="622" text-anchor="middle" class="label">Reward Manager</text>
+  <text x="670" y="657" text-anchor="middle" class="body">16 weighted terms</text>
+  <text x="670" y="686" text-anchor="middle" class="small">tracking + stability + gait</text>
+  <text x="670" y="715" text-anchor="middle" class="small">Episode Return = Σ step reward</text>
+
+  <rect x="930" y="585" width="300" height="155" class="box train"/>
+  <text x="1080" y="622" text-anchor="middle" class="label">PPO Update</text>
+  <text x="1080" y="657" text-anchor="middle" class="body">Actor + Critic optimization</text>
+  <text x="1080" y="686" text-anchor="middle" class="small">advantage, value and entropy</text>
+  <text x="1080" y="715" text-anchor="middle" class="small">not present in ONNX deployment</text>
+
+  <path d="M410 662 L520 662" class="arrow dashed"/>
+  <path d="M820 662 L930 662" class="arrow dashed"/>
+  <path d="M1080 585 L1080 520 L780 520 L780 335" class="arrow dashed"/>
+  <path d="M1400 420 L1400 475 L670 475 L670 585" class="arrow dashed"/>
+
+  <text x="800" y="815" text-anchor="middle" class="small">ONNX deployment contains the normalized actor path only; it does not provide training Reward or Episode Return.</text>
+</svg>

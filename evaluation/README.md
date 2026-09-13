@@ -19,22 +19,83 @@
 - 以相同的 20 个种子运行 8 项固定指令，共 160 个 Episode；
 - 生成每项指令的独立 summary 和跨指令 suite summary。
 
+## 400-Episode 随机速度基准
+
+固定八指令矩阵用于单轴诊断；随机速度基准另用 400 个 Episode 覆盖组合指令，
+两者分别报告，不合并成功率。随机协议使用 reset seeds `42–441` 和 command seed
+`20260911`，显式分配 25% 静止、15% 原地转向和 60% 全范围均匀采样：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/random_locomotion_benchmark.py \
+  --policy logs/rsl_rl/velocity/2026-09-05_22-08-33_baseline-flat-resume-5000/microduck_velocity_flat_5999.onnx \
+  --episodes 400 \
+  --seed 42 \
+  --command-seed 20260911 \
+  --output-dir ~/projects/microduck-embodied/artifacts/week02/05_random_400/run
+```
+
+运行器会逐 Episode 保存进度，同一协议和输出目录可以断点续跑。处理结果：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/analyze_random_locomotion.py \
+  --input ~/projects/microduck-embodied/artifacts/week02/05_random_400/run/summary/random_velocity_400_microduck_velocity_flat_5999.json \
+  --output-json ~/projects/microduck-embodied/results/week02/05_random_400/summaries/random_velocity_400_processed.json \
+  --output-figure ~/projects/microduck-embodied/results/week02/05_random_400/figures/random_velocity_400_response.png \
+  --output-report ~/projects/microduck-embodied/results/week02/05_random_400/README.md
+```
+
+逐步 CSV、断点文件和源汇总位于 `artifacts/week02/05_random_400/run/`，只保留
+在本地；处理后的关键汇总、图表和报告位于 `results/week02/05_random_400/`。
+Nominal Success Rate 是本项目定义的指标，不是上游官方指标。
+
 该部署形态评测不加载训练环境的 Reward Manager，因此汇总文件明确记录
-`reward_available: false`。Reward 和 Episode Return 将在后续官方环境式评测中加入。
+`reward_available: false`。Episode Return 由下面独立的官方环境评测记录，不会从
+ONNX 部署轨迹中伪造 Reward。
+
+## Episode Return（官方 Reward Manager）
+
+Episode Return 评测从官方 `microduck_rl` 环境加载 `model_5999.pt`，
+恢复 checkpoint 保存的课程进度和最终奖励权重，然后在 8 项固定指令下分别
+运行 5 个可复现、成对的向量环境初始状态。每个 Episode 为 10 秒，总计
+40 个 Episode。
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/episode_return_benchmark.py
+```
+
+评测器在每个 50 Hz 控制步记录 `reward_buf`，Episode Return 定义为
+`sum(reward_buf)`，并同时求和 16 个已加权奖励项。每一步都会检查奖励项之和
+与 `reward_buf` 一致。名义配置关闭观测噪声、推力与域随机化，但保留官方
+reset、终止条件、BAM 执行器、Reward Manager 和 checkpoint 的课程状态。
+
+结果：
+`results/week02/01_baseline_5999/summaries/episode_return_8x5_model_5999.json`。
+这组 40 Episode 是独立协议，不与 ONNX 固定指令的 160 Episode 或随机指令的
+400 Episode 合并计数。
 
 ## 绘制单 Episode 诊断图
 
-使用 `matplotlib` 将原始 CSV 转换为四联图：前进速度、偏航角速度、累计航向和
-世界坐标系 XY 轨迹。浅色细线表示 50 Hz 原始数据，深色粗线表示默认 1 秒滑动
-平均，虚线表示目标命令或目标轨迹。
+使用 `matplotlib` 将原始 CSV 转换为四联图：`vx`、`vy`、`wz` 的 Target vs
+Actual，以及对齐初始朝向的机体坐标系 XY 轨迹。浅色细线表示 50 Hz 原始数据，
+深色粗线表示默认 1 秒滑动平均，虚线表示目标命令或积分得到的目标轨迹。
+可使用 `--title` 为站立成功、典型失败等不同样本指定标题。
 
 ```bash
 cd ~/projects/microduck_rl
 
 uv run python \
   ~/projects/microduck-embodied/evaluation/plot_locomotion_episode.py \
-  --input ~/projects/microduck-embodied/results/week02/raw/straight_030_seed42_episode000_steps.csv \
-  --output ~/projects/microduck-embodied/results/week02/figures/straight_030_model_5999.png \
+  --input ~/projects/microduck-embodied/artifacts/week02/01_baseline_5999/raw/straight_030_seed42_episode000_steps.csv \
+  --output ~/projects/microduck-embodied/results/week02/01_baseline_5999/figures/straight_030_model_5999.png \
   --smooth-window-s 1.0
 ```
 
@@ -69,8 +130,8 @@ cd ~/projects/microduck_rl
 
 uv run python \
   ~/projects/microduck-embodied/evaluation/plot_locomotion_batch.py \
-  --summary ~/projects/microduck-embodied/results/week02/summary/straight_030_official_reset_20_microduck_velocity_flat_5999.json \
-  --output ~/projects/microduck-embodied/results/week02/figures/straight_030_official_reset_20_batch.png \
+  --summary ~/projects/microduck-embodied/results/week02/01_baseline_5999/summaries/straight_030_official_reset_20_microduck_velocity_flat_5999.json \
+  --output ~/projects/microduck-embodied/results/week02/01_baseline_5999/figures/straight_030_official_reset_20_batch.png \
   --smooth-window-s 1.0
 ```
 
@@ -101,8 +162,8 @@ cd ~/projects/microduck_rl
 
 uv run python \
   ~/projects/microduck-embodied/evaluation/plot_command_response.py \
-  --suite ~/projects/microduck-embodied/results/week02/summary/command_response_20_microduck_velocity_flat_5999.json \
-  --output ~/projects/microduck-embodied/results/week02/figures/command_response_20_model_5999.png
+  --suite ~/projects/microduck-embodied/results/week02/01_baseline_5999/summaries/command_response_20_microduck_velocity_flat_5999.json \
+  --output ~/projects/microduck-embodied/results/week02/01_baseline_5999/figures/command_response_20_model_5999.png
 ```
 
 ### 左右腿 Action 镜像诊断
@@ -117,9 +178,9 @@ cd ~/projects/microduck_rl
 
 uv run python \
   ~/projects/microduck-embodied/evaluation/analyze_action_symmetry.py \
-  --suite ~/projects/microduck-embodied/results/week02/summary/command_response_20_microduck_velocity_flat_5999.json \
-  --output-json ~/projects/microduck-embodied/results/week02/summary/action_symmetry_model_5999.json \
-  --output-figure ~/projects/microduck-embodied/results/week02/figures/action_symmetry_model_5999.png
+  --suite ~/projects/microduck-embodied/results/week02/01_baseline_5999/summaries/command_response_20_microduck_velocity_flat_5999.json \
+  --output-json ~/projects/microduck-embodied/results/week02/03_action_symmetry/summaries/action_symmetry_model_5999.json \
+  --output-figure ~/projects/microduck-embodied/results/week02/03_action_symmetry/figures/action_symmetry_model_5999.png
 ```
 
 ## 骨架校验
@@ -149,7 +210,12 @@ uv run python \
 
 ```text
 results/week02/
-├── raw/       # 逐控制步和逐 Episode 原始数据，不提交 Git
-├── summary/   # 可提交的汇总指标
-└── figures/   # 可提交的图表
+├── README.md
+├── 01_baseline_5999/
+├── 02_checkpoint_analysis/
+├── 03_action_symmetry/
+├── 04_symmetry_ab/
+└── 05_random_400/
+
+artifacts/week02/          # 原始 CSV 和中间产物，不提交 Git
 ```

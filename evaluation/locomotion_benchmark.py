@@ -41,7 +41,7 @@ OFFICIAL_RESET_RANGES = {
 PROJECT_ROOT = Path(__file__).parents[1]
 DEFAULT_MICRODUCK_RL_ROOT = Path.home() / "projects" / "microduck_rl"
 DEFAULT_COMMAND_SET = Path(__file__).parent / "command_sets" / "straight_only.json"
-DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "results" / "week02"
+DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "artifacts" / "week02" / "01_baseline_5999"
 
 
 @dataclass(frozen=True)

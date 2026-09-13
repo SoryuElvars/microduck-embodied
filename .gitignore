@@ -26,9 +26,12 @@ checkpoints/
 *.ckpt
 *.onnx
 
-# Raw experiment artifacts
+# Generated experiment artifacts
+artifacts/
+
+# Raw experiment artifacts retained under result folders
 results/raw/
-results/week02/checkpoint_comparison/*/raw/
+results/**/raw/
 videos/raw/
 
 # MuJoCo and native build artifacts

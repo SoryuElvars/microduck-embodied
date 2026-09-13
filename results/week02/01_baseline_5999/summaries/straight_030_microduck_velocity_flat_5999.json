@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-09T07:37:23.055037+00:00",
+  "benchmark_kind": "onnx_cpu_bam_deployment_rehearsal",
+  "reward_available": false,
+  "microduck_rl_commit": "29e887ecfbf5d37144759e5a9f8a176dfb83d547",
+  "policy_path": "logs/rsl_rl/velocity/2026-09-05_22-08-33_baseline-flat-resume-5000/microduck_velocity_flat_5999.onnx",
+  "policy_sha256": "4d7847ae5099bd3c0e816ddadcd1f441f839127cf134d16b1b5a125d594457e3",
+  "command_set_path": "evaluation/command_sets/straight_only.json",
+  "runtime": {
+    "observation_size": 61,
+    "action_size": 14,
+    "physics_timestep_s": 0.005,
+    "decimation": 4,
+    "control_frequency_hz": 50.0,
+    "actuator": "BAM M6 XL330",
+    "bam_vin": 7.4,
+    "bam_vin_drop_gain": 0.1,
+    "fall_proxy_tilt_deg": 70.0
+  },
+  "command": {
+    "name": "straight_030",
+    "vx": 0.3,
+    "vy": 0.0,
+    "wz": 0.0,
+    "warmup_s": 1.0,
+    "duration_s": 10.0
+  },
+  "episodes": [
+    {
+      "episode": 0,
+      "seed": 42,
+      "steps_completed": 500,
+      "duration_completed_s": 10.0,
+      "rmse_vx": 0.13158904052995116,
+      "rmse_vy": 0.1032091114968986,
+      "rmse_wz": 0.8794651495545514,
+      "mean_actual_vx": 0.17306221783161163,
+      "mean_actual_vy": 0.0029874555163551123,
+      "mean_actual_wz": 0.29026759159918225,
+      "net_yaw_rad": 2.9237291823012748,
+      "net_yaw_deg": 167.5173425850983,
+      "forward_distance_m": 0.09342405096908624,
+      "lateral_displacement_m": 1.1002446622922484,
+      "fallen": false,
+      "fall_time_s": null,
+      "raw_steps_csv": "artifacts/week02/01_baseline_5999/raw/straight_030_seed42_episode000_steps.csv"
+    }
+  ]
+}

@@ -1,0 +1,3023 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-10T12:30:37.976695+00:00",
+  "analysis_kind": "bilateral_action_symmetry",
+  "source_suite": "results/week02/01_baseline_5999/summaries/command_response_20_microduck_velocity_flat_5999.json",
+  "policy_path": "logs/rsl_rl/velocity/2026-09-05_22-08-33_baseline-flat-resume-5000/microduck_velocity_flat_5999.onnx",
+  "policy_sha256": "4d7847ae5099bd3c0e816ddadcd1f441f839127cf134d16b1b5a125d594457e3",
+  "microduck_rl_commit": "53b8971b61baf5b7f3c16d135dd7cac37623de4b",
+  "joint_order": [
+    "left_hip_yaw",
+    "left_hip_roll",
+    "left_hip_pitch",
+    "left_knee",
+    "left_ankle",
+    "neck_pitch",
+    "head_pitch",
+    "head_yaw",
+    "head_roll",
+    "right_hip_yaw",
+    "right_hip_roll",
+    "right_hip_pitch",
+    "right_knee",
+    "right_ankle"
+  ],
+  "official_mirror_contract": {
+    "source": "microduck_rl/src/mjlab_microduck/tasks/symmetry.py",
+    "source_sha256": "e37980389773f2f87b8f376df449af4d70e0c983744459f9a35a3ee7b686186b",
+    "joint_permutation": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      5,
+      6,
+      7,
+      8,
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "joint_sign": [
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      1.0,
+      1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0
+    ],
+    "observation_permutation": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      15,
+      16,
+      17,
+      18,
+      19,
+      11,
+      12,
+      13,
+      14,
+      6,
+      7,
+      8,
+      9,
+      10,
+      29,
+      30,
+      31,
+      32,
+      33,
+      25,
+      26,
+      27,
+      28,
+      20,
+      21,
+      22,
+      23,
+      24,
+      43,
+      44,
+      45,
+      46,
+      47,
+      39,
+      40,
+      41,
+      42,
+      34,
+      35,
+      36,
+      37,
+      38,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60
+    ],
+    "observation_sign": [
+      -1.0,
+      1.0,
+      -1.0,
+      1.0,
+      -1.0,
+      1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      1.0,
+      1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      1.0,
+      1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      1.0,
+      1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      1.0,
+      -1.0,
+      -1.0,
+      1.0,
+      1.0,
+      -1.0,
+      -1.0,
+      1.0,
+      -1.0,
+      1.0,
+      -1.0,
+      1.0,
+      -1.0
+    ]
+  },
+  "policy_equivariance": {
+    "definition": "pi(mirror(observation)) - mirror(pi(observation))",
+    "sample_stride_control_steps": 5,
+    "replay_validation": {
+      "sample_count": 16000,
+      "overall_rmse": 0.0,
+      "per_joint": [
+        {
+          "index": 0,
+          "joint": "left_hip_yaw",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.06473111361265182,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 1,
+          "joint": "left_hip_roll",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.1494768112897873,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 2,
+          "joint": "left_hip_pitch",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.2160508781671524,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 3,
+          "joint": "left_knee",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.34758976101875305,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 4,
+          "joint": "left_ankle",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.1027413159608841,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 5,
+          "joint": "neck_pitch",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.07512669265270233,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 6,
+          "joint": "head_pitch",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.08772070705890656,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 7,
+          "joint": "head_yaw",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.13591745495796204,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 8,
+          "joint": "head_roll",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.05752502754330635,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 9,
+          "joint": "right_hip_yaw",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.09361831843852997,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 10,
+          "joint": "right_hip_roll",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.16374096274375916,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 11,
+          "joint": "right_hip_pitch",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.2383146584033966,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 12,
+          "joint": "right_knee",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.35334187746047974,
+          "relative_rmse": 0.0
+        },
+        {
+          "index": 13,
+          "joint": "right_ankle",
+          "rmse": 0.0,
+          "mae": 0.0,
+          "reference_rms": 0.1179315373301506,
+          "relative_rmse": 0.0
+        }
+      ]
+    },
+    "overall": {
+      "sample_count": 16000,
+      "overall_rmse": 0.06467364728450775,
+      "per_joint": [
+        {
+          "index": 0,
+          "joint": "left_hip_yaw",
+          "rmse": 0.08018091320991516,
+          "mae": 0.0695357397198677,
+          "reference_rms": 0.09361836314201355,
+          "relative_rmse": 0.8564656376838684
+        },
+        {
+          "index": 1,
+          "joint": "left_hip_roll",
+          "rmse": 0.06590385735034943,
+          "mae": 0.04950692504644394,
+          "reference_rms": 0.16374094784259796,
+          "relative_rmse": 0.4024885594844818
+        },
+        {
+          "index": 2,
+          "joint": "left_hip_pitch",
+          "rmse": 0.0487327016890049,
+          "mae": 0.040163107216358185,
+          "reference_rms": 0.2383147031068802,
+          "relative_rmse": 0.2044888585805893
+        },
+        {
+          "index": 3,
+          "joint": "left_knee",
+          "rmse": 0.06407119333744049,
+          "mae": 0.05065459385514259,
+          "reference_rms": 0.3533423840999603,
+          "relative_rmse": 0.1813289225101471
+        },
+        {
+          "index": 4,
+          "joint": "left_ankle",
+          "rmse": 0.0793696716427803,
+          "mae": 0.06592658162117004,
+          "reference_rms": 0.11793160438537598,
+          "relative_rmse": 0.6730144023895264
+        },
+        {
+          "index": 5,
+          "joint": "neck_pitch",
+          "rmse": 0.039554402232170105,
+          "mae": 0.02811773307621479,
+          "reference_rms": 0.07512663304805756,
+          "relative_rmse": 0.5265030860900879
+        },
+        {
+          "index": 6,
+          "joint": "head_pitch",
+          "rmse": 0.06227836385369301,
+          "mae": 0.04131823033094406,
+          "reference_rms": 0.08772074431180954,
+          "relative_rmse": 0.7099616527557373
+        },
+        {
+          "index": 7,
+          "joint": "head_yaw",
+          "rmse": 0.09875853359699249,
+          "mae": 0.08612430095672607,
+          "reference_rms": 0.1359177529811859,
+          "relative_rmse": 0.7266051173210144
+        },
+        {
+          "index": 8,
+          "joint": "head_roll",
+          "rmse": 0.058488186448812485,
+          "mae": 0.04355219006538391,
+          "reference_rms": 0.05752500519156456,
+          "relative_rmse": 1.0167436599731445
+        },
+        {
+          "index": 9,
+          "joint": "right_hip_yaw",
+          "rmse": 0.06484724581241608,
+          "mae": 0.0551585778594017,
+          "reference_rms": 0.06473108381032944,
+          "relative_rmse": 1.0017945766448975
+        },
+        {
+          "index": 10,
+          "joint": "right_hip_roll",
+          "rmse": 0.06126153841614723,
+          "mae": 0.04532063379883766,
+          "reference_rms": 0.14947661757469177,
+          "relative_rmse": 0.40984028577804565
+        },
+        {
+          "index": 11,
+          "joint": "right_hip_pitch",
+          "rmse": 0.042270809412002563,
+          "mae": 0.034466005861759186,
+          "reference_rms": 0.2160511016845703,
+          "relative_rmse": 0.19565190374851227
+        },
+        {
+          "index": 12,
+          "joint": "right_knee",
+          "rmse": 0.053672511130571365,
+          "mae": 0.04291314631700516,
+          "reference_rms": 0.3475897014141083,
+          "relative_rmse": 0.15441341698169708
+        },
+        {
+          "index": 13,
+          "joint": "right_ankle",
+          "rmse": 0.061341091990470886,
+          "mae": 0.051780082285404205,
+          "reference_rms": 0.10274133831262589,
+          "relative_rmse": 0.5970439314842224
+        }
+      ]
+    },
+    "by_source_command": {
+      "stationary_official_reset_20": {
+        "mirror_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.03960435837507248,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.02904958836734295,
+              "mae": 0.028986992314457893,
+              "reference_rms": 0.025061292573809624,
+              "relative_rmse": 1.1591416597366333
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.006790276151150465,
+              "mae": 0.00673311622813344,
+              "reference_rms": 0.17432409524917603,
+              "relative_rmse": 0.038952022790908813
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.015348450280725956,
+              "mae": 0.015316558070480824,
+              "reference_rms": 0.03360311686992645,
+              "relative_rmse": 0.45675674080848694
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.06962927430868149,
+              "mae": 0.06951423734426498,
+              "reference_rms": 0.0905560851097107,
+              "relative_rmse": 0.7689077258110046
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.031305134296417236,
+              "mae": 0.03129882365465164,
+              "reference_rms": 0.005950807128101587,
+              "relative_rmse": 5.260653495788574
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.0038974490016698837,
+              "mae": 0.00387667422182858,
+              "reference_rms": 0.0900665670633316,
+              "relative_rmse": 0.04327298328280449
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.002543657086789608,
+              "mae": 0.0022500576451420784,
+              "reference_rms": 0.04522193595767021,
+              "relative_rmse": 0.05624829977750778
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.0916171669960022,
+              "mae": 0.0916047990322113,
+              "reference_rms": 0.06353353708982468,
+              "relative_rmse": 1.4420284032821655
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.026850664988160133,
+              "mae": 0.026601605117321014,
+              "reference_rms": 0.023235024884343147,
+              "relative_rmse": 1.1556116342544556
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.026675347238779068,
+              "mae": 0.026649264618754387,
+              "reference_rms": 0.0022773202508687973,
+              "relative_rmse": 11.713480949401855
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.008572363294661045,
+              "mae": 0.008432655595242977,
+              "reference_rms": 0.1646433025598526,
+              "relative_rmse": 0.05206627398729324
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.01475113071501255,
+              "mae": 0.0147379320114851,
+              "reference_rms": 0.039308901876211166,
+              "relative_rmse": 0.3752618432044983
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.06502027809619904,
+              "mae": 0.06497766077518463,
+              "reference_rms": 0.1509556919336319,
+              "relative_rmse": 0.43072426319122314
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.02527138590812683,
+              "mae": 0.025261664763092995,
+              "reference_rms": 0.027003107592463493,
+              "relative_rmse": 0.9358695149421692
+            }
+          ]
+        },
+        "replay_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.0,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.00227731978520751,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.16464336216449738,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.039308901876211166,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.15095579624176025,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.0270030926913023,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.0900665894150734,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.04522193595767021,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.06353353708982468,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.023235023021697998,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.025061294436454773,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.17432409524917603,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.033603113144636154,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.09055611491203308,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.005950807128101587,
+              "relative_rmse": 0.0
+            }
+          ]
+        }
+      },
+      "forward_010_official_reset_20": {
+        "mirror_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.05422795191407204,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.0842726081609726,
+              "mae": 0.0842592641711235,
+              "reference_rms": 0.05802992358803749,
+              "relative_rmse": 1.4522267580032349
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.02451498806476593,
+              "mae": 0.02449130453169346,
+              "reference_rms": 0.07131673395633698,
+              "relative_rmse": 0.3437480330467224
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.045732464641332626,
+              "mae": 0.04542968049645424,
+              "reference_rms": 0.13635917007923126,
+              "relative_rmse": 0.3353824019432068
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.006490478292107582,
+              "mae": 0.004127564374357462,
+              "reference_rms": 0.11673428863286972,
+              "relative_rmse": 0.055600445717573166
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.01834399811923504,
+              "mae": 0.017864573746919632,
+              "reference_rms": 0.03458767384290695,
+              "relative_rmse": 0.5303623080253601
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.005850737914443016,
+              "mae": 0.005549666937440634,
+              "reference_rms": 0.05541877821087837,
+              "relative_rmse": 0.10557319968938828
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.003303040750324726,
+              "mae": 0.0026255191769450903,
+              "reference_rms": 0.03486044332385063,
+              "relative_rmse": 0.09475039690732956
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.14958691596984863,
+              "mae": 0.14955921471118927,
+              "reference_rms": 0.11779346317052841,
+              "relative_rmse": 1.2699084281921387
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.03468324616551399,
+              "mae": 0.034645259380340576,
+              "reference_rms": 0.029796473681926727,
+              "relative_rmse": 1.1640050411224365
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.05598369240760803,
+              "mae": 0.05591786280274391,
+              "reference_rms": 0.0030687523540109396,
+              "relative_rmse": 18.243144989013672
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.009436234831809998,
+              "mae": 0.009102137759327888,
+              "reference_rms": 0.06435667723417282,
+              "relative_rmse": 0.14662402868270874
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.04861383140087128,
+              "mae": 0.04820037633180618,
+              "reference_rms": 0.08664948493242264,
+              "relative_rmse": 0.5610400438308716
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.018491307273507118,
+              "mae": 0.018168563023209572,
+              "reference_rms": 0.15990154445171356,
+              "relative_rmse": 0.11564183235168457
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.037995945662260056,
+              "mae": 0.037956055253744125,
+              "reference_rms": 0.05156014859676361,
+              "relative_rmse": 0.7369246482849121
+            }
+          ]
+        },
+        "replay_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.0,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.0030687509570270777,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.06435666978359222,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.08664949238300323,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.15990155935287476,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.05156014487147331,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.05541876330971718,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.03486042842268944,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.11779346317052841,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.029796475544571877,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.05802992358803749,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.07131673395633698,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.13635902106761932,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.11673430353403091,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.034587666392326355,
+              "relative_rmse": 0.0
+            }
+          ]
+        }
+      },
+      "forward_030_official_reset_20": {
+        "mirror_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.06710358709096909,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.0699395164847374,
+              "mae": 0.05836576223373413,
+              "reference_rms": 0.08678686618804932,
+              "relative_rmse": 0.8058767318725586
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.06414257735013962,
+              "mae": 0.04877060651779175,
+              "reference_rms": 0.17273935675621033,
+              "relative_rmse": 0.3713257908821106
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.05188837647438049,
+              "mae": 0.04406565800309181,
+              "reference_rms": 0.36059242486953735,
+              "relative_rmse": 0.14389757812023163
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.07251156866550446,
+              "mae": 0.058892179280519485,
+              "reference_rms": 0.5760111212730408,
+              "relative_rmse": 0.1258857101202011
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.06500829756259918,
+              "mae": 0.05607666075229645,
+              "reference_rms": 0.21488501131534576,
+              "relative_rmse": 0.30252596735954285
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.04201964661478996,
+              "mae": 0.03708032891154289,
+              "reference_rms": 0.09719458222389221,
+              "relative_rmse": 0.43232497572898865
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.07771807163953781,
+              "mae": 0.06900462508201599,
+              "reference_rms": 0.10568910092115402,
+              "relative_rmse": 0.7353461384773254
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.09914713352918625,
+              "mae": 0.08259894698858261,
+              "reference_rms": 0.26728758215904236,
+              "relative_rmse": 0.3709380328655243
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.06786983460187912,
+              "mae": 0.06296919286251068,
+              "reference_rms": 0.0877690464258194,
+              "relative_rmse": 0.7732775807380676
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.07199197262525558,
+              "mae": 0.058931052684783936,
+              "reference_rms": 0.07090377807617188,
+              "relative_rmse": 1.0153474807739258
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.0643392875790596,
+              "mae": 0.04718464985489845,
+              "reference_rms": 0.15080039203166962,
+              "relative_rmse": 0.4266519844532013
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.04942777007818222,
+              "mae": 0.039478570222854614,
+              "reference_rms": 0.35606086254119873,
+              "relative_rmse": 0.13881832361221313
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.06370851397514343,
+              "mae": 0.05156248062849045,
+              "reference_rms": 0.5423028469085693,
+              "relative_rmse": 0.11747774481773376
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.06157734617590904,
+              "mae": 0.052785590291023254,
+              "reference_rms": 0.17437615990638733,
+              "relative_rmse": 0.35312938690185547
+            }
+          ]
+        },
+        "replay_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.0,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.07090379297733307,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.15080054104328156,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.35606080293655396,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.5423030853271484,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.17437608540058136,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.09719457477331161,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.10568911582231522,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.26728764176368713,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.0877690315246582,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.08678680658340454,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.17273934185504913,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.3605926036834717,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.576011061668396,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.2148849368095398,
+              "relative_rmse": 0.0
+            }
+          ]
+        }
+      },
+      "backward_030_official_reset_20": {
+        "mirror_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.07914427667856216,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.08713433146476746,
+              "mae": 0.0721089169383049,
+              "reference_rms": 0.15357773005962372,
+              "relative_rmse": 0.5673630833625793
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.06564284861087799,
+              "mae": 0.05368949472904205,
+              "reference_rms": 0.17154920101165771,
+              "relative_rmse": 0.3826473653316498
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.06751196086406708,
+              "mae": 0.05456792190670967,
+              "reference_rms": 0.4318808615207672,
+              "relative_rmse": 0.15632079541683197
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.08515236526727676,
+              "mae": 0.0757039487361908,
+              "reference_rms": 0.358825147151947,
+              "relative_rmse": 0.2373088002204895
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.09542316943407059,
+              "mae": 0.08406298607587814,
+              "reference_rms": 0.22056379914283752,
+              "relative_rmse": 0.4326329529285431
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.049239978194236755,
+              "mae": 0.04038912057876587,
+              "reference_rms": 0.0773325115442276,
+              "relative_rmse": 0.6367306113243103
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.10490146279335022,
+              "mae": 0.08542869985103607,
+              "reference_rms": 0.1470024436712265,
+              "relative_rmse": 0.7136035561561584
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.05933412164449692,
+              "mae": 0.047583289444446564,
+              "reference_rms": 0.11056850850582123,
+              "relative_rmse": 0.5366276502609253
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.09951523691415787,
+              "mae": 0.08274136483669281,
+              "reference_rms": 0.07512275129556656,
+              "relative_rmse": 1.3247016668319702
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.07907699048519135,
+              "mae": 0.0649682804942131,
+              "reference_rms": 0.11468937247991562,
+              "relative_rmse": 0.689488410949707
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.05693333223462105,
+              "mae": 0.04786263033747673,
+              "reference_rms": 0.1592719554901123,
+              "relative_rmse": 0.3574598729610443
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.05002782121300697,
+              "mae": 0.042293090373277664,
+              "reference_rms": 0.40063929557800293,
+              "relative_rmse": 0.12486997991800308
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.07477404177188873,
+              "mae": 0.06378256529569626,
+              "reference_rms": 0.3756147027015686,
+              "relative_rmse": 0.19907112419605255
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.10215897113084793,
+              "mae": 0.08971858769655228,
+              "reference_rms": 0.20257772505283356,
+              "relative_rmse": 0.5042951703071594
+            }
+          ]
+        },
+        "replay_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.0,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.11468939483165741,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.15927202999591827,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.4006393849849701,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.37561464309692383,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.20257766544818878,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.0773325189948082,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.1470024734735489,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.11056846380233765,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.07512275129556656,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.15357767045497894,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.17154943943023682,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.4318807125091553,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.35882529616355896,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.2205638289451599,
+              "relative_rmse": 0.0
+            }
+          ]
+        }
+      },
+      "lateral_pos_020_official_reset_20": {
+        "mirror_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.07240839302539825,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.07275872677564621,
+              "mae": 0.06029355898499489,
+              "reference_rms": 0.08488710969686508,
+              "relative_rmse": 0.8571233749389648
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.11078343540430069,
+              "mae": 0.08996706455945969,
+              "reference_rms": 0.2325846403837204,
+              "relative_rmse": 0.4763144850730896
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.055191654711961746,
+              "mae": 0.045937828719615936,
+              "reference_rms": 0.17722325026988983,
+              "relative_rmse": 0.31142446398735046
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.07700420916080475,
+              "mae": 0.06448065489530563,
+              "reference_rms": 0.4711855947971344,
+              "relative_rmse": 0.1634264886379242
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.08580964803695679,
+              "mae": 0.08228964358568192,
+              "reference_rms": 0.08673586696386337,
+              "relative_rmse": 0.9893214106559753
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.05098823457956314,
+              "mae": 0.04148469120264053,
+              "reference_rms": 0.07176453620195389,
+              "relative_rmse": 0.7104934453964233
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.05875571817159653,
+              "mae": 0.048665851354599,
+              "reference_rms": 0.06849159300327301,
+              "relative_rmse": 0.8578529953956604
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.08401505649089813,
+              "mae": 0.06837031990289688,
+              "reference_rms": 0.09864278882741928,
+              "relative_rmse": 0.8517100811004639
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.06415311992168427,
+              "mae": 0.047364115715026855,
+              "reference_rms": 0.0701519027352333,
+              "relative_rmse": 0.914488673210144
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.08788749575614929,
+              "mae": 0.07399813085794449,
+              "reference_rms": 0.06769264489412308,
+              "relative_rmse": 1.2983314990997314
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.07432674616575241,
+              "mae": 0.05933142825961113,
+              "reference_rms": 0.177756205201149,
+              "relative_rmse": 0.41813868284225464
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.045170120894908905,
+              "mae": 0.03374176472425461,
+              "reference_rms": 0.15077079832553864,
+              "relative_rmse": 0.29959461092948914
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.046476811170578,
+              "mae": 0.03932686522603035,
+              "reference_rms": 0.34000951051712036,
+              "relative_rmse": 0.13669267296791077
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.06942982971668243,
+              "mae": 0.0643860474228859,
+              "reference_rms": 0.05524517223238945,
+              "relative_rmse": 1.2567583322525024
+            }
+          ]
+        },
+        "replay_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.0,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.06769268959760666,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.17775611579418182,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.15077069401741028,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.3400096297264099,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.05524520203471184,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.07176454365253448,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.06849158555269241,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.09864280372858047,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.0701519027352333,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.08488711714744568,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.2325846254825592,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.17722325026988983,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.4711858034133911,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.08673591911792755,
+              "relative_rmse": 0.0
+            }
+          ]
+        }
+      },
+      "lateral_neg_020_official_reset_20": {
+        "mirror_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.06754205375909805,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.08564839512109756,
+              "mae": 0.07508957386016846,
+              "reference_rms": 0.07387226074934006,
+              "relative_rmse": 1.159412145614624
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.0716921016573906,
+              "mae": 0.0603983998298645,
+              "reference_rms": 0.18364326655864716,
+              "relative_rmse": 0.3903878629207611
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.048913177102804184,
+              "mae": 0.04095117747783661,
+              "reference_rms": 0.21287554502487183,
+              "relative_rmse": 0.22977358102798462
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.062419090420007706,
+              "mae": 0.05126937851309776,
+              "reference_rms": 0.36049360036849976,
+              "relative_rmse": 0.1731489598751068
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.07758952677249908,
+              "mae": 0.0657992735505104,
+              "reference_rms": 0.0647401213645935,
+              "relative_rmse": 1.1984766721725464
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.06108202412724495,
+              "mae": 0.05060705170035362,
+              "reference_rms": 0.0906267836689949,
+              "relative_rmse": 0.6739952564239502
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.06800804287195206,
+              "mae": 0.05415337160229683,
+              "reference_rms": 0.11031065881252289,
+              "relative_rmse": 0.6165137887001038
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.07524716109037399,
+              "mae": 0.060499705374240875,
+              "reference_rms": 0.143173485994339,
+              "relative_rmse": 0.5255663394927979
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.06066221743822098,
+              "mae": 0.048459243029356,
+              "reference_rms": 0.054865919053554535,
+              "relative_rmse": 1.1056448221206665
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.05395814776420593,
+              "mae": 0.04902706295251846,
+              "reference_rms": 0.05872160941362381,
+              "relative_rmse": 0.9188805818557739
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.09350986033678055,
+              "mae": 0.07964768260717392,
+              "reference_rms": 0.2112606316804886,
+              "relative_rmse": 0.4426279366016388
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.03606641665101051,
+              "mae": 0.02894436940550804,
+              "reference_rms": 0.1400582492351532,
+              "relative_rmse": 0.25751012563705444
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.06894460320472717,
+              "mae": 0.0622837133705616,
+              "reference_rms": 0.43005067110061646,
+              "relative_rmse": 0.16031739115715027
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.060621477663517,
+              "mae": 0.05520166456699371,
+              "reference_rms": 0.03619281202554703,
+              "relative_rmse": 1.6749590635299683
+            }
+          ]
+        },
+        "replay_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.0,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.05872161686420441,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.21126039326190948,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.1400582492351532,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.4300503432750702,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.03619280830025673,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.0906267985701561,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.1103106215596199,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.1431734263896942,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.05486590042710304,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.07387226074934006,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.18364323675632477,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.21287548542022705,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.36049360036849976,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.0647401437163353,
+              "relative_rmse": 0.0
+            }
+          ]
+        }
+      },
+      "yaw_pos_050_official_reset_20": {
+        "mirror_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.06682892143726349,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.09698674827814102,
+              "mae": 0.08256860822439194,
+              "reference_rms": 0.1473141610622406,
+              "relative_rmse": 0.6583667397499084
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.07969088107347488,
+              "mae": 0.06877978146076202,
+              "reference_rms": 0.16445519030094147,
+              "relative_rmse": 0.4845750331878662
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.054309017956256866,
+              "mae": 0.04398028552532196,
+              "reference_rms": 0.19444939494132996,
+              "relative_rmse": 0.2792963981628418
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.06948918104171753,
+              "mae": 0.055227164179086685,
+              "reference_rms": 0.4040555953979492,
+              "relative_rmse": 0.17197926342487335
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.06615342944860458,
+              "mae": 0.055936846882104874,
+              "reference_rms": 0.05735861510038376,
+              "relative_rmse": 1.1533303260803223
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.04313576966524124,
+              "mae": 0.03713228553533554,
+              "reference_rms": 0.06750953197479248,
+              "relative_rmse": 0.638958215713501
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.07612698525190353,
+              "mae": 0.060425665229558945,
+              "reference_rms": 0.06366323679685593,
+              "relative_rmse": 1.1957762241363525
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.09154955297708511,
+              "mae": 0.07569286972284317,
+              "reference_rms": 0.10584357380867004,
+              "relative_rmse": 0.8649514317512512
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.055757611989974976,
+              "mae": 0.040424950420856476,
+              "reference_rms": 0.05454617738723755,
+              "relative_rmse": 1.0222092866897583
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.057201508432626724,
+              "mae": 0.045197200030088425,
+              "reference_rms": 0.06142900139093399,
+              "relative_rmse": 0.9311808347702026
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.07284639775753021,
+              "mae": 0.05769491195678711,
+              "reference_rms": 0.14834198355674744,
+              "relative_rmse": 0.4910706877708435
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.05294215306639671,
+              "mae": 0.04388200491666794,
+              "reference_rms": 0.14720794558525085,
+              "relative_rmse": 0.3596419394016266
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.041415005922317505,
+              "mae": 0.03135504946112633,
+              "reference_rms": 0.3355785310268402,
+              "relative_rmse": 0.12341375648975372
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.048692721873521805,
+              "mae": 0.035187236964702606,
+              "reference_rms": 0.04901878908276558,
+              "relative_rmse": 0.9933481216430664
+            }
+          ]
+        },
+        "replay_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.0,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.061428990215063095,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.14834199845790863,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.14720796048641205,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.33557847142219543,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.049018774181604385,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.06750950962305069,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.06366319954395294,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.10584351420402527,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.05454616621136665,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.14731408655643463,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.16445524990558624,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.19444943964481354,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.4040551781654358,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.05735860392451286,
+              "relative_rmse": 0.0
+            }
+          ]
+        }
+      },
+      "yaw_neg_050_official_reset_20": {
+        "mirror_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.06256639212369919,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.09469005465507507,
+              "mae": 0.09461363404989243,
+              "reference_rms": 0.02524230256676674,
+              "relative_rmse": 3.7512447834014893
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.043735019862651825,
+              "mae": 0.043224770575761795,
+              "reference_rms": 0.06985579431056976,
+              "relative_rmse": 0.6260757446289062
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.03215053677558899,
+              "mae": 0.03105524182319641,
+              "reference_rms": 0.05954477936029434,
+              "relative_rmse": 0.5399388074874878
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.028056735172867775,
+              "mae": 0.026022210717201233,
+              "reference_rms": 0.03467835485935211,
+              "relative_rmse": 0.8090561032295227
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.1341206431388855,
+              "mae": 0.13408322632312775,
+              "reference_rms": 0.014242027886211872,
+              "relative_rmse": 9.417243003845215
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.009232715703547001,
+              "mae": 0.008822813630104065,
+              "reference_rms": 0.024917084723711014,
+              "relative_rmse": 0.37053754925727844
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.009714754298329353,
+              "mae": 0.007992271333932877,
+              "reference_rms": 0.06787275522947311,
+              "relative_rmse": 0.14313186705112457
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.11315231770277023,
+              "mae": 0.11308520287275314,
+              "reference_rms": 0.06911810487508774,
+              "relative_rmse": 1.6370865106582642
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.0053924028761684895,
+              "mae": 0.005211161449551582,
+              "reference_rms": 0.028135986998677254,
+              "relative_rmse": 0.1916550099849701
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.066722072660923,
+              "mae": 0.06657897680997849,
+              "reference_rms": 0.0593402236700058,
+              "relative_rmse": 1.1243987083435059
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.05389976128935814,
+              "mae": 0.053308598697185516,
+              "reference_rms": 0.03398364037275314,
+              "relative_rmse": 1.586050271987915
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.024975789710879326,
+              "mae": 0.02444894053041935,
+              "reference_rms": 0.11428810656070709,
+              "relative_rmse": 0.21853359043598175
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.014064517803490162,
+              "mae": 0.011849520727992058,
+              "reference_rms": 0.2642931342124939,
+              "relative_rmse": 0.05321560055017471
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.054081860929727554,
+              "mae": 0.053744178265333176,
+              "reference_rms": 0.053376760333776474,
+              "relative_rmse": 1.0132099390029907
+            }
+          ]
+        },
+        "replay_error": {
+          "sample_count": 2000,
+          "overall_rmse": 0.0,
+          "per_joint": [
+            {
+              "index": 0,
+              "joint": "left_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.0593402236700058,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 1,
+              "joint": "left_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.033983636647462845,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 2,
+              "joint": "left_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.11428803950548172,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 3,
+              "joint": "left_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.2642931044101715,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 4,
+              "joint": "left_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.053376756608486176,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 5,
+              "joint": "neck_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.02491709031164646,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 6,
+              "joint": "head_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.06787273287773132,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 7,
+              "joint": "head_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.06911806762218475,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 8,
+              "joint": "head_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.028135979548096657,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 9,
+              "joint": "right_hip_yaw",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.025242317467927933,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 10,
+              "joint": "right_hip_roll",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.06985577195882797,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 11,
+              "joint": "right_hip_pitch",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.05954478681087494,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 12,
+              "joint": "right_knee",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.03467833995819092,
+              "relative_rmse": 0.0
+            },
+            {
+              "index": 13,
+              "joint": "right_ankle",
+              "rmse": 0.0,
+              "mae": 0.0,
+              "reference_rms": 0.014242036268115044,
+              "relative_rmse": 0.0
+            }
+          ]
+        }
+      }
+    }
+  },
+  "closed_loop_pairs": [
+    {
+      "name": "yaw_positive_vs_negative",
+      "positive_command": "yaw_pos_050_official_reset_20",
+      "negative_command": "yaw_neg_050_official_reset_20",
+      "paired_seeds": [
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61
+      ],
+      "mirror_error": {
+        "sample_count": 10000,
+        "overall_rmse": 0.17428626120090485,
+        "per_joint": [
+          {
+            "index": 0,
+            "joint": "left_hip_yaw",
+            "rmse": 0.11264529824256897,
+            "mae": 0.09190140664577484,
+            "reference_rms": 0.14754214882850647,
+            "relative_rmse": 0.7634787559509277
+          },
+          {
+            "index": 1,
+            "joint": "left_hip_roll",
+            "rmse": 0.1711069494485855,
+            "mae": 0.13871140778064728,
+            "reference_rms": 0.16448496282100677,
+            "relative_rmse": 1.0402588844299316
+          },
+          {
+            "index": 2,
+            "joint": "left_hip_pitch",
+            "rmse": 0.14519719779491425,
+            "mae": 0.12671181559562683,
+            "reference_rms": 0.19544844329357147,
+            "relative_rmse": 0.7428925633430481
+          },
+          {
+            "index": 3,
+            "joint": "left_knee",
+            "rmse": 0.39589232206344604,
+            "mae": 0.3285351097583771,
+            "reference_rms": 0.40492063760757446,
+            "relative_rmse": 0.9777035117149353
+          },
+          {
+            "index": 4,
+            "joint": "left_ankle",
+            "rmse": 0.03790377825498581,
+            "mae": 0.029698828235268593,
+            "reference_rms": 0.05730999633669853,
+            "relative_rmse": 0.6613816022872925
+          },
+          {
+            "index": 5,
+            "joint": "neck_pitch",
+            "rmse": 0.05333156883716583,
+            "mae": 0.042217470705509186,
+            "reference_rms": 0.06778573244810104,
+            "relative_rmse": 0.7867668867111206
+          },
+          {
+            "index": 6,
+            "joint": "head_pitch",
+            "rmse": 0.05569923669099808,
+            "mae": 0.0496957004070282,
+            "reference_rms": 0.06345709413290024,
+            "relative_rmse": 0.8777464032173157
+          },
+          {
+            "index": 7,
+            "joint": "head_yaw",
+            "rmse": 0.1462663859128952,
+            "mae": 0.115774966776371,
+            "reference_rms": 0.1059601828455925,
+            "relative_rmse": 1.3803900480270386
+          },
+          {
+            "index": 8,
+            "joint": "head_roll",
+            "rmse": 0.054766006767749786,
+            "mae": 0.04602299630641937,
+            "reference_rms": 0.05460590869188309,
+            "relative_rmse": 1.002931833267212
+          },
+          {
+            "index": 9,
+            "joint": "right_hip_yaw",
+            "rmse": 0.07561928033828735,
+            "mae": 0.06341490894556046,
+            "reference_rms": 0.06111930310726166,
+            "relative_rmse": 1.2372405529022217
+          },
+          {
+            "index": 10,
+            "joint": "right_hip_roll",
+            "rmse": 0.18111811578273773,
+            "mae": 0.1457037478685379,
+            "reference_rms": 0.14811649918556213,
+            "relative_rmse": 1.2228084802627563
+          },
+          {
+            "index": 11,
+            "joint": "right_hip_pitch",
+            "rmse": 0.14178693294525146,
+            "mae": 0.125840961933136,
+            "reference_rms": 0.14725367724895477,
+            "relative_rmse": 0.9628753066062927
+          },
+          {
+            "index": 12,
+            "joint": "right_knee",
+            "rmse": 0.3361656963825226,
+            "mae": 0.30807891488075256,
+            "reference_rms": 0.33664000034332275,
+            "relative_rmse": 0.9985910654067993
+          },
+          {
+            "index": 13,
+            "joint": "right_ankle",
+            "rmse": 0.04550739750266075,
+            "mae": 0.033149879425764084,
+            "reference_rms": 0.04913843423128128,
+            "relative_rmse": 0.9261059761047363
+          }
+        ]
+      },
+      "action_rms_positive_frame": {
+        "positive_command": [
+          0.061119336634874344,
+          0.14811648428440094,
+          0.14725370705127716,
+          0.33663955330848694,
+          0.049138348549604416,
+          0.06778571754693985,
+          0.06345702707767487,
+          0.10596003383398056,
+          0.0546058788895607,
+          0.1475420594215393,
+          0.1644848734140396,
+          0.19544833898544312,
+          0.4049207270145416,
+          0.05730999633669853
+        ],
+        "mirrored_negative_command": [
+          0.025297876447439194,
+          0.06978913396596909,
+          0.059587229043245316,
+          0.034205254167318344,
+          0.014146517962217331,
+          0.02503453753888607,
+          0.06782656908035278,
+          0.06893067806959152,
+          0.02819185145199299,
+          0.05945843830704689,
+          0.033051714301109314,
+          0.11379696428775787,
+          0.2644168436527252,
+          0.05343840643763542
+        ],
+        "negative_to_positive_ratio": [
+          0.4139095389494848,
+          0.47117735951635065,
+          0.40465690294978895,
+          0.10160794782178677,
+          0.28789160360032523,
+          0.36931876573483646,
+          1.0688582841633814,
+          0.6505346928974459,
+          0.5162786869342484,
+          0.4029931433800137,
+          0.20094075287951788,
+          0.5822355149113516,
+          0.6530089126389161,
+          0.9324447714790041
+        ]
+      }
+    },
+    {
+      "name": "lateral_positive_vs_negative",
+      "positive_command": "lateral_pos_020_official_reset_20",
+      "negative_command": "lateral_neg_020_official_reset_20",
+      "paired_seeds": [
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61
+      ],
+      "mirror_error": {
+        "sample_count": 10000,
+        "overall_rmse": 0.25807327032089233,
+        "per_joint": [
+          {
+            "index": 0,
+            "joint": "left_hip_yaw",
+            "rmse": 0.09633131325244904,
+            "mae": 0.07874441891908646,
+            "reference_rms": 0.08655119687318802,
+            "relative_rmse": 1.1129980087280273
+          },
+          {
+            "index": 1,
+            "joint": "left_hip_roll",
+            "rmse": 0.2968999743461609,
+            "mae": 0.2385883778333664,
+            "reference_rms": 0.23546740412712097,
+            "relative_rmse": 1.2608963251113892
+          },
+          {
+            "index": 2,
+            "joint": "left_hip_pitch",
+            "rmse": 0.21911703050136566,
+            "mae": 0.17670166492462158,
+            "reference_rms": 0.17949379980564117,
+            "relative_rmse": 1.220749855041504
+          },
+          {
+            "index": 3,
+            "joint": "left_knee",
+            "rmse": 0.5985426306724548,
+            "mae": 0.48306846618652344,
+            "reference_rms": 0.47188013792037964,
+            "relative_rmse": 1.268420934677124
+          },
+          {
+            "index": 4,
+            "joint": "left_ankle",
+            "rmse": 0.08690402656793594,
+            "mae": 0.0728350505232811,
+            "reference_rms": 0.08701995760202408,
+            "relative_rmse": 0.9986677765846252
+          },
+          {
+            "index": 5,
+            "joint": "neck_pitch",
+            "rmse": 0.06240193545818329,
+            "mae": 0.049945175647735596,
+            "reference_rms": 0.07136622816324234,
+            "relative_rmse": 0.8743902444839478
+          },
+          {
+            "index": 6,
+            "joint": "head_pitch",
+            "rmse": 0.0764915719628334,
+            "mae": 0.059976737946271896,
+            "reference_rms": 0.06746901571750641,
+            "relative_rmse": 1.1337288618087769
+          },
+          {
+            "index": 7,
+            "joint": "head_yaw",
+            "rmse": 0.1858033388853073,
+            "mae": 0.1534937173128128,
+            "reference_rms": 0.09967293590307236,
+            "relative_rmse": 1.8641302585601807
+          },
+          {
+            "index": 8,
+            "joint": "head_roll",
+            "rmse": 0.09310169517993927,
+            "mae": 0.07487515360116959,
+            "reference_rms": 0.07125391066074371,
+            "relative_rmse": 1.3066186904907227
+          },
+          {
+            "index": 9,
+            "joint": "right_hip_yaw",
+            "rmse": 0.11916056275367737,
+            "mae": 0.10071846097707748,
+            "reference_rms": 0.06815028935670853,
+            "relative_rmse": 1.7484967708587646
+          },
+          {
+            "index": 10,
+            "joint": "right_hip_roll",
+            "rmse": 0.2462131828069687,
+            "mae": 0.19859208166599274,
+            "reference_rms": 0.17839056253433228,
+            "relative_rmse": 1.3801918029785156
+          },
+          {
+            "index": 11,
+            "joint": "right_hip_pitch",
+            "rmse": 0.2446318119764328,
+            "mae": 0.19961099326610565,
+            "reference_rms": 0.1491769403219223,
+            "relative_rmse": 1.6398768424987793
+          },
+          {
+            "index": 12,
+            "joint": "right_knee",
+            "rmse": 0.4792129099369049,
+            "mae": 0.3797290623188019,
+            "reference_rms": 0.3381117880344391,
+            "relative_rmse": 1.417320966720581
+          },
+          {
+            "index": 13,
+            "joint": "right_ankle",
+            "rmse": 0.06270114332437515,
+            "mae": 0.049901142716407776,
+            "reference_rms": 0.054262541234493256,
+            "relative_rmse": 1.1555143594741821
+          }
+        ]
+      },
+      "action_rms_positive_frame": {
+        "positive_command": [
+          0.06815024465322495,
+          0.17839044332504272,
+          0.14917701482772827,
+          0.3381120562553406,
+          0.05426257103681564,
+          0.07136613130569458,
+          0.06746900081634521,
+          0.09967290610074997,
+          0.07125388085842133,
+          0.08655115216970444,
+          0.23546721041202545,
+          0.17949362099170685,
+          0.47188040614128113,
+          0.08701988309621811
+        ],
+        "mirrored_negative_command": [
+          0.07412511110305786,
+          0.18176153302192688,
+          0.21225759387016296,
+          0.36051681637763977,
+          0.06472687423229218,
+          0.09085795283317566,
+          0.11030945926904678,
+          0.1434922069311142,
+          0.054749421775341034,
+          0.05888223275542259,
+          0.21499291062355042,
+          0.14209482073783875,
+          0.43262338638305664,
+          0.03618399426341057
+        ],
+        "negative_to_positive_ratio": [
+          1.0876719735965052,
+          1.0188972549989224,
+          1.4228572284763912,
+          1.066264304119872,
+          1.19284569447284,
+          1.273124256154344,
+          1.6349650644644338,
+          1.4396310145313855,
+          0.7683710854167507,
+          0.6803171451717911,
+          0.9130481914970298,
+          0.7916427333337042,
+          0.9168072688602567,
+          0.4158129495922424
+        ]
+      }
+    }
+  ],
+  "bilateral_leg_action_rms": {
+    "stationary_official_reset_20": [
+      {
+        "joint_type": "hip_yaw",
+        "left_rms": 0.002276506507769227,
+        "right_rms": 0.02506127953529358,
+        "signed_relative_difference": -1.666906968372165,
+        "absolute_relative_difference": 1.666906968372165
+      },
+      {
+        "joint_type": "hip_roll",
+        "left_rms": 0.16467124223709106,
+        "right_rms": 0.1743522435426712,
+        "signed_relative_difference": -0.05711109531726748,
+        "absolute_relative_difference": 0.05711109531726748
+      },
+      {
+        "joint_type": "hip_pitch",
+        "left_rms": 0.039315205067396164,
+        "right_rms": 0.033614229410886765,
+        "signed_relative_difference": 0.15634224225904417,
+        "absolute_relative_difference": 0.15634224225904417
+      },
+      {
+        "joint_type": "knee",
+        "left_rms": 0.1509636640548706,
+        "right_rms": 0.09056150168180466,
+        "signed_relative_difference": 0.5001728262049503,
+        "absolute_relative_difference": 0.5001728262049503
+      },
+      {
+        "joint_type": "ankle",
+        "left_rms": 0.027019048109650612,
+        "right_rms": 0.005961746908724308,
+        "signed_relative_difference": 1.2769432143278803,
+        "absolute_relative_difference": 1.2769432143278803
+      }
+    ],
+    "forward_010_official_reset_20": [
+      {
+        "joint_type": "hip_yaw",
+        "left_rms": 0.003181620268151164,
+        "right_rms": 0.0579989068210125,
+        "signed_relative_difference": -1.7919847755796994,
+        "absolute_relative_difference": 1.7919847755796994
+      },
+      {
+        "joint_type": "hip_roll",
+        "left_rms": 0.06378725171089172,
+        "right_rms": 0.07100501656532288,
+        "signed_relative_difference": -0.10709464195143004,
+        "absolute_relative_difference": 0.10709464195143004
+      },
+      {
+        "joint_type": "hip_pitch",
+        "left_rms": 0.08650603145360947,
+        "right_rms": 0.13644734025001526,
+        "signed_relative_difference": -0.44799778908742877,
+        "absolute_relative_difference": 0.44799778908742877
+      },
+      {
+        "joint_type": "knee",
+        "left_rms": 0.16008809208869934,
+        "right_rms": 0.11678200215101242,
+        "signed_relative_difference": 0.3128260569752461,
+        "absolute_relative_difference": 0.3128260569752461
+      },
+      {
+        "joint_type": "ankle",
+        "left_rms": 0.05117960646748543,
+        "right_rms": 0.03430929407477379,
+        "signed_relative_difference": 0.39467842692332294,
+        "absolute_relative_difference": 0.39467842692332294
+      }
+    ],
+    "forward_030_official_reset_20": [
+      {
+        "joint_type": "hip_yaw",
+        "left_rms": 0.07162423431873322,
+        "right_rms": 0.08747557550668716,
+        "signed_relative_difference": -0.19926285525227924,
+        "absolute_relative_difference": 0.19926285525227924
+      },
+      {
+        "joint_type": "hip_roll",
+        "left_rms": 0.1526813507080078,
+        "right_rms": 0.17132703959941864,
+        "signed_relative_difference": -0.1150938645367756,
+        "absolute_relative_difference": 0.1150938645367756
+      },
+      {
+        "joint_type": "hip_pitch",
+        "left_rms": 0.35725849866867065,
+        "right_rms": 0.3596509099006653,
+        "signed_relative_difference": -0.0066742358334198,
+        "absolute_relative_difference": 0.0066742358334198
+      },
+      {
+        "joint_type": "knee",
+        "left_rms": 0.5440481901168823,
+        "right_rms": 0.5769526362419128,
+        "signed_relative_difference": -0.05870548058721751,
+        "absolute_relative_difference": 0.05870548058721751
+      },
+      {
+        "joint_type": "ankle",
+        "left_rms": 0.17548124492168427,
+        "right_rms": 0.21499651670455933,
+        "signed_relative_difference": -0.20239448012764516,
+        "absolute_relative_difference": 0.20239448012764516
+      }
+    ],
+    "backward_030_official_reset_20": [
+      {
+        "joint_type": "hip_yaw",
+        "left_rms": 0.11435806751251221,
+        "right_rms": 0.15319299697875977,
+        "signed_relative_difference": -0.2902991960812358,
+        "absolute_relative_difference": 0.2902991960812358
+      },
+      {
+        "joint_type": "hip_roll",
+        "left_rms": 0.15731044113636017,
+        "right_rms": 0.17219895124435425,
+        "signed_relative_difference": -0.09036774339222434,
+        "absolute_relative_difference": 0.09036774339222434
+      },
+      {
+        "joint_type": "hip_pitch",
+        "left_rms": 0.39918026328086853,
+        "right_rms": 0.431299090385437,
+        "signed_relative_difference": -0.07735009175790812,
+        "absolute_relative_difference": 0.07735009175790812
+      },
+      {
+        "joint_type": "knee",
+        "left_rms": 0.3751344382762909,
+        "right_rms": 0.35981297492980957,
+        "signed_relative_difference": 0.04169403979434034,
+        "absolute_relative_difference": 0.04169403979434034
+      },
+      {
+        "joint_type": "ankle",
+        "left_rms": 0.20185409486293793,
+        "right_rms": 0.2206568568944931,
+        "signed_relative_difference": -0.08900485042267062,
+        "absolute_relative_difference": 0.08900485042267062
+      }
+    ],
+    "lateral_pos_020_official_reset_20": [
+      {
+        "joint_type": "hip_yaw",
+        "left_rms": 0.06815024465322495,
+        "right_rms": 0.08655115216970444,
+        "signed_relative_difference": -0.2378893519305595,
+        "absolute_relative_difference": 0.2378893519305595
+      },
+      {
+        "joint_type": "hip_roll",
+        "left_rms": 0.17839044332504272,
+        "right_rms": 0.23546721041202545,
+        "signed_relative_difference": -0.27582801270721313,
+        "absolute_relative_difference": 0.27582801270721313
+      },
+      {
+        "joint_type": "hip_pitch",
+        "left_rms": 0.14917701482772827,
+        "right_rms": 0.17949362099170685,
+        "signed_relative_difference": -0.1844801625700076,
+        "absolute_relative_difference": 0.1844801625700076
+      },
+      {
+        "joint_type": "knee",
+        "left_rms": 0.3381120562553406,
+        "right_rms": 0.47188040614128113,
+        "signed_relative_difference": -0.33029529556397136,
+        "absolute_relative_difference": 0.33029529556397136
+      },
+      {
+        "joint_type": "ankle",
+        "left_rms": 0.05426257103681564,
+        "right_rms": 0.08701988309621811,
+        "signed_relative_difference": -0.4637138031104368,
+        "absolute_relative_difference": 0.4637138031104368
+      }
+    ],
+    "lateral_neg_020_official_reset_20": [
+      {
+        "joint_type": "hip_yaw",
+        "left_rms": 0.05888219177722931,
+        "right_rms": 0.07412504404783249,
+        "signed_relative_difference": -0.229203353878452,
+        "absolute_relative_difference": 0.229203353878452
+      },
+      {
+        "joint_type": "hip_roll",
+        "left_rms": 0.2149927318096161,
+        "right_rms": 0.1817615032196045,
+        "signed_relative_difference": 0.1675154322552557,
+        "absolute_relative_difference": 0.1675154322552557
+      },
+      {
+        "joint_type": "hip_pitch",
+        "left_rms": 0.142094686627388,
+        "right_rms": 0.21225771307945251,
+        "signed_relative_difference": -0.39600706251805334,
+        "absolute_relative_difference": 0.39600706251805334
+      },
+      {
+        "joint_type": "knee",
+        "left_rms": 0.4326229989528656,
+        "right_rms": 0.3605170249938965,
+        "signed_relative_difference": 0.18182407086244606,
+        "absolute_relative_difference": 0.18182407086244606
+      },
+      {
+        "joint_type": "ankle",
+        "left_rms": 0.036183930933475494,
+        "right_rms": 0.06472692638635635,
+        "signed_relative_difference": -0.5657071243070562,
+        "absolute_relative_difference": 0.5657071243070562
+      }
+    ],
+    "yaw_pos_050_official_reset_20": [
+      {
+        "joint_type": "hip_yaw",
+        "left_rms": 0.061119336634874344,
+        "right_rms": 0.1475420594215393,
+        "signed_relative_difference": -0.8283537292475484,
+        "absolute_relative_difference": 0.8283537292475484
+      },
+      {
+        "joint_type": "hip_roll",
+        "left_rms": 0.14811648428440094,
+        "right_rms": 0.1644848734140396,
+        "signed_relative_difference": -0.10472372385169795,
+        "absolute_relative_difference": 0.10472372385169795
+      },
+      {
+        "joint_type": "hip_pitch",
+        "left_rms": 0.14725370705127716,
+        "right_rms": 0.19544833898544312,
+        "signed_relative_difference": -0.2812625865035071,
+        "absolute_relative_difference": 0.2812625865035071
+      },
+      {
+        "joint_type": "knee",
+        "left_rms": 0.33663955330848694,
+        "right_rms": 0.4049207270145416,
+        "signed_relative_difference": -0.18415542341699034,
+        "absolute_relative_difference": 0.18415542341699034
+      },
+      {
+        "joint_type": "ankle",
+        "left_rms": 0.049138348549604416,
+        "right_rms": 0.05730999633669853,
+        "signed_relative_difference": -0.15353264150461374,
+        "absolute_relative_difference": 0.15353264150461374
+      }
+    ],
+    "yaw_neg_050_official_reset_20": [
+      {
+        "joint_type": "hip_yaw",
+        "left_rms": 0.05945832282304764,
+        "right_rms": 0.0252978652715683,
+        "signed_relative_difference": 0.8060876337039833,
+        "absolute_relative_difference": 0.8060876337039833
+      },
+      {
+        "joint_type": "hip_roll",
+        "left_rms": 0.033051747828722,
+        "right_rms": 0.06978914141654968,
+        "signed_relative_difference": -0.7144511070924401,
+        "absolute_relative_difference": 0.7144511070924401
+      },
+      {
+        "joint_type": "hip_pitch",
+        "left_rms": 0.11379706859588623,
+        "right_rms": 0.059587255120277405,
+        "signed_relative_difference": 0.6253138959015954,
+        "absolute_relative_difference": 0.6253138959015954
+      },
+      {
+        "joint_type": "knee",
+        "left_rms": 0.26441723108291626,
+        "right_rms": 0.03420526161789894,
+        "signed_relative_difference": 1.5418260519020097,
+        "absolute_relative_difference": 1.5418260519020097
+      },
+      {
+        "joint_type": "ankle",
+        "left_rms": 0.053438469767570496,
+        "right_rms": 0.014146514236927032,
+        "signed_relative_difference": 1.162742171486753,
+        "absolute_relative_difference": 1.162742171486753
+      }
+    ]
+  }
+}
