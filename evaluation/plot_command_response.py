@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plot the eight-command MicroDuck locomotion response matrix."""
+"""Plot a MicroDuck locomotion command-response matrix."""
 
 from __future__ import annotations
 
@@ -159,7 +159,7 @@ def plot_command_response(suite_path: Path, output_path: Path) -> None:
     total_episodes = int(suite["total_episodes"])
     policy_label = Path(str(suite["policy_path"])).stem
     fig.suptitle(
-        f"MicroDuck {policy_label} — 8-command response matrix "
+        f"MicroDuck {policy_label} — {len(summaries)}-command response matrix "
         f"({total_episodes} episodes, {fall_count} falls)"
     )
     fig.tight_layout()
