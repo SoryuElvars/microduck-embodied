@@ -228,7 +228,10 @@ Nominal/OOD 协议下选择一个可冻结的底层 Locomotion Policy。第三�
 - 已有失败基线：自训练 `model_5999`；
 - 官方参考模型：固定 Hugging Face revision 和 SHA-256 的
   `alpha_walking.onnx`；
-- 自训练候选：只收紧 angular-velocity tracking std 的新模型。
+- 自训练候选 A：只将 angular-velocity tracking std 收紧到
+  `sqrt(0.25)` 的新模型；
+- 自训练候选 B：仅当候选 A 保持稳定但仍压不住偏航时，再将
+  std 进一步收紧到 `sqrt(0.1)`。
 
 `model_5999` 用于保留失败基线，不再为它投入与优胜候选相同规模的完整 OOD
 预算。官方模型是否用于第四周，必须由本项目的统一评测决定，不能因“官方”身份
@@ -250,11 +253,14 @@ Nominal/OOD 协议下选择一个可冻结的底层 Locomotion Policy。第三�
 ### 5.2 自训练候选模型
 
 第一轮只验证一个假设：当前转向不对称和直行偏航是否主要来自角速度跟踪奖励
-过宽。按单变量原则使用：
+过宽。`track_angular_velocity` 对机身三轴角速度误差使用 Gaussian
+奖励；直接从 `sqrt(0.5)` 降到 `sqrt(0.1)` 会将指数惩罚放大 5 倍，
+训练早期存在大误差样本奖励接近零的风险。因此先使用中间值：
 
 ```text
-Control:   track_angular_velocity.std = sqrt(0.5)
-Candidate: track_angular_velocity.std = sqrt(0.1)
+Control:      track_angular_velocity.std = sqrt(0.5)
+Candidate A:  track_angular_velocity.std = sqrt(0.25)
+Candidate B:  track_angular_velocity.std = sqrt(0.1)  # A 稳定但偏航仍不合格时再训练
 
 保持不变：reward weight、command sampling、PPO 参数、seed、环境数量
 暂不叠加：mirror loss 或其他新参数
@@ -262,13 +268,15 @@ Candidate: track_angular_velocity.std = sqrt(0.1)
 
 训练顺序：
 
-- [ ] 为候选配置建立独立 Task/Run 名称，保留原始 baseline。
-- [ ] 用测试锁定新旧配置只有 angular tracking std 不同。
-- [ ] 运行 `64 envs × 5 iterations` CUDA 冒烟测试。
-- [ ] 运行 `64 envs × 25 iterations` 预运行，检查 NaN、跌倒和 Reward 异常。
+- [x] 为候选 A 建立独立 Task/Run 名称，保留原始 baseline。
+- [x] 用测试锁定新旧环境配置只有 angular tracking std 不同。
+- [x] 运行 `64 envs × 5 iterations` CUDA 冒烟测试。
+- [x] 运行 `64 envs × 25 iterations` 预运行，检查 NaN、跌倒和 Reward 异常。
 - [ ] 使用 4096 envs 从头训练，按固定间隔保存 checkpoint。
 - [ ] 在 `500 / 1000 / 1500 / 2000` iterations 进行三指令 × 5 seeds 快筛。
 - [ ] 只有 2000-iteration Gate 通过后，才继续到 `4000 / 6000`。
+- [ ] 若候选 A 稳定但偏航仍未达标，再建立独立候选 B；不在同一
+  Run 中修改 std。
 - [ ] 候选有效后，再增加 1～2 个独立 training seeds 判断训练随机性；不得用
   evaluation seeds 代替 training seeds。
 

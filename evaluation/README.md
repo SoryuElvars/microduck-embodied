@@ -82,6 +82,24 @@ reset、终止条件、BAM 执行器、Reward Manager 和 checkpoint 的课程�
 这组 40 Episode 是独立协议，不与 ONNX 固定指令的 160 Episode 或随机指令的
 400 Episode 合并计数。
 
+## Week 03 自训练候选 Checkpoint Gate
+
+Angular std `sqrt(0.25)` 候选在 `500 / 1000 / 1500 / 2000` checkpoints
+分别导出 ONNX，并使用独立的三指令配对快筛：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/locomotion_benchmark.py \
+  --policy <EXPORTED_CHECKPOINT_ONNX> \
+  --command-set ~/projects/microduck-embodied/evaluation/command_sets/angular_std025_gate_5.json \
+  --output-dir ~/projects/microduck-embodied/artifacts/week03/02_angular_std025_candidate/<CHECKPOINT>
+```
+
+该 Gate 每个 checkpoint 独立计算 3 条指令 x 5 seeds，不与第二周的固定
+160 Episode、随机 400 Episode 或官方 Return 协议合并成功率。
+
 ## 绘制单 Episode 诊断图
 
 使用 `matplotlib` 将原始 CSV 转换为四联图：`vx`、`vy`、`wz` 的 Target vs

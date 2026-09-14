@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "description": "Paired five-seed checkpoint gate for the Week-03 angular std sqrt(0.25) candidate.",
+  "defaults": {
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "episodes": 5,
+    "initial_state_mode": "official_reset"
+  },
+  "commands": [
+    {
+      "name": "forward_030_angular_std025_gate_5",
+      "vx": 0.3,
+      "vy": 0.0,
+      "wz": 0.0
+    },
+    {
+      "name": "yaw_pos_050_angular_std025_gate_5",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": 0.5
+    },
+    {
+      "name": "yaw_neg_050_angular_std025_gate_5",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": -0.5
+    }
+  ]
+}

@@ -117,6 +117,29 @@ class CommandSetTests(unittest.TestCase):
             ],
         )
 
+    def test_angular_std025_gate_has_three_paired_five_episode_cases(self) -> None:
+        path = (
+            PROJECT_ROOT
+            / "evaluation"
+            / "command_sets"
+            / "angular_std025_gate_5.json"
+        )
+        commands = load_command_set(path)
+
+        self.assertEqual(len(commands), 3)
+        self.assertTrue(all(command.episodes == 5 for command in commands))
+        self.assertTrue(
+            all(command.initial_state_mode == "official_reset" for command in commands)
+        )
+        self.assertEqual(
+            [(command.vx, command.vy, command.wz) for command in commands],
+            [
+                (0.3, 0.0, 0.0),
+                (0.0, 0.0, 0.5),
+                (0.0, 0.0, -0.5),
+            ],
+        )
+
     def test_checkpoint_response_has_eight_paired_five_episode_cases(self) -> None:
         path = (
             PROJECT_ROOT
