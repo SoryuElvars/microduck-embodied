@@ -10,6 +10,7 @@ import json
 import math
 import subprocess
 import sys
+import time
 from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,7 +35,7 @@ from navigation.classical_navigator import (
     ConstrainedGoToGoalNavigator,
     goal_error,
 )
-from navigation.mujoco_backend import BackendStep, MujocoBackend
+from navigation.mujoco_backend import BackendStep, MujocoBackend, ViewerSession
 from navigation.types import GoalState, RobotState, VelocityCommand
 
 
@@ -231,6 +232,15 @@ def select_run_goals(
     raise ValueError(f"unknown smoke goal: {smoke_goal!r}")
 
 
+def select_named_goal(protocol: PilotProtocol, goal_name: str) -> GoalCase:
+    """Return one configured goal for an interactive viewer run."""
+
+    for goal in protocol.goals:
+        if goal.name == goal_name:
+            return replace(goal, episodes=1)
+    raise ValueError(f"unknown goal: {goal_name!r}")
+
+
 def _step_row(
     phase: str,
     episode_seed: int,
@@ -283,6 +293,26 @@ def _write_rows(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
+def _step_episode(
+    backend: MujocoBackend,
+    command: VelocityCommand,
+    viewer: ViewerSession | None,
+    *,
+    realtime: bool,
+) -> BackendStep:
+    """Advance one control step and optionally pace/sync an interactive viewer."""
+
+    started_at = time.perf_counter()
+    step = backend.step(command)
+    if viewer is not None:
+        viewer.sync()
+    if realtime:
+        remaining_s = backend.control_dt_s - (time.perf_counter() - started_at)
+        if remaining_s > 0:
+            time.sleep(remaining_s)
+    return step
+
+
 def run_episode(
     backend: MujocoBackend,
     protocol: PilotProtocol,
@@ -291,18 +321,29 @@ def run_episode(
     output_dir: Path,
     *,
     smoke: bool,
+    episode_seed: int | None = None,
+    reset_backend: bool = True,
+    viewer: ViewerSession | None = None,
+    realtime: bool = False,
 ) -> dict[str, Any]:
     """Run one closed-loop PointGoal episode and write its raw trajectory."""
 
-    episode_seed = protocol.base_seed + episode_index
-    backend.reset(episode_seed, protocol.initial_state_mode)
+    episode_seed = (
+        protocol.base_seed + episode_index if episode_seed is None else episode_seed
+    )
+    if reset_backend:
+        backend.reset(episode_seed, protocol.initial_state_mode)
     navigator = ConstrainedGoToGoalNavigator(protocol.controller)
     zero_command = VelocityCommand(0.0, 0.0, 0.0)
     rows: list[dict[str, Any]] = []
 
     warmup_steps = round(protocol.warmup_s / backend.control_dt_s)
+    viewer_closed = False
     for _ in range(warmup_steps):
-        step = backend.step(zero_command)
+        if viewer is not None and not viewer.is_running():
+            viewer_closed = True
+            break
+        step = _step_episode(backend, zero_command, viewer, realtime=realtime)
         rows.append(
             _step_row("warmup", episode_seed, goal_case, None, zero_command, step)
         )
@@ -315,6 +356,8 @@ def run_episode(
         goal_case.x_initial_body_m,
         goal_case.y_initial_body_m,
     )
+    if viewer is not None and viewer.is_running():
+        viewer.set_goal(goal, protocol.success_radius_m)
     initial_distance, _ = goal_error(start, goal)
     previous_x = start.x_world_m
     previous_y = start.y_world_m
@@ -330,17 +373,22 @@ def run_episode(
     )
     navigator_dt_s = navigator_interval_steps * backend.control_dt_s
     command = zero_command
-    termination_reason = "fall" if start.fallen else "timeout"
+    termination_reason = (
+        "fall" if start.fallen else "viewer_closed" if viewer_closed else "timeout"
+    )
     timeout_s = protocol.smoke_timeout_s if smoke else protocol.timeout_s
     test_steps = round(timeout_s / backend.control_dt_s)
     test_rows: list[dict[str, Any]] = []
 
     navigator.reset()
-    if not start.fallen:
+    if not start.fallen and not viewer_closed:
         for control_step in range(test_steps):
+            if viewer is not None and not viewer.is_running():
+                termination_reason = "viewer_closed"
+                break
             if control_step % navigator_interval_steps == 0:
                 command = navigator.compute_command(backend.observe(), goal, navigator_dt_s)
-            step = backend.step(command)
+            step = _step_episode(backend, command, viewer, realtime=realtime)
             test_rows.append(
                 _step_row("test", episode_seed, goal_case, goal, command, step)
             )
@@ -404,6 +452,7 @@ def run_episode(
         "fall": termination_reason == "fall",
         "invalid_state": termination_reason == "invalid_state",
         "timeout": termination_reason == "timeout",
+        "viewer_closed": termination_reason == "viewer_closed",
         "vx_saturation_fraction": vx_saturated / denominator,
         "wz_saturation_fraction": wz_saturated / denominator,
         "start_state": asdict(start),
@@ -565,12 +614,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--goal-set", type=Path, default=DEFAULT_GOAL_SET)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--validate-only", action="store_true")
-    parser.add_argument(
+    run_mode = parser.add_mutually_exclusive_group()
+    run_mode.add_argument(
         "--smoke",
         action="store_true",
         help="Run one short episode even while the protocol is still draft",
     )
+    run_mode.add_argument(
+        "--view",
+        action="store_true",
+        help="Run one real-time episode in the native MuJoCo viewer",
+    )
     parser.add_argument("--smoke-goal", default="front")
+    parser.add_argument("--view-goal", default="front")
+    parser.add_argument("--view-seed", type=int, default=42)
     return parser
 
 
@@ -602,6 +659,42 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"  planned episodes:  {protocol.episode_count}")
     print(f"  expected I/O:      {EXPECTED_OBSERVATION_SIZE} obs -> {EXPECTED_ACTION_SIZE} actions")
     if args.validate_only:
+        return 0
+
+    if args.view:
+        try:
+            goal_case = select_named_goal(protocol, args.view_goal)
+        except ValueError as error:
+            parser.error(str(error))
+        backend.reset(args.view_seed, protocol.initial_state_mode)
+        print(
+            f"viewer: goal={goal_case.name}, seed={args.view_seed}; "
+            "orange marker=goal, green disk=success radius"
+        )
+        try:
+            with backend.open_viewer() as viewer:
+                result = run_episode(
+                    backend,
+                    protocol,
+                    goal_case,
+                    0,
+                    output_dir / "viewer",
+                    smoke=False,
+                    episode_seed=args.view_seed,
+                    reset_backend=False,
+                    viewer=viewer,
+                    realtime=True,
+                )
+                print(
+                    f"viewer result: {result['termination_reason']}, "
+                    f"final_distance={result['final_distance_m']:.3f} m"
+                )
+                print("Episode finished; close the MuJoCo viewer window to exit")
+                while viewer.is_running():
+                    viewer.sync()
+                    time.sleep(0.02)
+        except KeyboardInterrupt:
+            print("viewer interrupted")
         return 0
 
     try:

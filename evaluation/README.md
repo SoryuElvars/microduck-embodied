@@ -182,6 +182,47 @@ uv run python \
     ~/projects/microduck-embodied/artifacts/week03/04_classical_pointgoal_pilot/model_2500/figures/smoke_front_pair.png
 ```
 
+使用 MuJoCo 原生 viewer 实时观看一个不计入正式 pilot 的 Episode：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_pilot.py \
+  --view \
+  --view-goal left \
+  --view-seed 42
+```
+
+viewer 中橙色球是目标点，半透明绿色圆盘是 `0.2 m` 成功区域。窗口使用
+跟随 Duck 的相机；Episode 结束后窗口会保留，关闭 MuJoCo 窗口即退出程序。
+`--view-goal` 支持 `front / front_left / front_right / left / right`，
+`--view-seed` 可选择具体 reset seed。观看模式按实时速度运行，其轨迹单独写入
+`artifacts/week03/04_classical_pointgoal_pilot/model_2500/viewer/`，不覆盖正式结果。
+
+如果 WSL 无法弹出窗口，先在 WSL 中检查 `echo $DISPLAY` 是否有值；Windows 11 + WSLg
+通常无需额外 X Server。
+
+## PointGoal 低速 yaw 归因
+
+用固定低速命令移除 Navigator 闭环，检查侧向目标的左右启动差异是否来自
+底层 policy：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/locomotion_benchmark.py \
+  --policy ~/projects/microduck-embodied/artifacts/week03/02_angular_std025_candidate/models/model_2500.onnx \
+  --command-set ~/projects/microduck-embodied/evaluation/command_sets/pointgoal_low_speed_yaw_5.json \
+  --output-dir ~/projects/microduck-embodied/artifacts/week03/05_pointgoal_low_speed_yaw/model_2500 \
+  --seed 42
+```
+
+协议测试 `vx=0.05/0.10` 与 `wz=±0.50` 的四种组合，每条五个配对 seeds，
+共 20 Episode。它不使用 gait lead-in，不加载 Reward Manager，也不与
+PointGoal pilot 或行进转向协议合并。
+
 ## 绘制单 Episode 诊断图
 
 使用 `matplotlib` 将原始 CSV 转换为四联图：`vx`、`vy`、`wz` 的 Target vs

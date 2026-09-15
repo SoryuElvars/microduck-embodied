@@ -236,8 +236,8 @@ Classical Navigator 正式 Benchmark，不与后者合并 Episode 数或成功�
   `alpha_walking.onnx`；
 - 已完成的自训练候选 A：只将 angular-velocity tracking std 收紧到
   `sqrt(0.25)`，当前以 `model_2500` 作为 pilot 临时候选；
-- 待定的自训练候选 B：不预先假定继续收紧 std，而由 PointGoal pilot
-  的主要失败证据决定唯一修改因素。
+- 已完成训练前准备的自训练候选 B：根据 PointGoal pilot 和低速 yaw 归因，
+  只把 angular tracking 改为 yaw-axis error；正式长训尚未开始。
 
 `model_5999` 用于保留失败基线，不再为它投入与优胜候选相同规模的完整 OOD
 预算。官方模型是否用于第四周，必须由本项目的统一评测决定，不能因“官方”身份
@@ -283,7 +283,9 @@ Candidate A:  track_angular_velocity.std = sqrt(0.25)
   yaw 的局部最优现象。
 - [x] 在行进转向协议下确认 `model_2500` 能双向转弯，但仍持续右偏、左右
   不对称且前进速度欠跟踪。
-- [ ] 完成 PointGoal pilot 后再定义候选 B；不在同一 Run 中改配置，不同时
+- [x] 完成 `model_2500` PointGoal pilot。
+- [x] 通过 20-Episode 低速 yaw 归因确认左右启动死区来自底层 policy，
+  并据此定义候选 B；不在同一 Run 中改配置，不同时
   修改多个因素。
 
 后续 checkpoint 统一使用分层固定指令快筛，不再使用“直行 + 两条纯原地转向”作为
@@ -341,13 +343,13 @@ MujocoBackend -> RobotState + GoalState -> Navigator -> VelocityCommand
 - [x] 用不计入 pilot 的少量 smoke Episode 校验坐标系、目标判定、轨迹记录和指令限幅。
 - [x] smoke 后一次性冻结 goal 坐标、success tolerance、timeout、controller 参数、
   reset 方式和 seeds；正式 pilot 中不再追着结果调参。
-- [ ] 运行 5 组对称目标：正前、左前、右前、左侧、右侧；左右使用镜像坐标和配对
+- [x] 运行 5 组对称目标：正前、左前、右前、左侧、右侧；左右使用镜像坐标和配对
   reset seed。
-- [ ] 每组目标 5 seeds，共 `5 × 5 = 25 Episode`；单独报告，不与行进转向的
+- [x] 每组目标 5 seeds，共 `5 × 5 = 25 Episode`；单独报告，不与行进转向的
   25 Episode 或第四周正式评测累加。
-- [ ] 记录 Success Rate、Final Distance、Path Efficiency、Completion Time、Fall Rate、
+- [x] 记录 Success Rate、Final Distance、Path Efficiency、Completion Time、Fall Rate、
   Timeout Rate，以及左前/右前、左侧/右侧的镜像差异。
-- [ ] 附加记录 `vx/wz` 命令和实测值、限幅占比与轨迹，供失败归因使用。
+- [x] 附加记录 `vx/wz` 命令和实测值、限幅占比与轨迹，供失败归因使用。
 
 #### pilot 结果的决策用法
 
@@ -364,18 +366,18 @@ pilot 是小样本诊断，不用它声称导航策略已验收通过。在运�
 
 ### 5.4 根据 pilot 证据训练新模型
 
-不把“继续收紧 angular std”当成默认答案。先核对当前上游 Reward 实现；若 pilot
-确认主要失败是 yaw 偏置和左右不对称，候选 B 优先只将 angular tracking
+不把“继续收紧 angular std”当成默认答案。PointGoal pilot 和随后的
+20-Episode 低速 yaw 归因已确认主要失败是底层正 yaw 启动死区和左右不对称。
+候选 B 只将 angular tracking
 从“会受其他机身角速度影响的误差”改为“commanded yaw rate 与实测 yaw-axis
 angular velocity 的误差”。保持 std、reward weight、command sampling、PPO 参数、
-seed 和 envs 不变，不同时加 mirror loss。若 pilot 指向其他主因，则在实验说明中
-记录换路原因，仍只改一个因素。
+seed 和 envs 不变，不同时加 mirror loss。
 
 新候选执行顺序：
 
-- [ ] 写明 pilot 证据、唯一训练假设、Control 和 Candidate 差异。
-- [ ] 用测试锁定只有一个预期配置或 Reward 定义发生改变。
-- [ ] 先运行 `64 envs × 5 iterations` CUDA 冒烟，再运行 `64 envs × 25 iterations`
+- [x] 写明 pilot 与低速 yaw 归因证据、唯一训练假设、Control 和 Candidate 差异。
+- [x] 用测试锁定只有一个预期配置或 Reward 定义发生改变。
+- [x] 先运行 `64 envs × 5 iterations` CUDA 冒烟，再运行 `64 envs × 25 iterations`
   预运行；检查 NaN、跌倒、Reward 量级和行为退化。
 - [ ] 通过后使用 4096 envs 从头训练，在 `500 / 1000 / 1500 / 2000` 及必要的
   后续 checkpoint 保存与导出；不因为“还在上升”就无上限续训。
@@ -386,6 +388,13 @@ seed 和 envs 不变，不同时加 mirror loss。若 pilot 指向其他主因�
   evaluation seeds 代替 training seeds。
 - [ ] 根据 locomotion 和 PointGoal 两层结果选择优胜者，再进入完整 Nominal/OOD
   评测和冻结流程。
+
+候选 B 的训练前快照：官方仓库分支 `codex/yaw-only-angular-tracking`，Task 为
+`Mjlab-Velocity-Flat-Yaw-Only-Tracking-MicroDuck`；`std=0.5`、reward weight、
+command sampling、PPO、seed 42 和从头训练设置均继承候选 A。数值单测与配置差异
+测试共 5 项通过，`64×5` 和 `64×25` 两级 CUDA 预运行均正常结束且
+`nan_state=0`。短预运行从随机策略开始，跌倒率与 Reward 只用于检查运行异常，
+不得作为模型质量或候选优劣结论。正式 `4096 envs` 训练须在代码提交后由用户启动。
 
 ### 5.5 必做鲁棒性参数
 
@@ -437,7 +446,8 @@ seed 和 envs 不变，不同时加 mirror loss。若 pilot 指向其他主因�
 - [x] 官方 `alpha_walking.onnx` 独立评测报告
 - [x] angular tracking std 单变量训练报告
 - [x] `model_2500` PointGoal 行进转向报告
-- [ ] `model_2500` 的 25-Episode Classical PointGoal pilot 报告与轨迹
+- [x] `model_2500` 的 25-Episode Classical PointGoal pilot 报告与轨迹
+- [x] `model_2500` 的 20-Episode 低速 yaw 归因报告与图表
 - [ ] 由 pilot 证据驱动的新模型单变量训练报告
 - [ ] 新旧候选在同一 Locomotion 协议与 PointGoal pilot 下的配对对比
 - [ ] `model_5999` / 官方模型 / 自训练候选的 Nominal 对比表

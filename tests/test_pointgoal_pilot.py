@@ -9,6 +9,7 @@ from evaluation.pointgoal_pilot import (
     aggregate_episodes,
     goal_from_initial_body_frame,
     load_goal_set,
+    select_named_goal,
     select_run_goals,
 )
 from evaluation.plot_pointgoal_pilot import world_to_initial_body
@@ -118,6 +119,21 @@ class PointGoalProtocolTests(unittest.TestCase):
         self.assertEqual(len(selected), 1)
         self.assertEqual(selected[0].name, "front_left")
         self.assertEqual(selected[0].episodes, 1)
+
+    def test_viewer_selects_one_named_goal_without_changing_protocol(self) -> None:
+        protocol = load_goal_set(DEFAULT_GOAL_SET)
+
+        selected = select_named_goal(protocol, "left")
+
+        self.assertEqual(selected.name, "left")
+        self.assertEqual(selected.episodes, 1)
+        self.assertEqual(protocol.episode_count, 25)
+
+    def test_viewer_rejects_unknown_goal(self) -> None:
+        protocol = load_goal_set(DEFAULT_GOAL_SET)
+
+        with self.assertRaisesRegex(ValueError, "unknown goal"):
+            select_named_goal(protocol, "behind")
 
     def test_formal_run_selects_all_goals_from_frozen_protocol(self) -> None:
         protocol = load_goal_set(DEFAULT_GOAL_SET)

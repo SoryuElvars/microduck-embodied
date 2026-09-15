@@ -21,7 +21,7 @@ from evaluation.locomotion_benchmark import (
     create_runtime,
     validate_artifacts,
 )
-from navigation.types import RobotState, VelocityCommand
+from navigation.types import GoalState, RobotState, VelocityCommand
 
 
 @dataclass(frozen=True)
@@ -29,6 +29,82 @@ class BackendStep:
     state: RobotState
     observation: tuple[float, ...]
     action: tuple[float, ...]
+
+
+class ViewerSession:
+    """Native MuJoCo viewer with PointGoal markers and a tracking camera."""
+
+    def __init__(self, runtime: Any) -> None:
+        self._runtime = runtime
+        self._viewer_context: Any | None = None
+        self._viewer: Any | None = None
+
+    def __enter__(self) -> "ViewerSession":
+        self._viewer_context = self._runtime.official.mujoco.viewer.launch_passive(
+            self._runtime.model,
+            self._runtime.data,
+            show_left_ui=False,
+            show_right_ui=False,
+        )
+        self._viewer = self._viewer_context.__enter__()
+        mujoco = self._runtime.official.mujoco
+        trunk_id = mujoco.mj_name2id(
+            self._runtime.model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            "trunk_base",
+        )
+        with self._viewer.lock():
+            if trunk_id >= 0:
+                self._viewer.cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
+                self._viewer.cam.trackbodyid = trunk_id
+            self._viewer.cam.distance = 2.5
+            self._viewer.cam.azimuth = 135.0
+            self._viewer.cam.elevation = -35.0
+        self.sync()
+        return self
+
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+        if self._viewer_context is not None:
+            self._viewer_context.__exit__(exc_type, exc_value, traceback)
+        self._viewer = None
+        self._viewer_context = None
+
+    def is_running(self) -> bool:
+        return self._viewer is not None and bool(self._viewer.is_running())
+
+    def sync(self) -> None:
+        if self._viewer is not None and self._viewer.is_running():
+            self._viewer.sync()
+
+    def set_goal(self, goal: GoalState, success_radius_m: float) -> None:
+        """Draw a target beacon and a translucent success zone."""
+
+        if self._viewer is None:
+            raise RuntimeError("viewer session is not open")
+        np = self._runtime.official.np
+        mujoco = self._runtime.official.mujoco
+        position = np.asarray([goal.x_world_m, goal.y_world_m, 0.025], dtype=float)
+        identity = np.eye(3, dtype=float).reshape(-1)
+        with self._viewer.lock():
+            scene = self._viewer.user_scn
+            scene.ngeom = 2
+            mujoco.mjv_initGeom(
+                scene.geoms[0],
+                mujoco.mjtGeom.mjGEOM_CYLINDER,
+                np.asarray([success_radius_m, 0.012, 0.0], dtype=float),
+                position,
+                identity,
+                np.asarray([0.1, 0.8, 0.25, 0.28], dtype=float),
+            )
+            mujoco.mjv_initGeom(
+                scene.geoms[1],
+                mujoco.mjtGeom.mjGEOM_SPHERE,
+                np.asarray([0.055, 0.0, 0.0], dtype=float),
+                position + np.asarray([0.0, 0.0, 0.09], dtype=float),
+                identity,
+                np.asarray([1.0, 0.25, 0.05, 1.0], dtype=float),
+            )
+        self.sync()
 
 
 class MujocoBackend:
@@ -92,6 +168,12 @@ class MujocoBackend:
             observation=tuple(float(value) for value in observation),
             action=tuple(float(value) for value in action),
         )
+
+    def open_viewer(self) -> ViewerSession:
+        """Create a viewer for the current episode without exposing simulator state."""
+
+        self._require_runtime()
+        return ViewerSession(self._runtime)
 
     def _to_robot_state(self, state: dict[str, Any]) -> RobotState:
         self._require_runtime()

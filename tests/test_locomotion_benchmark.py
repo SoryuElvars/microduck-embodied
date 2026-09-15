@@ -171,6 +171,33 @@ class CommandSetTests(unittest.TestCase):
             ],
         )
 
+    def test_pointgoal_low_speed_yaw_attribution_is_paired(self) -> None:
+        path = (
+            PROJECT_ROOT
+            / "evaluation"
+            / "command_sets"
+            / "pointgoal_low_speed_yaw_5.json"
+        )
+        commands = load_command_set(path)
+
+        self.assertEqual(len(commands), 4)
+        self.assertTrue(all(command.episodes == 5 for command in commands))
+        self.assertTrue(all(command.warmup_s == 1.0 for command in commands))
+        self.assertTrue(all(command.lead_in_s == 0.0 for command in commands))
+        self.assertTrue(all(command.duration_s == 8.0 for command in commands))
+        self.assertTrue(
+            all(command.initial_state_mode == "official_reset" for command in commands)
+        )
+        self.assertEqual(
+            [(command.vx, command.vy, command.wz) for command in commands],
+            [
+                (0.05, 0.0, 0.5),
+                (0.05, 0.0, -0.5),
+                (0.1, 0.0, 0.5),
+                (0.1, 0.0, -0.5),
+            ],
+        )
+
     def test_checkpoint_response_has_eight_paired_five_episode_cases(self) -> None:
         path = (
             PROJECT_ROOT

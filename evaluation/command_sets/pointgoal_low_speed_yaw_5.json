@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "description": "PointGoal failure attribution: paired low-forward-speed yaw commands from a settled reset, without gait lead-in or Navigator feedback.",
+  "defaults": {
+    "warmup_s": 1.0,
+    "lead_in_s": 0.0,
+    "duration_s": 8.0,
+    "episodes": 5,
+    "initial_state_mode": "official_reset"
+  },
+  "commands": [
+    {
+      "name": "pointgoal_low_speed_left_vx005_wz050",
+      "vx": 0.05,
+      "vy": 0.0,
+      "wz": 0.5
+    },
+    {
+      "name": "pointgoal_low_speed_right_vx005_wzneg050",
+      "vx": 0.05,
+      "vy": 0.0,
+      "wz": -0.5
+    },
+    {
+      "name": "pointgoal_low_speed_left_vx010_wz050",
+      "vx": 0.1,
+      "vy": 0.0,
+      "wz": 0.5
+    },
+    {
+      "name": "pointgoal_low_speed_right_vx010_wzneg050",
+      "vx": 0.1,
+      "vy": 0.0,
+      "wz": -0.5
+    }
+  ]
+}
