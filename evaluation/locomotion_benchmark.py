@@ -68,6 +68,10 @@ class CommandCase:
     duration_s: float
     episodes: int
     initial_state_mode: str
+    lead_in_s: float = 0.0
+    lead_in_vx: float = 0.0
+    lead_in_vy: float = 0.0
+    lead_in_wz: float = 0.0
 
     @classmethod
     def from_mapping(
@@ -91,6 +95,10 @@ class CommandCase:
             duration_s=float(value("duration_s")),
             episodes=int(value("episodes")),
             initial_state_mode=str(value("initial_state_mode")),
+            lead_in_s=float(raw.get("lead_in_s", defaults.get("lead_in_s", 0.0))),
+            lead_in_vx=float(raw.get("lead_in_vx", defaults.get("lead_in_vx", 0.0))),
+            lead_in_vy=float(raw.get("lead_in_vy", defaults.get("lead_in_vy", 0.0))),
+            lead_in_wz=float(raw.get("lead_in_wz", defaults.get("lead_in_wz", 0.0))),
         )
         case.validate()
         return case
@@ -102,6 +110,13 @@ class CommandCase:
             raise ValueError(f"command {self.name!r} contains a non-finite velocity")
         if not math.isfinite(self.warmup_s) or self.warmup_s < 0:
             raise ValueError(f"command {self.name!r} warmup_s must be finite and >= 0")
+        if not math.isfinite(self.lead_in_s) or self.lead_in_s < 0:
+            raise ValueError(f"command {self.name!r} lead_in_s must be finite and >= 0")
+        if not all(
+            math.isfinite(v)
+            for v in (self.lead_in_vx, self.lead_in_vy, self.lead_in_wz)
+        ):
+            raise ValueError(f"command {self.name!r} contains a non-finite lead-in velocity")
         if not math.isfinite(self.duration_s) or self.duration_s <= 0:
             raise ValueError(f"command {self.name!r} duration_s must be finite and > 0")
         if self.episodes < 1:
@@ -430,6 +445,40 @@ def run_episode(
         row.update({f"action_{index:02d}": float(value) for index, value in enumerate(action)})
         rows.append(row)
 
+    runtime.policy.set_vel_cmd(
+        command.lead_in_vx,
+        command.lead_in_vy,
+        command.lead_in_wz,
+    )
+    lead_in_steps = round(command.lead_in_s / runtime.control_dt)
+    for step in range(lead_in_steps):
+        observation, action, state = _advance_control_step(runtime)
+        row = {
+            "phase": "lead_in",
+            "step": step,
+            "time_s": (step + 1) * runtime.control_dt,
+            "cmd_vx": command.lead_in_vx,
+            "cmd_vy": command.lead_in_vy,
+            "cmd_wz": command.lead_in_wz,
+            "actual_vx": float(state["body_velocity"][0]),
+            "actual_vy": float(state["body_velocity"][1]),
+            "actual_wz": state["yaw_rate"],
+            "world_x": float(state["position"][0]),
+            "world_y": float(state["position"][1]),
+            "trunk_z": float(state["position"][2]),
+            "roll_rad": state["roll"],
+            "pitch_rad": state["pitch"],
+            "yaw_rad": state["yaw"],
+            "tilt_rad": state["tilt"],
+            "net_yaw_rad": 0.0,
+            "forward_distance_m": 0.0,
+            "lateral_displacement_m": 0.0,
+            "fallen": state["tilt"] >= math.radians(FALL_TILT_DEG),
+        }
+        row.update({f"obs_{index:02d}": float(value) for index, value in enumerate(observation)})
+        row.update({f"action_{index:02d}": float(value) for index, value in enumerate(action)})
+        rows.append(row)
+
     start_state = _base_state(runtime)
     start_position = start_state["position"].copy()
     start_yaw = start_state["yaw"]
@@ -613,6 +662,10 @@ def write_summary(
             "vy": command.vy,
             "wz": command.wz,
             "warmup_s": command.warmup_s,
+            "lead_in_s": command.lead_in_s,
+            "lead_in_vx": command.lead_in_vx,
+            "lead_in_vy": command.lead_in_vy,
+            "lead_in_wz": command.lead_in_wz,
             "duration_s": command.duration_s,
             "episodes": command.episodes,
             "initial_state_mode": command.initial_state_mode,
@@ -659,6 +712,10 @@ def write_suite_summary(
                 "vy": command.vy,
                 "wz": command.wz,
                 "warmup_s": command.warmup_s,
+                "lead_in_s": command.lead_in_s,
+                "lead_in_vx": command.lead_in_vx,
+                "lead_in_vy": command.lead_in_vy,
+                "lead_in_wz": command.lead_in_wz,
                 "duration_s": command.duration_s,
                 "episodes": command.episodes,
                 "initial_state_mode": command.initial_state_mode,
@@ -734,6 +791,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(
             f"    - {case.name}: cmd=({case.vx:+.2f}, {case.vy:+.2f}, "
             f"{case.wz:+.2f}), warmup={case.warmup_s:.1f}s, "
+            f"lead_in=({case.lead_in_vx:+.2f}, {case.lead_in_vy:+.2f}, "
+            f"{case.lead_in_wz:+.2f})/{case.lead_in_s:.1f}s, "
             f"duration={case.duration_s:.1f}s, episodes={case.episodes}, "
             f"initial_state={case.initial_state_mode}"
         )

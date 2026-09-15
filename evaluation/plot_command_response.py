@@ -40,11 +40,14 @@ def short_label(command: dict[str, Any]) -> str:
     wz = float(command["wz"])
     if vx == vy == wz == 0.0:
         return "stop"
+    components = []
     if vx:
-        return f"vx {vx:+.1f}"
+        components.append(f"vx {vx:+.2f}")
     if vy:
-        return f"vy {vy:+.1f}"
-    return f"wz {wz:+.1f}"
+        components.append(f"vy {vy:+.2f}")
+    if wz:
+        components.append(f"wz {wz:+.2f}")
+    return "\n".join(components)
 
 
 def plot_command_response(suite_path: Path, output_path: Path) -> None:
@@ -131,7 +134,11 @@ def plot_command_response(suite_path: Path, output_path: Path) -> None:
     )
     ax.scatter(x, target_yaw, marker="x", s=80, color="#212121", label="integrated target yaw")
     ax.axhline(0.0, color="#757575", linewidth=1.0)
-    ax.set_title("Ten-second net-yaw distributions")
+    durations = {float(command["duration_s"]) for command in commands}
+    duration_label = (
+        f"{next(iter(durations)):g}-second" if len(durations) == 1 else "Test-phase"
+    )
+    ax.set_title(f"{duration_label} net-yaw distributions")
     ax.set_ylabel("Net yaw (deg)")
     ax.set_xticks(x, labels, rotation=30, ha="right")
     ax.legend(loc="best")

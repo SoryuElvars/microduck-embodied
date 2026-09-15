@@ -128,6 +128,7 @@ class CommandSetTests(unittest.TestCase):
 
         self.assertEqual(len(commands), 3)
         self.assertTrue(all(command.episodes == 5 for command in commands))
+        self.assertTrue(all(command.lead_in_s == 0.0 for command in commands))
         self.assertTrue(
             all(command.initial_state_mode == "official_reset" for command in commands)
         )
@@ -137,6 +138,36 @@ class CommandSetTests(unittest.TestCase):
                 (0.3, 0.0, 0.0),
                 (0.0, 0.0, 0.5),
                 (0.0, 0.0, -0.5),
+            ],
+        )
+
+    def test_pointgoal_gate_establishes_gait_before_moving_turns(self) -> None:
+        path = (
+            PROJECT_ROOT
+            / "evaluation"
+            / "command_sets"
+            / "pointgoal_moving_turn_5.json"
+        )
+        commands = load_command_set(path)
+
+        self.assertEqual(len(commands), 5)
+        self.assertTrue(all(command.episodes == 5 for command in commands))
+        self.assertTrue(all(command.lead_in_s == 2.0 for command in commands))
+        self.assertTrue(
+            all(
+                (command.lead_in_vx, command.lead_in_vy, command.lead_in_wz)
+                == (0.25, 0.0, 0.0)
+                for command in commands
+            )
+        )
+        self.assertEqual(
+            [(command.vx, command.vy, command.wz) for command in commands],
+            [
+                (0.25, 0.0, 0.0),
+                (0.25, 0.0, 0.25),
+                (0.25, 0.0, -0.25),
+                (0.2, 0.0, 0.5),
+                (0.2, 0.0, -0.5),
             ],
         )
 

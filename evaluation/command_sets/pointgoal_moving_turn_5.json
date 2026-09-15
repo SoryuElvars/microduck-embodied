@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "description": "PointGoal locomotion gate: establish forward gait, then measure straight tracking or simultaneous forward-and-yaw response with paired seeds.",
+  "defaults": {
+    "warmup_s": 1.0,
+    "lead_in_s": 2.0,
+    "lead_in_vx": 0.25,
+    "lead_in_vy": 0.0,
+    "lead_in_wz": 0.0,
+    "duration_s": 8.0,
+    "episodes": 5,
+    "initial_state_mode": "official_reset"
+  },
+  "commands": [
+    {
+      "name": "pointgoal_straight_vx025",
+      "vx": 0.25,
+      "vy": 0.0,
+      "wz": 0.0
+    },
+    {
+      "name": "pointgoal_gentle_left_vx025_wz025",
+      "vx": 0.25,
+      "vy": 0.0,
+      "wz": 0.25
+    },
+    {
+      "name": "pointgoal_gentle_right_vx025_wzneg025",
+      "vx": 0.25,
+      "vy": 0.0,
+      "wz": -0.25
+    },
+    {
+      "name": "pointgoal_turn_left_vx020_wz050",
+      "vx": 0.2,
+      "vy": 0.0,
+      "wz": 0.5
+    },
+    {
+      "name": "pointgoal_turn_right_vx020_wzneg050",
+      "vx": 0.2,
+      "vy": 0.0,
+      "wz": -0.5
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "protocol_status": "frozen",
+  "description": "Frozen symmetric Classical PointGoal pilot protocol for model_2500. Do not tune from formal pilot outcomes.",
+  "defaults": {
+    "episodes": 5,
+    "base_seed": 42,
+    "initial_state_mode": "official_reset",
+    "warmup_s": 1.0,
+    "timeout_s": 20.0,
+    "smoke_timeout_s": 5.0,
+    "success_radius_m": 0.2,
+    "success_hold_s": 0.5,
+    "navigator_frequency_hz": 10.0
+  },
+  "controller": {
+    "distance_gain": 0.8,
+    "heading_gain": 1.2,
+    "max_forward_speed_mps": 0.25,
+    "min_turn_speed_mps": 0.05,
+    "max_yaw_rate_radps": 0.5,
+    "max_forward_accel_mps2": 0.5,
+    "max_yaw_accel_radps2": 1.0,
+    "heading_slowdown_floor": 0.2
+  },
+  "goals": [
+    {
+      "name": "front",
+      "x_initial_body_m": 1.5,
+      "y_initial_body_m": 0.0,
+      "mirror_group": null,
+      "mirror_side": null
+    },
+    {
+      "name": "front_left",
+      "x_initial_body_m": 1.06066,
+      "y_initial_body_m": 1.06066,
+      "mirror_group": "front_diagonal",
+      "mirror_side": "left"
+    },
+    {
+      "name": "front_right",
+      "x_initial_body_m": 1.06066,
+      "y_initial_body_m": -1.06066,
+      "mirror_group": "front_diagonal",
+      "mirror_side": "right"
+    },
+    {
+      "name": "left",
+      "x_initial_body_m": 0.0,
+      "y_initial_body_m": 1.5,
+      "mirror_group": "side",
+      "mirror_side": "left"
+    },
+    {
+      "name": "right",
+      "x_initial_body_m": 0.0,
+      "y_initial_body_m": -1.5,
+      "mirror_group": "side",
+      "mirror_side": "right"
+    }
+  ]
+}

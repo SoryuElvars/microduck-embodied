@@ -100,6 +100,88 @@ uv run python \
 该 Gate 每个 checkpoint 独立计算 3 条指令 x 5 seeds，不与第二周的固定
 160 Episode、随机 400 Episode 或官方 Return 协议合并成功率。
 
+## PointGoal 行进转向门禁
+
+PointGoal 的主要下层能力不是从静止状态原地旋转，而是直行时保持较低偏航，
+并在已经建立步态后响应同时非零的 `vx + wz` 指令。该独立协议先用 1 秒零命令
+稳定仿真，再以 `vx=0.25 m/s` 直行 2 秒建立步态，最后测量 8 秒直行、缓转或
+正常转弯；预备段不计入测试段指标。
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/locomotion_benchmark.py \
+  --policy ~/projects/microduck-embodied/artifacts/week03/02_angular_std025_candidate/models/model_2500.onnx \
+  --command-set ~/projects/microduck-embodied/evaluation/command_sets/pointgoal_moving_turn_5.json \
+  --output-dir ~/projects/microduck-embodied/artifacts/week03/03_pointgoal_moving_turn/model_2500
+```
+
+协议使用直行 `(0.25, 0)`、缓转 `(0.25, ±0.25)` 和正常转弯
+`(0.20, ±0.50)`，每项运行配对 seeds `42--46`，共 25 Episode。它与原地
+转向 Gate、随机组合指令和官方 Return 均分别报告。
+
+## Classical PointGoal pilot 框架
+
+pilot 使用 `model_2500.onnx` 与最小 Constrained Go-to-Goal Controller，检查
+航向闭环能否补偿底层持续偏航。框架分为：
+
+- `navigation/types.py`：`RobotState / GoalState / VelocityCommand / Navigator`；
+- `navigation/classical_navigator.py`：限速、限加速度且大航向误差时保留小幅前进的
+  Go-to-Goal Controller；
+- `navigation/mujoco_backend.py`：复用官方 MuJoCo、BAM M6、Observation 和 ONNX
+  推理，并将仿真真值封装为 `RobotState`；
+- `evaluation/pointgoal_pilot.py`：Episode 循环、终止判定、轨迹记录与左右镜像汇总；
+- `evaluation/goal_sets/pointgoal_pilot_5.json`：5 组对称目标和已冻结的 pilot 协议参数。
+
+Navigator 只消费 `RobotState`，不直接读取 `mj_data.qpos`。当前位姿来源在汇总中明确记为
+`simulator_ground_truth_via_backend`；它是部署形态的 Nominal pilot，不是真机定位或
+Reality Gap 结论。
+
+首先只校验文件、模型和 `61 obs -> 14 actions` 合约：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_pilot.py \
+  --validate-only
+```
+
+运行正式 pilot 前，可以用不计入正式结果的短程 smoke 复核执行链路：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_pilot.py \
+  --smoke \
+  --smoke-goal front
+```
+
+`--smoke-goal` 可选 `front / front_left / front_right / left / right`。当前 smoke 已完成，
+goal 坐标、成功半径、超时、controller 参数、reset 方式和 seeds 已一次性冻结，
+`protocol_status` 为 `frozen`。正式 25 Episode 期间不得根据结果追调这些参数。
+
+原始 50 Hz CSV 和 smoke summary 写入
+`artifacts/week03/04_classical_pointgoal_pilot/model_2500/`，不提交 Git。ONNX pilot 不加载
+Reward Manager，因此 `reward_available` 为 `false`。失败 Episode 不伪造 Path Efficiency，
+另外记录取值在 `[0, 1]` 的 Progress Efficiency 供诊断使用。
+
+将多个 smoke 或正式 Episode 统一变换到各自的初始机体坐标系后绘图：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/plot_pointgoal_pilot.py \
+  --summary \
+    ~/projects/microduck-embodied/artifacts/week03/04_classical_pointgoal_pilot/model_2500/summary/pointgoal_smoke_front_left_model_2500.json \
+    ~/projects/microduck-embodied/artifacts/week03/04_classical_pointgoal_pilot/model_2500/summary/pointgoal_smoke_front_right_model_2500.json \
+  --output \
+    ~/projects/microduck-embodied/artifacts/week03/04_classical_pointgoal_pilot/model_2500/figures/smoke_front_pair.png
+```
+
 ## 绘制单 Episode 诊断图
 
 使用 `matplotlib` 将原始 CSV 转换为四联图：`vx`、`vy`、`wz` 的 Target vs

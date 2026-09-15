@@ -2,7 +2,7 @@
 
 > 目标：在 6 周内完成一个可写入简历、可用于投递具身算法/机器人强化学习实习的项目版本。
 >
-> 项目主线：**官方 Locomotion 基线 → 鲁棒性评测 → PointGoal Navigation → Classical vs RL 对比**。
+> 项目主线：**官方 Locomotion 基线 → 轻量 PointGoal 闭环诊断 → 证据驱动的底层训练与鲁棒性评测 → PointGoal Navigation → Classical vs RL 对比**。
 
 ## 1. 六周结束时的目标成果
 
@@ -34,7 +34,7 @@ MuJoCo
 |---|---|---|---|
 | 第 1 周 | 跑通官方 `microduck_rl` 全链路 | Train → Play → ONNX Export → Inference | 证明掌握官方 RL 技术栈 |
 | 第 2 周 | 理解并评测 Locomotion | Observation/Action/Reward 梳理 + Benchmark | 从“运行 Demo”升级为“分析策略” |
-| 第 3 周 | 底层模型选择、训练与鲁棒性实验 | 官方模型与自训练候选完成 Nominal/OOD 对比并冻结导航底层 | 形成 Sim2Real-ready 实验能力 |
+| 第 3 周 | 底层筛选、轻量 PointGoal pilot、单变量再训练与鲁棒性实验 | 用闭环失败证据确定训练因素，完成新旧候选复测并冻结导航底层 | 形成从任务诊断到策略改进的实验闭环 |
 | 第 4 周 | PointGoal + 传统控制对比 | Naive P 与受限 Go-to-Goal 在随机 Start/Goal 下统一评测 | 完成第一个自己的核心模块 |
 | 第 5 周 | RL Navigator | PPO：Goal → 速度指令 | 形成分层 RL 系统 |
 | 第 6 周 | 对比实验与项目整理 | Classical vs RL + OOD + README + 视频 | 达到可正式投递的项目版本 |
@@ -214,24 +214,30 @@ State Feedback
 
 ---
 
-## 5. 第 3 周：底层模型选择、训练与鲁棒性实验
+## 5. 第 3 周：底层筛选、轻量 PointGoal pilot 与证据驱动训练
 
 ### 本周目标
 
-在进入导航开发前，评测官方推理模型、训练自己的单变量候选模型，并在统一的
-Nominal/OOD 协议下选择一个可冻结的底层 Locomotion Policy。第三周完成的是
-控制器级 Reality Gap 敏感性实验；没有真机数据时，结论应标记为
-`Sim2Real proxy`，不得写成已经完成真实 Reality Gap 验证。
+在进入第四周正式导航开发前，先对已有 Locomotion 候选做指令级快筛，再用
+一个 `20～30 Episode` 的 Classical PointGoal pilot 检查它在闭环导航中的真实失败
+模式。根据 pilot 证据选择一个训练因素，从头训练新候选；新旧模型通过
+同一 Locomotion 协议和同一 PointGoal pilot 复测后，才对优胜者运行完整
+Nominal/OOD 对比并冻结第四周底层策略。
+
+第三周的 PointGoal pilot 是选择底层模型的轻量诊断，不是第四周的
+Classical Navigator 正式 Benchmark，不与后者合并 Episode 数或成功率。
+第三周完成的鲁棒性结论仍是控制器级 `Sim2Real proxy`；没有真机数据时，
+不得写成已经完成真实 Reality Gap 验证。
 
 候选模型分为：
 
 - 已有失败基线：自训练 `model_5999`；
 - 官方参考模型：固定 Hugging Face revision 和 SHA-256 的
   `alpha_walking.onnx`；
-- 自训练候选 A：只将 angular-velocity tracking std 收紧到
-  `sqrt(0.25)` 的新模型；
-- 自训练候选 B：仅当候选 A 保持稳定但仍压不住偏航时，再将
-  std 进一步收紧到 `sqrt(0.1)`。
+- 已完成的自训练候选 A：只将 angular-velocity tracking std 收紧到
+  `sqrt(0.25)`，当前以 `model_2500` 作为 pilot 临时候选；
+- 待定的自训练候选 B：不预先假定继续收紧 std，而由 PointGoal pilot
+  的主要失败证据决定唯一修改因素。
 
 `model_5999` 用于保留失败基线，不再为它投入与优胜候选相同规模的完整 OOD
 预算。官方模型是否用于第四周，必须由本项目的统一评测决定，不能因“官方”身份
@@ -250,7 +256,7 @@ Nominal/OOD 协议下选择一个可冻结的底层 Locomotion Policy。第三�
 固定八指令、随机速度指令和官方 PT Reward Manager Return 继续作为不同协议
 分别报告，不合并 Episode 数或成功率。
 
-### 5.2 自训练候选模型
+### 5.2 已完成的 angular std 单变量候选
 
 第一轮只验证一个假设：当前转向不对称和直行偏航是否主要来自角速度跟踪奖励
 过宽。`track_angular_velocity` 对机身三轴角速度误差使用 Gaussian
@@ -260,8 +266,6 @@ Nominal/OOD 协议下选择一个可冻结的底层 Locomotion Policy。第三�
 ```text
 Control:      track_angular_velocity.std = sqrt(0.5)
 Candidate A:  track_angular_velocity.std = sqrt(0.25)
-Candidate B:  track_angular_velocity.std = sqrt(0.1)  # A 稳定但偏航仍不合格时再训练
-
 保持不变：reward weight、command sampling、PPO 参数、seed、环境数量
 暂不叠加：mirror loss 或其他新参数
 ```
@@ -272,23 +276,122 @@ Candidate B:  track_angular_velocity.std = sqrt(0.1)  # A 稳定但偏航仍不�
 - [x] 用测试锁定新旧环境配置只有 angular tracking std 不同。
 - [x] 运行 `64 envs × 5 iterations` CUDA 冒烟测试。
 - [x] 运行 `64 envs × 25 iterations` 预运行，检查 NaN、跌倒和 Reward 异常。
-- [ ] 使用 4096 envs 从头训练，按固定间隔保存 checkpoint。
-- [ ] 在 `500 / 1000 / 1500 / 2000` iterations 进行三指令 × 5 seeds 快筛。
-- [ ] 只有 2000-iteration Gate 通过后，才继续到 `4000 / 6000`。
-- [ ] 若候选 A 稳定但偏航仍未达标，再建立独立候选 B；不在同一
-  Run 中修改 std。
-- [ ] 候选有效后，再增加 1～2 个独立 training seeds 判断训练随机性；不得用
-  evaluation seeds 代替 training seeds。
+- [x] 使用 4096 envs、seed 42 从头训练至 `model_1999.pt`，保持配置不变续训至
+  `model_2999.pt`。
+- [x] 导出 `500 / 1000 / 1500 / 1999 / 2500 / 2999` 的 ONNX 快照并完成配对快筛。
+- [x] 确认后期 checkpoint 纯原地转向失败，且 `model_1999` 存在站立并忽略
+  yaw 的局部最优现象。
+- [x] 在行进转向协议下确认 `model_2500` 能双向转弯，但仍持续右偏、左右
+  不对称且前进速度欠跟踪。
+- [ ] 完成 PointGoal pilot 后再定义候选 B；不在同一 Run 中改配置，不同时
+  修改多个因素。
 
-训练中使用的三条核心诊断指令：
+后续 checkpoint 统一使用分层固定指令快筛，不再使用“直行 + 两条纯原地转向”作为
+PointGoal 主要 Gate。
+
+PointGoal 核心指令：
 
 ```text
-vx=+0.3
-wz=+0.5
-wz=-0.5
+[vx= 0.00, vy=0, wz= 0.00]  静止/停止
+[vx=+0.10, vy=0, wz= 0.00]  低速前进
+[vx=+0.30, vy=0, wz= 0.00]  正常直行
+[vx=+0.25, vy=0, wz=+0.25]  缓慢左转
+[vx=+0.25, vy=0, wz=-0.25]  缓慢右转
+[vx=+0.20, vy=0, wz=+0.50]  正常左转
+[vx=+0.20, vy=0, wz=-0.50]  正常右转
 ```
 
-### 5.3 必做鲁棒性参数
+辅助 locomotion 指令：
+
+```text
+[vx=-0.30, vy= 0.00, wz= 0.00]  后退
+[vx= 0.00, vy=+0.20, wz= 0.00]  左横移
+[vx= 0.00, vy=-0.20, wz= 0.00]  右横移
+[vx= 0.00, vy= 0.00, wz=+0.50]  原地左转
+[vx= 0.00, vy= 0.00, wz=-0.50]  原地右转
+```
+
+另外独立执行“前进 `3～5 s` → 零指令停止”序列。七条核心指令、五条辅助指令和
+停止序列分别汇总，不合并为一个成功率。行进转向统一采用“先建立步态，再叠加
+yaw 指令”的协议；纯原地转向只作为辅助能力报告。
+
+### 5.3 轻量 Classical PointGoal pilot
+
+#### 目的与边界
+
+使用 `model_2500.onnx` 和一个最小可用的 Constrained Go-to-Goal Controller，回答两个
+问题：现有航向闭环能否抵消直行右偏，以及左右转向不对称是否会直接转化为
+到达失败。本 pilot 只在 Nominal 物理参数下运行，不调参对比 Naive P 与受限控制器，
+不替代第四周的 `200 Episode` 正式评测。
+
+为了避免写出一次性脚本，pilot 仍遵循第四周的接口边界：
+
+```text
+MujocoBackend -> RobotState + GoalState -> Navigator -> VelocityCommand
+```
+
+`Navigator` 不得直接读取 `mj_data.qpos`；底层 ONNX 通过后端注入，以便新模型只需
+替换路径便能按同一协议复测。
+
+#### 实施顺序
+
+- [x] 实现最小 `RobotState / GoalState / VelocityCommand / Navigator / MujocoBackend` 接口。
+- [x] 实现固定参数的 Constrained Go-to-Goal：速度限幅、大航向误差时降低前进速度、
+  接近目标时减速，并包含超时与跌倒终止。
+- [x] 用不计入 pilot 的少量 smoke Episode 校验坐标系、目标判定、轨迹记录和指令限幅。
+- [x] smoke 后一次性冻结 goal 坐标、success tolerance、timeout、controller 参数、
+  reset 方式和 seeds；正式 pilot 中不再追着结果调参。
+- [ ] 运行 5 组对称目标：正前、左前、右前、左侧、右侧；左右使用镜像坐标和配对
+  reset seed。
+- [ ] 每组目标 5 seeds，共 `5 × 5 = 25 Episode`；单独报告，不与行进转向的
+  25 Episode 或第四周正式评测累加。
+- [ ] 记录 Success Rate、Final Distance、Path Efficiency、Completion Time、Fall Rate、
+  Timeout Rate，以及左前/右前、左侧/右侧的镜像差异。
+- [ ] 附加记录 `vx/wz` 命令和实测值、限幅占比与轨迹，供失败归因使用。
+
+#### pilot 结果的决策用法
+
+pilot 是小样本诊断，不用它声称导航策略已验收通过。在运行前将下列判定项的
+数值门槛写入配置或报告，运行后不追溯修改：总体与分类到达率、正前目标偏航、左右
+成功率差、镜像轨迹差、超时和 Fall Rate。
+
+| pilot 主要现象 | 优先归因 | 下一个单变量候选 |
+|---|---|---|
+| 正前也持续偏航，左右目标明显不对称，控制器长时间 yaw 限幅 | 底层 yaw 跟踪或奖励定义 | 优先只改 yaw tracking Reward 定义 |
+| 方向基本正确，但持续低速造成超时和低路径效率 | 底层前进速度欠跟踪 | 只改 linear-velocity tracking 的一个因素 |
+| 突发指令、大航向误差时失败，平稳弧线可成功 | 先排查高层指令形状和变化率 | 先修正 Navigator 约束；有证据后才训练底层 |
+| 可到达且左右对称，但指令级评测仍有明显速度误差 | 导航闭环可补偿，但 locomotion 质量仍不足 | 以速度跟踪为唯一因素训练新候选 |
+
+### 5.4 根据 pilot 证据训练新模型
+
+不把“继续收紧 angular std”当成默认答案。先核对当前上游 Reward 实现；若 pilot
+确认主要失败是 yaw 偏置和左右不对称，候选 B 优先只将 angular tracking
+从“会受其他机身角速度影响的误差”改为“commanded yaw rate 与实测 yaw-axis
+angular velocity 的误差”。保持 std、reward weight、command sampling、PPO 参数、
+seed 和 envs 不变，不同时加 mirror loss。若 pilot 指向其他主因，则在实验说明中
+记录换路原因，仍只改一个因素。
+
+新候选执行顺序：
+
+- [ ] 写明 pilot 证据、唯一训练假设、Control 和 Candidate 差异。
+- [ ] 用测试锁定只有一个预期配置或 Reward 定义发生改变。
+- [ ] 先运行 `64 envs × 5 iterations` CUDA 冒烟，再运行 `64 envs × 25 iterations`
+  预运行；检查 NaN、跌倒、Reward 量级和行为退化。
+- [ ] 通过后使用 4096 envs 从头训练，在 `500 / 1000 / 1500 / 2000` 及必要的
+  后续 checkpoint 保存与导出；不因为“还在上升”就无上限续训。
+- [ ] 每个快照先做固定指令与行进转向快筛，与 `model_2500` 使用配对 seeds。
+- [ ] 只有当新候选在目标指标上明确改善且稳定性未退化时，才复测同一个
+  25-Episode PointGoal pilot。
+- [ ] 候选有效后再增加 1～2 个独立 training seeds 判断训练随机性；不得用
+  evaluation seeds 代替 training seeds。
+- [ ] 根据 locomotion 和 PointGoal 两层结果选择优胜者，再进入完整 Nominal/OOD
+  评测和冻结流程。
+
+### 5.5 必做鲁棒性参数
+
+完整鲁棒性矩阵放在新模型训练之后：候选必须先通过 Nominal 固定指令快筛，并在
+同一 25-Episode PointGoal pilot 中相对 `model_2500` 显示出目标改善。当前不单独为
+已知持续右偏和速度欠跟踪的 `model_2500` 消耗完整矩阵预算。
 
 | 不确定因素 | 推荐测试值 |
 |---|---|
@@ -303,11 +406,13 @@ wz=-0.5
 - [ ] IMU Noise
 - [ ] Joint Encoder Noise
 
-### 5.4 控制器级鲁棒性评测
+### 5.6 控制器级鲁棒性评测
 
 - [ ] 为四类必做不确定因素建立统一配置入口。
-- [ ] 所有候选先用静止、前进、正负转向和前进加转向做 OOD 快筛。
-- [ ] 只对 Nominal 表现最好的两个模型运行完整四因素矩阵。
+- [ ] 完成新旧候选的 Nominal 固定指令和 PointGoal pilot 配对对比。
+- [ ] 只对 Nominal 和 pilot 表现最好的两个模型运行 OOD 快筛；快筛使用
+  PointGoal 核心指令的代表子集，不用纯原地转向作为唯一转向项。
+- [ ] OOD 快筛无全面失效后，才运行完整四因素矩阵。
 - [ ] 所有模型共享指令、seeds、终止条件和参数档位。
 - [ ] 记录配置、模型 revision/checkpoint、种子和结果路径。
 - [ ] 统计 Tracking RMSE、方向成功率、直行偏航、Fall Rate、恢复时间和停止漂移。
@@ -329,8 +434,12 @@ wz=-0.5
 
 ### 本周交付物
 
-- [ ] 官方 `alpha_walking.onnx` 独立评测报告
-- [ ] angular tracking 单变量训练报告
+- [x] 官方 `alpha_walking.onnx` 独立评测报告
+- [x] angular tracking std 单变量训练报告
+- [x] `model_2500` PointGoal 行进转向报告
+- [ ] `model_2500` 的 25-Episode Classical PointGoal pilot 报告与轨迹
+- [ ] 由 pilot 证据驱动的新模型单变量训练报告
+- [ ] 新旧候选在同一 Locomotion 协议与 PointGoal pilot 下的配对对比
 - [ ] `model_5999` / 官方模型 / 自训练候选的 Nominal 对比表
 - [ ] 四类不确定因素的统一配置入口和完整实验数据
 - [ ] 最优两个模型的鲁棒性汇总表
@@ -341,20 +450,24 @@ wz=-0.5
 
 ### 验收标准
 
-导航候选至少满足：
+最终导航底层候选至少满足：
 
-- 正负转向方向均正确，且不是单个 checkpoint 的偶然行为；
+- 行进中正负转向方向均正确，且不是单个 checkpoint 的偶然行为；
 - 直行偏航显著低于 `model_5999`；
 - 低速命令存在可预测响应，静止保持稳定；
 - Nominal 条件无明显跌倒；
 - OOD 退化能够量化，且不是轻微扰动下立即全面失效。
 
-至少完成：
+冻结前至少完成：
 
 ```text
 官方模型评测
     +
 自训练单变量候选
+    +
+25-Episode PointGoal pilot
+    +
+根据 pilot 训练并复测新候选
     +
 4 类 Uncertainty
     +
@@ -363,9 +476,9 @@ wz=-0.5
 冻结第四周底层策略
 ```
 
-若官方模型通过门禁，可先冻结官方模型进入第四周；自训练模型仍作为研究和替换
-候选。若所有模型均未通过，第四周可先实现接口与控制器单元测试，但不得把使用
-不合格底层得到的 PointGoal 结果写成最终导航结论。
+若某个模型通过上述门禁，则冻结其 ONNX、Normalizer、上游 commit、评测配置和
+SHA-256 后进入第四周。若所有模型均未通过，第四周可继续完善接口与控制器
+单元测试，但不得把使用不合格底层得到的 pilot 结果写成最终导航结论。
 
 > 完成本周后结束 M1 的主要实验，不继续无限调步态，立即转入 M2。
 
@@ -375,8 +488,11 @@ wz=-0.5
 
 ### 本周目标
 
-使用第三周冻结的底层策略，建立随机 Start/Goal 条件下的自主目标点导航，并形成
+使用第三周在轻量 pilot、新旧候选复测和 Nominal/OOD 对比后冻结的底层策略，
+建立随机 Start/Goal 条件下的自主目标点导航，并形成
 一个可由第五周 RL Navigator 直接复用的 Classical Navigation Benchmark。
+第三周的 25-Episode pilot 只用于诊断和底层选型；本周重新冻结正式 controller
+参数和随机 Start/Goal 协议，不继承 pilot 的 Episode 计数。
 
 这里的 Go-to-Goal Controller 本身就是传统控制基线。第四周先比较简单比例控制
 与加入工程约束的实用控制器；真正的 Classical Navigator vs RL Navigator 统一
