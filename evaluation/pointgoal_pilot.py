@@ -336,6 +336,7 @@ def run_episode(
     navigator = ConstrainedGoToGoalNavigator(protocol.controller)
     zero_command = VelocityCommand(0.0, 0.0, 0.0)
     rows: list[dict[str, Any]] = []
+    pre_warmup = backend.observe()
 
     warmup_steps = round(protocol.warmup_s / backend.control_dt_s)
     viewer_closed = False
@@ -433,6 +434,43 @@ def run_episode(
         if path_length > 0
         else 0.0
     )
+    zero_command_rows = [
+        row
+        for row in rows
+        if abs(float(row["cmd_vx"])) < 1e-9
+        and abs(float(row["cmd_vy"])) < 1e-9
+        and abs(float(row["cmd_wz"])) < 1e-9
+    ]
+
+    def rmse(actual_key: str, command_key: str) -> float | None:
+        if not test_rows:
+            return None
+        return math.sqrt(
+            fmean(
+                (float(row[actual_key]) - float(row[command_key])) ** 2
+                for row in test_rows
+            )
+        )
+
+    zero_command_mean_speed = (
+        fmean(
+            math.hypot(float(row["actual_vx"]), float(row["actual_vy"]))
+            for row in zero_command_rows
+        )
+        if zero_command_rows
+        else None
+    )
+    zero_command_wz_rms = (
+        math.sqrt(
+            fmean(float(row["actual_wz"]) ** 2 for row in zero_command_rows)
+        )
+        if zero_command_rows
+        else None
+    )
+    warmup_yaw_delta = math.atan2(
+        math.sin(start.yaw_rad - pre_warmup.yaw_rad),
+        math.cos(start.yaw_rad - pre_warmup.yaw_rad),
+    )
     return {
         "goal_name": goal_case.name,
         "mirror_group": goal_case.mirror_group,
@@ -449,6 +487,15 @@ def run_episode(
         "path_length_m": path_length,
         "path_efficiency": path_efficiency,
         "progress_efficiency": progress_efficiency,
+        "tracking_rmse_vx_mps": rmse("actual_vx", "cmd_vx"),
+        "tracking_rmse_wz_radps": rmse("actual_wz", "cmd_wz"),
+        "zero_command_mean_planar_speed_mps": zero_command_mean_speed,
+        "zero_command_wz_rms_radps": zero_command_wz_rms,
+        "warmup_planar_drift_m": math.hypot(
+            start.x_world_m - pre_warmup.x_world_m,
+            start.y_world_m - pre_warmup.y_world_m,
+        ),
+        "warmup_absolute_yaw_drift_rad": abs(warmup_yaw_delta),
         "fall": termination_reason == "fall",
         "invalid_state": termination_reason == "invalid_state",
         "timeout": termination_reason == "timeout",
@@ -523,11 +570,22 @@ def aggregate_episodes(episodes: list[dict[str, Any]]) -> dict[str, Any]:
             ),
         }
 
+    def optional_median(key: str) -> float | None:
+        values = [
+            float(item[key])
+            for item in episodes
+            if item.get(key) is not None
+        ]
+        return _median_or_none(values)
+
     return {
         "episode_count": len(episodes),
         "success_rate": fmean(float(item["success"]) for item in episodes),
         "fall_rate": fmean(float(item["fall"]) for item in episodes),
         "timeout_rate": fmean(float(item["timeout"]) for item in episodes),
+        "invalid_state_rate": fmean(
+            float(item.get("invalid_state", False)) for item in episodes
+        ),
         "median_final_distance_m": median(
             item["final_distance_m"] for item in episodes
         ),
@@ -536,6 +594,22 @@ def aggregate_episodes(episodes: list[dict[str, Any]]) -> dict[str, Any]:
         ),
         "median_progress_efficiency": median(
             item["progress_efficiency"] for item in episodes
+        ),
+        "median_tracking_rmse_vx_mps": optional_median("tracking_rmse_vx_mps"),
+        "median_tracking_rmse_wz_radps": optional_median(
+            "tracking_rmse_wz_radps"
+        ),
+        "median_zero_command_mean_planar_speed_mps": optional_median(
+            "zero_command_mean_planar_speed_mps"
+        ),
+        "median_zero_command_wz_rms_radps": optional_median(
+            "zero_command_wz_rms_radps"
+        ),
+        "median_warmup_planar_drift_m": optional_median(
+            "warmup_planar_drift_m"
+        ),
+        "median_warmup_absolute_yaw_drift_rad": optional_median(
+            "warmup_absolute_yaw_drift_rad"
         ),
         "goals": goal_summaries,
         "mirror_groups": mirror_summary,

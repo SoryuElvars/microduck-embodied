@@ -16,6 +16,7 @@ from typing import Any
 from evaluation.locomotion_benchmark import (
     FALL_TILT_DEG,
     BenchmarkConfig,
+    RuntimePerturbation,
     _advance_control_step,
     _base_state,
     create_runtime,
@@ -116,6 +117,7 @@ class MujocoBackend:
         policy_path: Path,
         metadata_path: Path,
         output_dir: Path,
+        perturbation: RuntimePerturbation | None = None,
     ) -> None:
         self._benchmark_config = BenchmarkConfig(
             microduck_rl_root=microduck_rl_root.resolve(),
@@ -125,6 +127,7 @@ class MujocoBackend:
             seed=0,
         )
         self._runtime: Any | None = None
+        self._perturbation = perturbation or RuntimePerturbation()
         self._elapsed_s = 0.0
         self._last_command: VelocityCommand | None = None
 
@@ -135,6 +138,20 @@ class MujocoBackend:
 
     def validate(self) -> None:
         validate_artifacts(self._benchmark_config)
+        self._perturbation.validate()
+        if (
+            self._perturbation.scene_xml_path is not None
+            and not self._perturbation.scene_xml_path.is_file()
+        ):
+            raise FileNotFoundError(
+                f"MuJoCo scene not found: {self._perturbation.scene_xml_path}"
+            )
+
+    @property
+    def perturbation_record(self) -> dict[str, Any]:
+        return self._perturbation.as_record(
+            self._benchmark_config.microduck_rl_root
+        )
 
     def reset(self, episode_seed: int, initial_state_mode: str) -> RobotState:
         self.validate()
@@ -142,6 +159,7 @@ class MujocoBackend:
             self._benchmark_config,
             episode_seed,
             initial_state_mode,
+            self._perturbation,
         )
         self._elapsed_s = 0.0
         self._last_command = VelocityCommand(0.0, 0.0, 0.0)

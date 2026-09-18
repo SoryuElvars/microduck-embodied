@@ -250,6 +250,86 @@ uv run python \
 `results/week03/06_yaw_only_tracking_candidate/`；原始逐步 CSV 仅保存在
 `artifacts/week03/06_yaw_only_tracking_candidate/pointgoal_nominal_holdout/`。
 
+## PointGoal OOD 鲁棒性框架
+
+鲁棒性评测冻结同一个 `model_1500.onnx`、同一个 Constrained Go-to-Goal
+Controller、同一组目标与配对 reset seeds，每次只修改一个部署侧因素。统一入口为
+`evaluation/pointgoal_robustness.py`，版本化矩阵位于
+`evaluation/robustness_configs/pointgoal_ood_v1.json`：
+
+- Ground friction：`0.3 / 0.5 / 0.7 / 0.9 / 1.1`；
+- Actuator delay：`20 / 40 / 60 / 80 ms`，复用官方 PolicyInference action buffer；
+- Motor strength proxy：BAM 供电电压的 `80% / 90% / 110%`，`100%` 由 Nominal
+  条件提供；它是电压代理量，不等同于宣称所有电机 torque 被严格线性缩放；
+- Backlash：官方 `scene_walk_backlash.xml` 的 `2 deg` 总齿隙模型。策略仍观察
+  actuated motor-side joint state；汇总会显式记录这项限制。
+
+先只校验矩阵、模型和目标协议：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_robustness.py \
+  --validate-only
+```
+
+四类注入均已用 `front / seed 42 / 5 s` 的非正式 smoke 验证执行链路。需要单独
+复核时使用 `--smoke-condition`，其结果不计入快筛：
+
+```bash
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_robustness.py \
+  --smoke \
+  --smoke-condition backlash_2deg \
+  --smoke-goal front
+```
+
+第一层快筛固定为 `Nominal + friction 0.3 + delay 60 ms + motor 80% + backlash`，
+5 个条件 × 5 个对称目标 × 1 个配对 seed，共 25 Episode：
+
+```bash
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_robustness.py \
+  --quick
+```
+
+快筛只把 Fall Rate 和 invalid-state rate 作为安全门槛；到达率、Timeout、最终距离、
+Path Efficiency、左右镜像差、`vx/wz` 跟踪 RMSE、零命令速度/角速度和预热段位姿
+漂移都报告，但不把每条件仅 5 Episode 的结果包装成统计性结论。完整矩阵用 14 个
+不重复条件 × 25 Episode，共 350 Episode；必须在快筛检查后另行运行，不由 smoke
+自动触发：
+
+```bash
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_robustness.py \
+  --full
+```
+
+运行器逐 Episode 写入带协议签名的进度文件，默认可断点续跑；模型、官方 commit、
+评测代码、鲁棒性配置、目标集或运行模式变化时会拒绝混用旧进度。原始轨迹和进度只写入
+`artifacts/week03/08_pointgoal_robustness/`。得到 quick 或 full suite summary 后生成
+四因素敏感性图：
+
+```bash
+uv run python \
+  ~/projects/microduck-embodied/evaluation/plot_pointgoal_robustness.py \
+  --summary <POINTGOAL_ROBUSTNESS_SUMMARY.json> \
+  --output <OUTPUT.png>
+```
+
+Nominal、quick OOD 和 full OOD 各自报告，不与 400-Episode 随机速度基准合并
+Success Rate。当前 Navigator 范围仍为 `[vx,0,wz]`；`vy` 不纳入本轮 OOD Gate。
+
+2026-09-18 的 `model_1500` quick screen 已完成：Nominal、friction 0.3、motor 80%
+和 backlash 均为 5/5、0 跌倒；delay 60 ms 为 2/5，并发生 3/5 跌倒。随后以每档
+25 Episode 补测 0/20/40/60 ms，并最终完成冻结的 14 条件 × 25 Episode 完整矩阵。
+12/14 条件通过：全部 friction、motor proxy、backlash 及 delay 20/40 ms 均为
+25/25、0 跌倒；delay 60 ms 为 8/25、17 次跌倒，delay 80 ms 为 0/25、25 次
+跌倒。当前离散控制周期下，硬安全失效阈值位于 `(40,60] ms`。快筛分析见
+`results/week03/07_pointgoal_robustness/README.md`；延迟阈值和完整矩阵已经合并
+到同一份 Week03/07 报告中。
+
 ## PointGoal 低速 yaw 归因
 
 用固定低速命令移除 Navigator 闭环，检查侧向目标的左右启动差异是否来自

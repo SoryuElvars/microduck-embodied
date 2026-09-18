@@ -395,14 +395,40 @@ seed 和 envs 不变，不同时加 mirror loss。
   `1.0/1.8 m`，方向 `0°/±30°/±60°/±90°`。运行前写死总体/逐目标成功率、
   Fall、Timeout 和镜像差门槛，运行中不调参。结果为 70/70 到达、0 跌倒、
   0 超时，14 个目标均 5/5，最大镜像成功率差为 0，全部预设 Gate 通过。
-- [ ] 上述 holdout 通过后，再保持 Candidate B 配置不变，依次增加 training
-  seeds 43、44；每个从头训练至 `model_1500`，先复测静止后启动 Gate 和
-  行进转向，再用冻结 Controller 运行同一 25-Episode pilot。evaluation seeds
-  仍为 42–46，不得将其当作 training seeds。
-- [ ] 只有当独立 seed 无法复现或仍出现 1500 后能力崩塌时，才为候选 C 写明一个
-  可证伪的 curriculum 单因素假设；不同时修改 yaw-only Reward 和 command sampling。
-- [ ] 根据 locomotion 和 PointGoal 两层结果选择优胜者，再进入完整 Nominal/OOD
-  评测和冻结流程。
+- [x] 保持 Candidate B 配置不变，使用 training seed 43 从头训练至
+  `model_1500`。静止后双向启动均 5/5，行进转向 25 Episode 为 0 跌倒，同一
+  PointGoal pilot 为 25/25、0 跌倒、0 超时；seed 42 的早停能力得到第二次复现。
+- [x] seed 43 从 `model_1500` 续训至 `model_1999`，补测 `model_1750/1999`。
+  `model_1750` 仍 25/25，但直行速度、完成时间和 Path Efficiency 已退化；到
+  `model_1999`，稳定后右转仅 `wz=-0.019`。seed 42 与 43 均有 1500 后回退，
+  但崩塌时点和方向不同，因此当前采用 `model_1500` 早停。
+- [x] 在开始 OOD 鲁棒性测试前，固定 seed 42 的 `model_1500.onnx`，完成现有
+  400-Episode 随机速度 Nominal 协议：reset seeds 42–441，100 standing、
+  60 turn-in-place、240 三轴 general commands。400/400 未跌倒，但预先冻结的
+  逐轴 RMSE Success 为 0%；完整随机速度能力不通过。Candidate B 的 yaw 均值
+  slope/MAE 从 baseline 的 `0.801/0.146` 改善到 `1.040/0.078`，正负原地转向
+  也接近对称，但 `vx` 仍欠跟踪、`vy` 能力弱且停止状态存在漂移和角速度振荡。
+- [x] 延续已经确定的第一阶段任务边界：PointGoal Navigator 使用 `[vx,0,wz]`，
+  非零 `vy` 记为范围外能力，不以完整三轴 Success 覆盖闭环到达结果；停止漂移、
+  `vx` 欠跟踪和 yaw 振荡作为 OOD 必须持续观察的已知风险。
+- [x] 完成 seed 42 `model_1500.onnx` 的 25-Episode PointGoal OOD 快筛。Nominal、
+  friction 0.3、motor 80% 和 backlash 均 5/5、0 跌倒；delay 60 ms 仅 2/5，
+  并有 3/5 跌倒，是当前最明确的任务层安全缺口。报告位于
+  `results/week03/07_pointgoal_robustness/`。
+- [x] 保持模型、Controller、目标和 seeds 不变，完成 delay 0/20/40/60 ms 配对评测：
+  每档 25 Episode。0/20/40 ms 均 25/25、0 跌倒；60 ms 仅 8/25，并有 17/25
+  跌倒。当前 20 ms 分辨率下，硬安全失效阈值位于 `(40,60] ms`。
+- [x] 项目当前没有实机，因此不再等待真机延迟测量；完成冻结的 14 条件
+  `350-Episode` 仿真鲁棒性矩阵。12/14 条件通过：全部 friction、motor proxy、
+  backlash 及 delay 20/40 ms 均为 25/25、0 跌倒；delay 60 ms 为 8/25、17 次
+  跌倒，delay 80 ms 为 0/25、25 次跌倒。快筛、延迟阈值和完整矩阵统一记录于
+  `results/week03/07_pointgoal_robustness/`。
+- [x] 根据 Nominal、OOD 和 PointGoal 两层结果，将 seed 42 `model_1500.onnx`
+  冻结为后续导航阶段的仿真下层基线，并明确记录 `(40,60] ms` 延迟失效边界；
+  这不等于 Sim2Real-ready。
+- [ ] 进入 Week 4 Classical PointGoal 正式 benchmark。若以后单独开展下层鲁棒性
+  增强，则只加入 action-delay randomization，并复跑同一 Nominal 与 350-Episode
+  矩阵，不同时修改 yaw-only Reward、command sampling 或多个 curriculum 权重。
 
 候选 B 的训练前快照：官方仓库分支 `codex/yaw-only-angular-tracking`，Task 为
 `Mjlab-Velocity-Flat-Yaw-Only-Tracking-MicroDuck`；`std=0.5`、reward weight、
@@ -435,12 +461,23 @@ fraction、head-pose 和 CoM 等多项 curriculum，本轮尚不能把退化单�
 25-Episode PointGoal pilot：五类目标全部 5/5 到达，合计 25/25、0 跌倒、
 0 超时；相同协议下 `model_2500` 和 `model_1750` 均为 20/25。说明 yaw-only
 Reward 在合适 checkpoint 上已经产生任务层改善，但路径效率和完成时间仍不及
-Candidate A 已成功的目标，而且该结果目前只来自一个 training seed。
+Candidate A 已成功的目标；这一步完成时证据还只来自 seed 42。
 使用未见 evaluation seeds 和扩展目标完成的 70-Episode holdout 为 70/70、
-0 跌倒、0 超时，确认了固定 `model_1500.onnx` 的 Nominal 能力。下一步保持配置
-不变验证训练可复现性；若独立 seed 不能复现 1500 的能力，或仍在后期发生崩塌，
-再围绕 curriculum 做单因素消融。`model_1500` 当前是优先复现候选，尚不直接进入
-完整 OOD 或冻结流程。
+0 跌倒、0 超时，确认了固定 seed 42 `model_1500.onnx` 的 Nominal 能力。随后
+training seed 43 的 `model_1500` 在同一 pilot 中也达到 25/25、0 跌倒、0 超时，
+说明早停能力已在两个独立训练中复现；但 seed 43 的路径效率略低，直行偏航方向也与
+seed 42 相反。两个 seed 继续训练后都出现性能回退：seed 42 在 1750 双侧启动崩塌，
+seed 43 先整体变慢并在 1999 出现右侧启动崩塌。训练方法的早期有效性与后期不稳定性
+均有了跨 seed 证据，`model_1500` 因而升级为推荐早停 checkpoint；它仍需先完成
+400-Episode 随机速度检测。检测中 400/400 未跌倒，但严格三轴逐步 RMSE Success
+为 0%；yaw 的 Episode 均值响应和左右对称性相对 baseline 明显改善，`vx` 欠跟踪、
+非零 `vy`、停止漂移和步态内 yaw 振荡仍是明确能力边界。该随机协议比当前
+`[vx,0,wz]` PointGoal 接口更宽，因此结果不覆盖 70/70 闭环 holdout，也不能被
+闭环到达率掩盖。第一阶段继续维持 `vy=0` 的既定范围。随后完成的 PointGoal OOD
+快筛显示，friction 0.3、motor 80% 和 backlash 未立即退化，但 delay 60 ms 导致
+3/5 跌倒，并同步放大停止漂移、`vx/wz` tracking error 和 yaw 振荡。下一步先用
+20/40 ms 配对评测定位延迟阈值，再决定是否设计 action-delay randomization
+单因素新候选。
 
 ### 5.5 必做鲁棒性参数
 
@@ -463,11 +500,15 @@ Candidate A 已成功的目标，而且该结果目前只来自一个 training s
 
 ### 5.6 控制器级鲁棒性评测
 
-- [ ] 为四类必做不确定因素建立统一配置入口。
+- [x] 为四类必做不确定因素建立统一配置入口：采用同一冻结 ONNX、Controller、
+  对称目标与配对 seeds，每次只注入一个因素；支持协议签名、逐 Episode 进度和
+  断点续跑。四种注入均已完成不计入正式结果的短 smoke。
 - [ ] 完成新旧候选的 Nominal 固定指令和 PointGoal pilot 配对对比。
-- [ ] 只对 Nominal 和 pilot 表现最好的两个模型运行 OOD 快筛；快筛使用
-  PointGoal 核心指令的代表子集，不用纯原地转向作为唯一转向项。
-- [ ] OOD 快筛无全面失效后，才运行完整四因素矩阵。
+- [x] 对当前冻结的 seed 42 `model_1500.onnx` 运行 25-Episode PointGoal OOD
+  快筛：Nominal、friction 0.3、delay 60 ms、motor 80% 和 backlash 各覆盖五类
+  对称目标；结果为 22/25 到达，所有 3 次跌倒均来自 delay 60 ms。
+- [x] 完成 delay 阈值定位：40 ms 仍通过完整任务/安全 Gate，60 ms 在所有五类目标
+  上均出现跌倒或成功率下降；不直接运行完整四因素矩阵。
 - [ ] 所有模型共享指令、seeds、终止条件和参数档位。
 - [ ] 记录配置、模型 revision/checkpoint、种子和结果路径。
 - [ ] 统计 Tracking RMSE、方向成功率、直行偏航、Fall Rate、恢复时间和停止漂移。
@@ -497,7 +538,9 @@ Candidate A 已成功的目标，而且该结果目前只来自一个 training s
 - [x] 由 pilot 证据驱动的新模型单变量训练报告
 - [x] 新旧候选在同一 Locomotion 协议与 PointGoal pilot 下的配对对比
 - [ ] `model_5999` / 官方模型 / 自训练候选的 Nominal 对比表
-- [ ] 四类不确定因素的统一配置入口和完整实验数据
+- [x] 四类不确定因素的统一配置入口、短 smoke 与断点续跑框架
+- [x] 25-Episode OOD 快筛、关键汇总与敏感性图
+- [ ] Delay 阈值定位和完整四因素实验数据
 - [ ] 最优两个模型的鲁棒性汇总表
 - [ ] 2～4 张敏感性或对比曲线
 - [ ] Reality Gap / Sim2Real proxy 影响分析

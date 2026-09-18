@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "created_from": "artifacts/week03/08_pointgoal_robustness/model_1500/quick/summary/pointgoal_robustness_quick_model_1500.json",
+  "benchmark_kind": "classical_pointgoal_onnx_bam_ood_quick_screen_processed",
+  "run_mode": "quick",
+  "policy": {
+    "path": "artifacts/week03/06_yaw_only_tracking_candidate/models/model_1500.onnx",
+    "sha256": "533b820c13b3782f2c35bfaa7171c29b095d1b5c121c0fe5d8bef80ab37e785d"
+  },
+  "microduck_rl_commit": "062921c4c9f65107e391df042f8de424136213c3",
+  "run_signature": "b29a536bad22072b8be8003230db15ad217798e37682c7c40a3a4e4ebe0cae3c",
+  "protocol": {
+    "conditions": 5,
+    "goals_per_condition": 5,
+    "episodes_per_goal": 1,
+    "reset_seed": 42,
+    "episode_count": 25,
+    "paired_across_conditions": true,
+    "one_factor_at_a_time": true,
+    "navigator_action_scope": "[vx, 0, wz]"
+  },
+  "descriptive_total": {
+    "successes": 22,
+    "falls": 3,
+    "timeouts": 0,
+    "invalid_states": 0,
+    "note": "Do not use the pooled 22/25 value as one acceptance rate; each OOD condition is interpreted separately."
+  },
+  "conditions": [
+    {
+      "condition_id": "nominal",
+      "successes": 5,
+      "episodes": 5,
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "timeout_rate": 0.0,
+      "median_final_distance_m": 0.18857633722780215,
+      "median_path_efficiency_successes": 0.8051414222078896,
+      "median_completion_time_successes_s": 12.4,
+      "median_tracking_rmse_vx_mps": 0.12283327584386415,
+      "median_tracking_rmse_wz_radps": 0.4886819188400977,
+      "median_zero_command_mean_planar_speed_mps": 0.04791300122665138,
+      "median_zero_command_wz_rms_radps": 0.17390115592148517,
+      "median_warmup_planar_drift_m": 0.0036590854944967676,
+      "quick_safety_gate_passed": true
+    },
+    {
+      "condition_id": "friction_0p3",
+      "successes": 5,
+      "episodes": 5,
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "timeout_rate": 0.0,
+      "median_final_distance_m": 0.18857633722780215,
+      "median_path_efficiency_successes": 0.8051414222078896,
+      "median_completion_time_successes_s": 12.4,
+      "median_tracking_rmse_vx_mps": 0.12283327584386415,
+      "median_tracking_rmse_wz_radps": 0.4886819188400977,
+      "median_zero_command_mean_planar_speed_mps": 0.04791300122665138,
+      "median_zero_command_wz_rms_radps": 0.17390115592148517,
+      "median_warmup_planar_drift_m": 0.0036590854944967676,
+      "quick_safety_gate_passed": true,
+      "runtime_verification": {
+        "nominal_foot_friction": [1.0, 0.005, 0.0001],
+        "perturbed_foot_friction": [0.3, 0.005, 0.0001],
+        "all_five_raw_trajectory_hashes_match_nominal": true
+      }
+    },
+    {
+      "condition_id": "delay_60ms",
+      "successes": 2,
+      "episodes": 5,
+      "success_rate": 0.4,
+      "fall_rate": 0.6,
+      "timeout_rate": 0.0,
+      "median_final_distance_m": 0.18480108839159087,
+      "median_path_efficiency_successes": 0.5827683021321397,
+      "median_completion_time_successes_s": 12.53,
+      "median_tracking_rmse_vx_mps": 0.1765000091163294,
+      "median_tracking_rmse_wz_radps": 0.9520041174312079,
+      "median_zero_command_mean_planar_speed_mps": 0.0854477592017914,
+      "median_zero_command_wz_rms_radps": 0.536881001987139,
+      "median_warmup_planar_drift_m": 0.028828091780333027,
+      "quick_safety_gate_passed": false,
+      "relative_to_nominal_percent": {
+        "path_efficiency_successes": -27.6,
+        "tracking_rmse_vx": 43.7,
+        "tracking_rmse_wz": 94.8,
+        "zero_command_planar_speed": 78.3,
+        "zero_command_wz_rms": 208.7,
+        "warmup_planar_drift": 687.8
+      }
+    },
+    {
+      "condition_id": "motor_80pct",
+      "successes": 5,
+      "episodes": 5,
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "timeout_rate": 0.0,
+      "median_final_distance_m": 0.18691085641441638,
+      "median_path_efficiency_successes": 0.7986967750224343,
+      "median_completion_time_successes_s": 12.8,
+      "median_tracking_rmse_vx_mps": 0.1255191532643507,
+      "median_tracking_rmse_wz_radps": 0.4212569636354214,
+      "median_zero_command_mean_planar_speed_mps": 0.03579832590688221,
+      "median_zero_command_wz_rms_radps": 0.09878563501839362,
+      "median_warmup_planar_drift_m": 0.0015276222833999055,
+      "quick_safety_gate_passed": true
+    },
+    {
+      "condition_id": "backlash_2deg",
+      "successes": 5,
+      "episodes": 5,
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "timeout_rate": 0.0,
+      "median_final_distance_m": 0.168876563981935,
+      "median_path_efficiency_successes": 0.953135410414505,
+      "median_completion_time_successes_s": 9.72,
+      "median_tracking_rmse_vx_mps": 0.08944069837471191,
+      "median_tracking_rmse_wz_radps": 0.4135475942978213,
+      "median_zero_command_mean_planar_speed_mps": 0.044344037934731566,
+      "median_zero_command_wz_rms_radps": 0.21478810621522854,
+      "median_warmup_planar_drift_m": 0.011803505406889542,
+      "quick_safety_gate_passed": true,
+      "observation_limit": "Policy observes motor-side actuated joint state; passive output-side backlash joint is not added to the policy observation."
+    }
+  ],
+  "delay_60ms_failures": [
+    {
+      "goal": "front_left",
+      "termination": "fall",
+      "time_s": 15.08,
+      "final_distance_m": 0.09330089598992879,
+      "terminal_tilt_deg": 77.62,
+      "note": "Entered the success radius but fell before satisfying the success hold."
+    },
+    {
+      "goal": "front_right",
+      "termination": "fall",
+      "time_s": 8.98,
+      "final_distance_m": 0.6603142799716125,
+      "terminal_tilt_deg": 71.60
+    },
+    {
+      "goal": "left",
+      "termination": "fall",
+      "time_s": 8.48,
+      "final_distance_m": 1.1114053048843449,
+      "terminal_tilt_deg": 70.82
+    }
+  ],
+  "decision": {
+    "dominant_risk": "60 ms actuator delay",
+    "model_status": "Nominal-capable but not delay-robust; do not claim Sim2Real readiness.",
+    "next_test": "Completed: paired 0/20/40/60 ms testing localized the hard failure threshold to (40, 60] ms.",
+    "do_not_do_yet": "Do not spend the full 350-episode matrix budget or modify multiple training factors."
+  }
+}

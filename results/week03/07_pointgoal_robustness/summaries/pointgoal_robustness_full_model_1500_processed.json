@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "source_summary": "artifacts/week03/08_pointgoal_robustness/model_1500/full/summary/pointgoal_robustness_full_model_1500.json",
+  "created_at": "2026-09-18T12:19:01.906697+00:00",
+  "scope": "simulation_only_pointgoal_ood",
+  "policy": {
+    "path": "artifacts/week03/06_yaw_only_tracking_candidate/models/model_1500.onnx",
+    "sha256": "533b820c13b3782f2c35bfaa7171c29b095d1b5c121c0fe5d8bef80ab37e785d"
+  },
+  "microduck_rl_commit": "062921c4c9f65107e391df042f8de424136213c3",
+  "run_signature": "329d8191885de196102cd41de21ff3f2315d062a3a696e5722a412288b406d23",
+  "protocol": {
+    "one_factor_at_a_time": true,
+    "paired_reset_seeds": [42, 43, 44, 45, 46],
+    "goals": ["front", "front_left", "front_right", "left", "right"],
+    "episodes_per_condition": 25,
+    "condition_count": 14,
+    "total_episodes": 350,
+    "navigator_action_scope": "[vx, 0, wz]"
+  },
+  "acceptance_gate": {
+    "minimum_overall_success_rate": 0.8,
+    "minimum_per_goal_success_rate": 0.6,
+    "maximum_fall_rate": 0.0,
+    "maximum_timeout_rate": 0.2,
+    "maximum_invalid_state_rate": 0.0,
+    "maximum_absolute_mirror_success_rate_gap": 0.4
+  },
+  "conditions": [
+    {"id": "nominal", "factor": "nominal", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.806228, "median_final_distance_m": 0.188388, "median_completion_time_s_successes": 12.38, "median_tracking_rmse_vx_mps": 0.122833, "median_tracking_rmse_wz_radps": 0.485561, "gate_passed": true},
+    {"id": "friction_0p3", "factor": "foot_friction", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.806228, "median_final_distance_m": 0.188388, "median_completion_time_s_successes": 12.38, "median_tracking_rmse_vx_mps": 0.122833, "median_tracking_rmse_wz_radps": 0.485561, "gate_passed": true},
+    {"id": "friction_0p5", "factor": "foot_friction", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.806228, "median_final_distance_m": 0.188388, "median_completion_time_s_successes": 12.38, "median_tracking_rmse_vx_mps": 0.122833, "median_tracking_rmse_wz_radps": 0.485561, "gate_passed": true},
+    {"id": "friction_0p7", "factor": "foot_friction", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.806228, "median_final_distance_m": 0.188388, "median_completion_time_s_successes": 12.38, "median_tracking_rmse_vx_mps": 0.122833, "median_tracking_rmse_wz_radps": 0.485561, "gate_passed": true},
+    {"id": "friction_0p9", "factor": "foot_friction", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.806228, "median_final_distance_m": 0.188388, "median_completion_time_s_successes": 12.38, "median_tracking_rmse_vx_mps": 0.122833, "median_tracking_rmse_wz_radps": 0.485561, "gate_passed": true},
+    {"id": "friction_1p1", "factor": "foot_friction", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.81249, "median_final_distance_m": 0.188813, "median_completion_time_s_successes": 12.26, "median_tracking_rmse_vx_mps": 0.120173, "median_tracking_rmse_wz_radps": 0.483228, "gate_passed": true},
+    {"id": "delay_20ms", "factor": "actuator_delay", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.866725, "median_final_distance_m": 0.171174, "median_completion_time_s_successes": 8.82, "median_tracking_rmse_vx_mps": 0.077418, "median_tracking_rmse_wz_radps": 0.288752, "gate_passed": true},
+    {"id": "delay_40ms", "factor": "actuator_delay", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.851528, "median_final_distance_m": 0.160141, "median_completion_time_s_successes": 8.04, "median_tracking_rmse_vx_mps": 0.067681, "median_tracking_rmse_wz_radps": 0.269567, "gate_passed": true},
+    {"id": "delay_60ms", "factor": "actuator_delay", "success": 8, "fall": 17, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.570477, "median_final_distance_m": 0.660314, "median_completion_time_s_successes": 12.94, "median_tracking_rmse_vx_mps": 0.202128, "median_tracking_rmse_wz_radps": 1.01717, "gate_passed": false},
+    {"id": "delay_80ms", "factor": "actuator_delay", "success": 0, "fall": 25, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": null, "median_final_distance_m": 1.404151, "median_completion_time_s_successes": null, "median_tracking_rmse_vx_mps": 0.270991, "median_tracking_rmse_wz_radps": 2.465844, "gate_passed": false},
+    {"id": "motor_80pct", "factor": "motor_strength_proxy", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.799421, "median_final_distance_m": 0.186911, "median_completion_time_s_successes": 12.8, "median_tracking_rmse_vx_mps": 0.125804, "median_tracking_rmse_wz_radps": 0.425139, "gate_passed": true},
+    {"id": "motor_90pct", "factor": "motor_strength_proxy", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.799161, "median_final_distance_m": 0.186534, "median_completion_time_s_successes": 12.66, "median_tracking_rmse_vx_mps": 0.124496, "median_tracking_rmse_wz_radps": 0.452911, "gate_passed": true},
+    {"id": "motor_110pct", "factor": "motor_strength_proxy", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.817564, "median_final_distance_m": 0.189347, "median_completion_time_s_successes": 12.0, "median_tracking_rmse_vx_mps": 0.118424, "median_tracking_rmse_wz_radps": 0.518268, "gate_passed": true},
+    {"id": "backlash_2deg", "factor": "backlash", "success": 25, "fall": 0, "timeout": 0, "invalid_state": 0, "median_path_efficiency_successes": 0.95368, "median_final_distance_m": 0.169947, "median_completion_time_s_successes": 9.7, "median_tracking_rmse_vx_mps": 0.08861, "median_tracking_rmse_wz_radps": 0.416702, "gate_passed": true}
+  ],
+  "observations": {
+    "passed_condition_count": 12,
+    "failed_condition_ids": ["delay_60ms", "delay_80ms"],
+    "hard_delay_failure_bracket_ms": "(40, 60]",
+    "friction_0p3_to_0p9_csvs_byte_identical_to_nominal": "100/100",
+    "friction_interpretation": "The flat-ground protocol did not activate a friction-limited regime at coefficients 0.3 through 0.9.",
+    "scope_limit": "This is simulation OOD evidence, not Sim2Real validation."
+  }
+}

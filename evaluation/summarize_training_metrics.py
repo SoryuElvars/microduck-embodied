@@ -28,9 +28,13 @@ METRICS = {
 
 PLOT_METRICS = (
     ("error_vel_yaw", "Yaw velocity error", "lower is better"),
-    ("track_angular_velocity", "Angular tracking reward", "definition differs"),
+    (
+        "track_angular_velocity",
+        "Angular tracking reward",
+        "higher only when definition matches",
+    ),
     ("error_vel_xy", "XY velocity error", "lower is better"),
-    ("mean_reward", "Mean training reward", "reward definition differs"),
+    ("mean_reward", "Mean training reward", "higher only when definition matches"),
     ("fell_over", "Fell-over termination", "lower is better"),
     ("mean_episode_length", "Mean episode length", "higher is better"),
 )
@@ -169,6 +173,7 @@ def _plot(
     output_path: Path,
     series: dict[str, dict[str, dict[int, ScalarPoint]]],
     rolling_window: int,
+    title: str,
 ) -> None:
     import matplotlib
 
@@ -176,7 +181,9 @@ def _plot(
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(2, 3, figsize=(15, 8.5), constrained_layout=True)
-    for axis, (metric, title, note) in zip(axes.flat, PLOT_METRICS, strict=True):
+    for axis, (metric, panel_title, note) in zip(
+        axes.flat, PLOT_METRICS, strict=True
+    ):
         for label, metrics in series.items():
             points = sorted(metrics[metric].values(), key=lambda item: item.iteration)
             steps = [point.iteration for point in points]
@@ -187,11 +194,13 @@ def _plot(
                 linewidth=1.8,
                 label=label,
             )
-        axis.set_title(f"{title}\n({note}, {rolling_window}-iteration mean)")
+        axis.set_title(
+            f"{panel_title}\n({note}, {rolling_window}-iteration mean)"
+        )
         axis.set_xlabel("Iteration")
         axis.grid(alpha=0.25)
     axes[0, 0].legend()
-    fig.suptitle("Candidate A vs Candidate B training metrics", fontsize=15)
+    fig.suptitle(title, fontsize=15)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=170)
     plt.close(fig)
@@ -209,6 +218,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--checkpoints", default="250,500,750,1000,1250,1500,1750,1999")
     parser.add_argument("--window-size", type=int, default=100)
     parser.add_argument("--rolling-window", type=int, default=50)
+    parser.add_argument(
+        "--title",
+        default="Candidate A vs Candidate B training metrics",
+        help="Figure title.",
+    )
     parser.add_argument("--output-csv", type=Path, required=True)
     parser.add_argument("--output-summary", type=Path, required=True)
     parser.add_argument("--output-figure", type=Path, required=True)
@@ -252,7 +266,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args.output_summary.write_text(
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    _plot(args.output_figure, all_series, args.rolling_window)
+    _plot(args.output_figure, all_series, args.rolling_window, args.title)
     return 0
 
 

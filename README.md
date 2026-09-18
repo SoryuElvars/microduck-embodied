@@ -110,3 +110,40 @@ MicroDuck
 - [第 1 周：官方 Locomotion 链路复现记录](./results/week01_official_locomotion_chain.md)
 - [第 2 周：Locomotion 自动评测与训练诊断](./results/week02/)
 - [第 3 周：底层模型选择与鲁棒性实验](./results/week03/)
+
+## 附录：官方 `microduck_rl` 速查表
+
+官方仓库 `/home/elvars/projects/microduck_rl` 是机器人模型、训练环境、Locomotion
+Policy、PT checkpoint、ONNX 导出和官方 Reward 的来源；本仓库继续负责评测协议、
+导航算法、实验结果和展示材料。涉及官方依赖的个人评测通常从 `microduck_rl` 目录通过
+其 `uv` 环境运行，但脚本和输出仍分别保存在本仓库的 `evaluation/`、`artifacts/` 和
+`results/` 中。
+
+| 目标 | 官方仓库中的位置或入口 |
+|---|---|
+| 查看已注册的训练任务及 Task ID | `src/mjlab_microduck/tasks/__init__.py` |
+| 修改步行 Reward、Observation、Command、Domain Randomization 或 PPO 配置 | `src/mjlab_microduck/tasks/microduck_velocity_env_cfg.py` |
+| 查看自定义 Reward、Observation、Event、Termination 和 Curriculum 的具体实现 | `src/mjlab_microduck/tasks/mdp.py` |
+| 修改或核对左右镜像训练 | `src/mjlab_microduck/tasks/symmetry.py` |
+| 查看 Backlash 任务如何包装普通任务 | `src/mjlab_microduck/tasks/backlash.py` |
+| 查看机器人模型选择、HOME pose、BAM 执行器和关节配置 | `src/mjlab_microduck/robot/microduck_constants.py` |
+| 查看 MuJoCo XML、场景、碰撞模型、传感器和 STL 资产 | `src/mjlab_microduck/robot/microduck/` |
+| 查看 BAM 摩擦随机化和回程间隙编码器模型 | `src/mjlab_microduck/actuator/friction_dr_bam.py` |
+| 列出当前可用任务 | `uv run list-envs` |
+| 训练或进行 `64 env × 5 iteration` 冒烟测试 | `uv run train <TASK_ID> ...` |
+| 回放 PT checkpoint | `uv run play <TASK_ID> ...` |
+| 将 PT checkpoint 正确导出为包含 Observation Normalizer 的 ONNX | `scripts/export.py`、`src/mjlab_microduck/export.py` |
+| 运行 ONNX 部署形态仿真 | `scripts/infer_policy.py` |
+| 查找本地 PT checkpoint 和训练配置快照 | `logs/rsl_rl/<experiment>/<run>/` |
+| 查看本地 W&B 运行缓存 | `wandb/` |
+| 验证官方代码和配置约束 | `uv run --with pytest pytest tests/` |
+| 阅读官方项目入口、任务和命令 | `README.md` |
+| 阅读 Observation/Action 合约、Reward、DR 和 Sim2Real 约束 | `AGENTS.md` |
+| 查看依赖版本和命令入口 | `pyproject.toml`、`uv.lock` |
+| 编写和运行本项目的量化评测 | `microduck-embodied/evaluation/` |
+| 保存本项目的原始 CSV、模型快照和中间产物 | `microduck-embodied/artifacts/` |
+| 整理本项目可审阅的汇总、图表和中文报告 | `microduck-embodied/results/` |
+
+需要计算训练环境的 Episode Return 时，应使用官方 PT checkpoint、官方环境和 Reward
+Manager；ONNX 部署轨迹默认没有训练 Reward。Navigator 只消费后端提供的
+`RobotState`，不直接读取 `mj_data.qpos`，以保持仿真与未来真机定位后端可替换。

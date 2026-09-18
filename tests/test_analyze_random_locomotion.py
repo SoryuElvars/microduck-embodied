@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from evaluation.analyze_random_locomotion import (
+    episode_mean_passes,
     episode_passes,
     linear_response,
     normalized_tracking_score,
@@ -11,6 +12,18 @@ from evaluation.analyze_random_locomotion import (
 
 
 class RandomLocomotionAnalysisTests(unittest.TestCase):
+    def test_episode_mean_diagnostic_can_ignore_vy_for_pointgoal_axes(self) -> None:
+        episode = {
+            "fallen": False,
+            "command": {"vx": 0.2, "vy": 0.2, "wz": 0.5},
+            "mean_actual_vx": 0.15,
+            "mean_actual_vy": 0.0,
+            "mean_actual_wz": 0.4,
+        }
+
+        self.assertFalse(episode_mean_passes(episode))
+        self.assertTrue(episode_mean_passes(episode, ("vx", "wz")))
+
     def test_success_requires_all_axes_and_no_fall(self) -> None:
         command = {"vx": 0.2, "vy": -0.1, "wz": 0.5}
         tolerances = success_tolerances({"command": command})

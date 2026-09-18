@@ -30,6 +30,7 @@ from evaluation.locomotion_benchmark import (
     PROJECT_ROOT,
     BenchmarkConfig,
     CommandCase,
+    path_for_record,
     run_episode,
     validate_artifacts,
 )
@@ -243,7 +244,11 @@ def run_random_benchmark(
         "benchmark_kind": f"onnx_cpu_bam_random_velocity_{episodes}",
         "reward_available": False,
         "microduck_rl_commit": official_commit,
-        "policy_path": str(config.policy_path.relative_to(config.microduck_rl_root)),
+        "policy_path": path_for_record(
+            config.policy_path,
+            config.microduck_rl_root,
+            PROJECT_ROOT,
+        ),
         "policy_sha256": hashlib.sha256(config.policy_path.read_bytes()).hexdigest(),
         "plan_sha256": plan_hash,
         "protocol": {key: value for key, value in plan_document.items() if key != "commands"},

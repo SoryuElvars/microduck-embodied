@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "protocol_status": "frozen",
+  "description": "One-factor-at-a-time PointGoal OOD screen for the frozen model_1500 ONNX policy and frozen Classical Navigator.",
+  "goal_set_path": "evaluation/goal_sets/pointgoal_pilot_5.json",
+  "quick": {
+    "episodes_per_goal": 1,
+    "condition_ids": [
+      "nominal",
+      "friction_0p3",
+      "delay_60ms",
+      "motor_80pct",
+      "backlash_2deg"
+    ],
+    "safety_gate": {
+      "maximum_fall_rate": 0.0,
+      "maximum_invalid_state_rate": 0.0,
+      "note": "The 25-episode quick screen is diagnostic. Success, timeout, efficiency and left-right metrics are reported, not promoted to a statistical acceptance claim."
+    }
+  },
+  "full": {
+    "episodes_per_goal": 5,
+    "condition_ids": [
+      "nominal",
+      "friction_0p3",
+      "friction_0p5",
+      "friction_0p7",
+      "friction_0p9",
+      "friction_1p1",
+      "delay_20ms",
+      "delay_40ms",
+      "delay_60ms",
+      "delay_80ms",
+      "motor_80pct",
+      "motor_90pct",
+      "motor_110pct",
+      "backlash_2deg"
+    ],
+    "acceptance_gate": {
+      "minimum_overall_success_rate": 0.8,
+      "minimum_per_goal_success_rate": 0.6,
+      "maximum_fall_rate": 0.0,
+      "maximum_timeout_rate": 0.2,
+      "maximum_invalid_state_rate": 0.0,
+      "maximum_absolute_mirror_success_rate_gap": 0.4,
+      "note": "All criteria are evaluated independently per condition. Do not pool OOD conditions into the nominal success rate."
+    }
+  },
+  "conditions": [
+    {"id": "nominal", "factor": "nominal"},
+    {"id": "friction_0p3", "factor": "foot_friction", "foot_friction": 0.3},
+    {"id": "friction_0p5", "factor": "foot_friction", "foot_friction": 0.5},
+    {"id": "friction_0p7", "factor": "foot_friction", "foot_friction": 0.7},
+    {"id": "friction_0p9", "factor": "foot_friction", "foot_friction": 0.9},
+    {"id": "friction_1p1", "factor": "foot_friction", "foot_friction": 1.1},
+    {"id": "delay_20ms", "factor": "actuator_delay", "actuator_delay_ms": 20},
+    {"id": "delay_40ms", "factor": "actuator_delay", "actuator_delay_ms": 40},
+    {"id": "delay_60ms", "factor": "actuator_delay", "actuator_delay_ms": 60},
+    {"id": "delay_80ms", "factor": "actuator_delay", "actuator_delay_ms": 80},
+    {"id": "motor_80pct", "factor": "motor_strength_proxy", "bam_voltage_scale": 0.8},
+    {"id": "motor_90pct", "factor": "motor_strength_proxy", "bam_voltage_scale": 0.9},
+    {"id": "motor_110pct", "factor": "motor_strength_proxy", "bam_voltage_scale": 1.1},
+    {
+      "id": "backlash_2deg",
+      "factor": "backlash",
+      "scene_xml_path": "src/mjlab_microduck/robot/microduck/scene_walk_backlash.xml"
+    }
+  ]
+}

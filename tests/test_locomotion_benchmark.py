@@ -9,6 +9,7 @@ from pathlib import Path
 from evaluation.locomotion_benchmark import (
     DEFAULT_COMMAND_SET,
     PROJECT_ROOT,
+    RuntimePerturbation,
     load_command_set,
     path_for_record,
     quaternion_to_euler,
@@ -18,6 +19,17 @@ from evaluation.locomotion_benchmark import (
 
 
 class CommandSetTests(unittest.TestCase):
+    def test_runtime_perturbation_requires_delay_on_control_ticks(self) -> None:
+        self.assertEqual(RuntimePerturbation(actuator_delay_ms=60).actuator_delay_steps, 3)
+        with self.assertRaisesRegex(ValueError, "20 ms control period"):
+            RuntimePerturbation(actuator_delay_ms=10).validate()
+
+    def test_runtime_perturbation_rejects_invalid_physics_values(self) -> None:
+        with self.assertRaisesRegex(ValueError, "foot_friction"):
+            RuntimePerturbation(foot_friction=0.0).validate()
+        with self.assertRaisesRegex(ValueError, "bam_voltage_scale"):
+            RuntimePerturbation(bam_voltage_scale=0.0).validate()
+
     def test_policy_path_can_be_recorded_from_official_or_project_root(self) -> None:
         official_root = Path("/workspace/microduck_rl")
         project_root = Path("/workspace/microduck-embodied")

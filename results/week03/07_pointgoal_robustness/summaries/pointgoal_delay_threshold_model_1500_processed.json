@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "created_from": "artifacts/week03/08_pointgoal_robustness/model_1500/full/summary/pointgoal_robustness_full_partial_nominal_delay_20ms_delay_40ms_delay_60ms_model_1500.json",
+  "benchmark_kind": "classical_pointgoal_actuator_delay_threshold_processed",
+  "policy": {
+    "path": "artifacts/week03/06_yaw_only_tracking_candidate/models/model_1500.onnx",
+    "sha256": "533b820c13b3782f2c35bfaa7171c29b095d1b5c121c0fe5d8bef80ab37e785d"
+  },
+  "microduck_rl_commit": "062921c4c9f65107e391df042f8de424136213c3",
+  "run_signature": "329d8191885de196102cd41de21ff3f2315d062a3a696e5722a412288b406d23",
+  "protocol": {
+    "delay_levels_ms": [0, 20, 40, 60],
+    "control_period_ms": 20,
+    "goals": ["front", "front_left", "front_right", "left", "right"],
+    "reset_seeds": [42, 43, 44, 45, 46],
+    "episodes_per_delay_level": 25,
+    "episode_count": 100,
+    "paired_across_delay_levels": true,
+    "one_factor_at_a_time": true
+  },
+  "threshold": {
+    "maximum_tested_delay_passing_task_and_safety_gate_ms": 40,
+    "minimum_tested_delay_failing_task_and_safety_gate_ms": 60,
+    "hard_failure_threshold_interval_ms": "(40, 60]",
+    "first_tested_failure_level_ms": 60,
+    "resolution_limit": "Delay is injected in integer 20 ms policy-control steps; this protocol cannot resolve a threshold inside the 40-60 ms interval.",
+    "soft_degradation_note": "Zero-command motion and warmup drift increase before task success collapses; passing at 40 ms does not mean dynamics are unchanged."
+  },
+  "conditions": [
+    {
+      "delay_ms": 0,
+      "successes": 25,
+      "falls": 0,
+      "timeouts": 0,
+      "invalid_states": 0,
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "minimum_per_goal_success_rate": 1.0,
+      "median_final_distance_m": 0.18838777463907683,
+      "median_path_efficiency_successes": 0.8062280908968473,
+      "median_completion_time_successes_s": 12.38,
+      "median_tracking_rmse_vx_mps": 0.12283327584386415,
+      "median_tracking_rmse_wz_radps": 0.48556064876213356,
+      "median_zero_command_mean_planar_speed_mps": 0.04766556260143629,
+      "median_zero_command_wz_rms_radps": 0.1668682858099298,
+      "median_warmup_planar_drift_m": 0.0036590854944967676,
+      "full_gate_passed": true
+    },
+    {
+      "delay_ms": 20,
+      "successes": 25,
+      "falls": 0,
+      "timeouts": 0,
+      "invalid_states": 0,
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "minimum_per_goal_success_rate": 1.0,
+      "median_final_distance_m": 0.17117381650319005,
+      "median_path_efficiency_successes": 0.8667246589431158,
+      "median_completion_time_successes_s": 8.82,
+      "median_tracking_rmse_vx_mps": 0.07741809807157907,
+      "median_tracking_rmse_wz_radps": 0.2887518661214624,
+      "median_zero_command_mean_planar_speed_mps": 0.06772358210133446,
+      "median_zero_command_wz_rms_radps": 0.20227747500523122,
+      "median_warmup_planar_drift_m": 0.008540394876865974,
+      "full_gate_passed": true,
+      "relative_to_nominal_percent": {
+        "path_efficiency_successes": 7.5,
+        "tracking_rmse_vx": -37.0,
+        "tracking_rmse_wz": -40.5,
+        "zero_command_planar_speed": 42.1,
+        "zero_command_wz_rms": 21.2,
+        "warmup_planar_drift": 133.4
+      }
+    },
+    {
+      "delay_ms": 40,
+      "successes": 25,
+      "falls": 0,
+      "timeouts": 0,
+      "invalid_states": 0,
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "minimum_per_goal_success_rate": 1.0,
+      "median_final_distance_m": 0.1601408821206179,
+      "median_path_efficiency_successes": 0.8515280010231914,
+      "median_completion_time_successes_s": 8.04,
+      "median_tracking_rmse_vx_mps": 0.06768054017801624,
+      "median_tracking_rmse_wz_radps": 0.26956749879479763,
+      "median_zero_command_mean_planar_speed_mps": 0.08071281098513783,
+      "median_zero_command_wz_rms_radps": 0.2512059232735706,
+      "median_warmup_planar_drift_m": 0.016127978843491198,
+      "full_gate_passed": true,
+      "relative_to_nominal_percent": {
+        "path_efficiency_successes": 5.6,
+        "tracking_rmse_vx": -44.9,
+        "tracking_rmse_wz": -44.5,
+        "zero_command_planar_speed": 69.3,
+        "zero_command_wz_rms": 50.5,
+        "warmup_planar_drift": 340.8
+      }
+    },
+    {
+      "delay_ms": 60,
+      "successes": 8,
+      "falls": 17,
+      "timeouts": 0,
+      "invalid_states": 0,
+      "success_rate": 0.32,
+      "fall_rate": 0.68,
+      "minimum_per_goal_success_rate": 0.2,
+      "median_final_distance_m": 0.6603142799716125,
+      "median_path_efficiency_successes": 0.5704769030879615,
+      "median_completion_time_successes_s": 12.87,
+      "median_tracking_rmse_vx_mps": 0.20212766418321337,
+      "median_tracking_rmse_wz_radps": 1.0171698798181625,
+      "median_zero_command_mean_planar_speed_mps": 0.08671893255491932,
+      "median_zero_command_wz_rms_radps": 0.5032898908275969,
+      "median_warmup_planar_drift_m": 0.02726756227264029,
+      "full_gate_passed": false,
+      "goal_successes": {
+        "front": "2/5",
+        "front_left": "2/5",
+        "front_right": "2/5",
+        "left": "1/5",
+        "right": "1/5"
+      },
+      "relative_to_nominal_percent": {
+        "path_efficiency_successes": -29.2,
+        "tracking_rmse_vx": 64.6,
+        "tracking_rmse_wz": 109.5,
+        "zero_command_planar_speed": 81.9,
+        "zero_command_wz_rms": 201.6,
+        "warmup_planar_drift": 645.2
+      }
+    }
+  ],
+  "decision": {
+    "model_status": "Passes the frozen task/safety gate through 40 ms, but has a sharp safety collapse at 60 ms.",
+    "training_implication": "If deployment latency can exceed 40 ms or is uncertain, action-delay randomization is now an evidence-backed single-factor candidate.",
+    "deployment_implication": "Measure end-to-end hardware control latency before selecting the training delay range; do not infer Sim2Real readiness from the 40 ms pass alone."
+  }
+}

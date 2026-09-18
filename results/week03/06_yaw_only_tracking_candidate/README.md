@@ -358,10 +358,11 @@ seeds 42–46、20 秒 timeout 和 0.2 m 到达半径，分别对 `model_1750` �
 进展效率仍低于 Candidate A，所有共有成功目标的完成时间也更长，符合前进速度
 欠跟踪的结果。
 
-因此 checkpoint 选择结论需要修正：`model_1750` 是建立步态后行进转向指标最好的
-checkpoint，但 `model_1500` 才是本轮 25-Episode PointGoal pilot 表现最好的
-checkpoint。它已经满足“小样本任务层改善”，但仍只来自一个 training seed，
-且同一训练继续到 1750 后能力会崩塌，当前称为“优先复现候选”，还不能直接冻结。
+因此 checkpoint 选择结论需要修正：`model_1750` 是 seed 42 建立步态后行进转向
+指标最好的 checkpoint，但 `model_1500` 才是本轮 25-Episode PointGoal pilot
+表现最好的 checkpoint。后续 seed 43 已复现 `model_1500` 的 25/25，并再次观察到
+1500 后的质量退化；这使 `model_1500` 成为跨两个 training seeds 的推荐早停点，
+但还不能跳过扩展 Nominal 与 OOD 鲁棒性评测而直接冻结。
 
 ![model_1750 PointGoal pilot 轨迹](figures/pointgoal_pilot_model_1750.png)
 
@@ -401,42 +402,139 @@ checkpoint 选择的 reset seeds 100–104，以及
 
 ![model_1500 Nominal holdout](figures/pointgoal_nominal_holdout_70_model_1500.png)
 
-## 独立 training seed 复现协议
+## seed 43 复现与续训退化检查
 
 固定 Candidate B 的 Task、Reward、curriculum、command sampling、PPO、4096 envs
-和从头训练设置，只将 training seed 从 42 扩展为 43、44。每个 seed 训练到
-iteration 1500；命令使用 `max_iterations=1501`，以确保实际写出 `model_1500.pt`。
-两个训练在同一张 GPU 上顺序运行，不并行。
+和从头训练设置，只把 training seed 从 42 改为 43。seed 43 先训练到
+`model_1500.pt`，通过同一套轻量 Gate 与 PointGoal pilot 后，再保持配置不变续训到
+`model_1999.pt`。所有部署评测仍固定使用 evaluation seeds 42–46；它们不属于
+training seed。
 
-每个独立 seed 按以下顺序评测，evaluation seeds 仍固定为 42–46，不把它们当作
-training seed：
+训练曲线使用每个 checkpoint 截止前 100 iterations 的均值。seed 43 的续训日志与
+初始日志按 iteration 合并，重叠点以后一次运行覆盖：
 
-1. 导出 `model_1500.onnx` 并核对 `61 obs → 14 actions`。
-2. 运行 10-Episode 静止后双向启动 Gate；期望两侧均 5/5，且正确方向的
-   Episode 平均 `|wz|≥0.25 rad/s`。
-3. 运行 25-Episode 行进转向快筛；要求 0 跌倒，并单独报告直行偏航、前进速度和
-   gentle/normal turn mirror residual，不与启动 Gate 合并。
-4. 只有轻量 Gate 未出现明显失效时，才运行冻结 Controller 的同一 25-Episode
-   PointGoal pilot。主要复现目标为 25/25 到达、左右侧各 5/5、0 跌倒；完成时间和
-   Path Efficiency 作为质量指标，不因到达率通过而省略。
+| Checkpoint | seed 42 `error_vel_yaw` | seed 43 `error_vel_yaw` | seed 42 angular reward | seed 43 angular reward | seed 42 / 43 Mean Reward |
+|---:|---:|---:|---:|---:|---:|
+| 1500 | 1.059 | 1.086 | 1.053 | 1.020 | 123.91 / 121.49 |
+| 1750 | 1.023 | 1.013 | 1.062 | 1.079 | 116.54 / 118.00 |
+| 1999 | 1.011 | 1.019 | 1.072 | 1.068 | 117.60 / 117.94 |
 
-判定以三个 training seeds 的分布为准：若 43、44 都复现，Candidate B 的
-`model_1500` 能力可视为具有初步训练可复现性；若只复现一个，则保留为不稳定
-候选；若都未复现，才进入 1500 后 curriculum 的单因素消融。
+两条曲线的量级和走向基本一致：yaw error 在 1500 后仍小幅下降，angular reward
+小幅上升，而 Mean Reward 都从 1500 的局部高点回落。因此训练标量没有把后续行为
+退化清楚地暴露出来，checkpoint 仍必须经过行为 Gate 和 PointGoal 闭环评测。seed 43
+在 1500 附近的尖锐短暂下探与续训进程切换边界重合，按 restart transient 处理，不把
+它本身当作行为崩塌证据；续训 checkpoint 的结论来自重新导出的 ONNX 行为评测。
+
+![seed 42 与 seed 43 训练曲线](figures/seed42_vs_seed43_training_metrics.png)
+
+`model_1500` 的同协议对比如下：
+
+| 指标 | seed 42 | seed 43 | 结论 |
+|---|---:|---:|---|
+| 静止后左转 `wz` | +0.524（5/5） | +0.492（5/5） | 均通过 |
+| 静止后右转 `wz` | -0.517（5/5） | -0.518（5/5） | 均通过 |
+| 直行实际 `vx` | 0.122 | 0.116 | seed 43 略低 |
+| 直行净偏航 | -19.4° | +18.1° | 幅度接近、偏航方向随 seed 改变 |
+| gentle turn mirror residual | 0.058 | 0.108 | seed 43 对称性较差 |
+| normal turn mirror residual | 0.023 | 0.060 | seed 43 对称性较差 |
+| PointGoal Success | 25/25 | 25/25 | 任务成功率复现 |
+| PointGoal 中位 Final Distance | 0.188 m | 0.185 m | 接近 |
+| PointGoal 中位 Path Efficiency | 0.806 | 0.769 | seed 43 低 0.038 |
+| Fall / Timeout | 0 / 0 | 0 / 0 | 均稳定 |
+
+seed 43 的五类目标中位完成时间为 `12.48 / 12.92 / 13.06 / 14.58 / 14.62 s`，
+比 seed 42 对应的 `12.02 / 12.34 / 12.36 / 13.78 / 14.02 s` 全部更慢，但仍在
+冻结的 20 秒超时内完成。也就是说，`model_1500` 的“能到达、双向可转、无跌倒”
+已经在第二个 training seed 上复现，效率和直行偏航方向则不是 seed 不变性质。
+
+继续训练后的行为退化也在 seed 43 上出现，但时点和方向不同：
+
+| Training seed | `model_1750` | `model_1999` | 退化形态 |
+|---:|---|---|---|
+| 42 | 原地左右转均降至约 `|wz|=0.02`；PointGoal 20/25，左侧 0/5 | 原地左右仍几乎不转 | 1500–1750 间双侧启动崩塌 |
+| 43 | 原地左右仍为 `+0.467/-0.454`；PointGoal 25/25，但 Path Efficiency 从 0.769 降至 0.718 | 左转仍为 `+0.446`，右转降至 `-0.019` | 先整体变慢，1750–1999 间右侧启动崩塌 |
+
+seed 43 的 `model_1750` 虽仍 25/25，但直行实际 `vx` 从 0.116 降至 0.096，五类
+目标中位完成时间延长到 `15.66 / 15.96 / 16.06 / 17.68 / 17.80 s`。因此不能只按
+Success Rate 判断“没有退化”。两个 training seeds 都支持“1500 后存在性能回退”与
+“`model_1500` 是当前合适早停点”，但不支持“必定在 1750、必定先坏同一侧”的更强
+结论。当前证据把问题定位到 1500 后训练阶段；由于该阶段有多项 curriculum 同时变化，
+仍不能把因果单独归给某一个 curriculum 权重。
+
+![seed 43 model_1500 PointGoal pilot](figures/pointgoal_pilot_seed43_model_1500.png)
+
+![seed 43 model_1750 PointGoal pilot](figures/pointgoal_pilot_seed43_model_1750.png)
+
+## seed 42 `model_1500` 400-Episode 随机速度检测
+
+在进入 OOD 前，固定 seed 42 的 `model_1500.onnx`，运行与第二周 baseline 完全
+相同的随机速度协议：reset seeds 42–441、command seed 20260911、1 秒零命令
+预热和 10 秒测试。400 Episode 由 100 个 standing、60 个 turn-in-place 和
+240 个三轴 general commands 组成；未修改模型、Controller 或成功门槛。
+
+数据完整性检查通过：400 个 summary、400 个原始 CSV、220000 行、每行 95 字段，
+没有缺失文件、行数错误或非有限数值。全部 400 Episode 均未跌倒。
+
+预先冻结的 Nominal Success 要求 `vx/vy/wz` 每一轴的逐步速度 RMSE 都不超过
+`max(命令幅值的 30%, 绝对下限)`。结果如下：
+
+| 指标 | 第二周 `model_5999` baseline | seed 42 `model_1500` |
+|---|---:|---:|
+| Fall Rate | 0.0% | 0.0% |
+| 运动指令严格 Nominal Success | 0.0% | 0.0% |
+| 全部严格 Nominal Success | 25.0% | 0.0% |
+| `vx` RMSE 单轴通过率 | 44.2% | 48.0% |
+| `vy` RMSE 单轴通过率 | 32.2% | 0.0% |
+| `wz` RMSE 单轴通过率 | 26.8% | 4.2% |
+| `vx` Episode-mean slope / MAE | 0.517 / 0.063 | 0.521 / 0.062 |
+| `vy` Episode-mean slope / MAE | 0.218 / 0.067 | 0.170 / 0.071 |
+| `wz` Episode-mean slope / MAE | 0.801 / 0.146 | **1.040 / 0.078** |
+| 原地正/负 yaw 实际均值 | +0.518 / -0.290 | **+0.742 / -0.740** |
+
+Candidate B 的 yaw Episode 均值响应明显优于 baseline，正负原地转向也接近对称；
+这与 25-Episode PointGoal pilot 的双向转向改善一致。但它仍不通过严格随机速度
+Gate，主要暴露三类限制：
+
+1. `vx` 响应斜率仍只有约 0.52，前进速度持续欠跟踪。
+2. `vy` 响应斜率只有 0.17，完整三轴 locomotion 能力没有建立。
+3. 即使 Episode 均值 yaw 接近命令，逐步 `wz` RMSE 仍大，说明步态内角速度振荡
+   明显。100 个 standing 也全部未通过严格 RMSE：平均后退约 0.07 m/10 s，平均
+   净偏航约 +21.4°/10 s，停止状态并不真正静止。
+
+为区分“均值偏置”和“步态内振荡”，报告补充了非 Gate 的 Episode-mean 诊断：
+全部 Episode 的三轴均值通过率为 40.8%，只看当前 PointGoal 接口的 `vx/wz` 为
+50.0%；300 个运动指令对应为 21.0% 和 33.3%。这些结果只能帮助归因，不能在看到
+结果后替代预先冻结的 RMSE Gate。
+
+该协议覆盖正负 `vx`、非零 `vy` 和全范围 `wz`，而当前 Classical PointGoal
+Navigator 固定为 `[vx, 0, wz]`。因此“完整三轴严格 Success 为 0”不能改写已经完成
+的 70/70 PointGoal Nominal holdout，但它明确说明：`model_1500` 不能宣称具备完整
+随机速度跟踪能力，并且进入 OOD 前必须显式决定是否接受 `vy` 为任务外能力，同时把
+停止漂移、`vx` 欠跟踪和 yaw 振荡作为当前任务内的已知风险。
+
+详细报告与图表见 [400-Episode 随机速度检测](random_velocity_400/README.md)。
+
+![seed 42 model_1500 随机速度响应](random_velocity_400/figures/random_velocity_400_seed42_model_1500.png)
 
 ## 当前结论
 
 1. yaw-only error 使定义未变的 `error_vel_yaw` 在整个同预算训练过程中持续改善，
    训练假设得到初步支持。
 2. 较高的 angular reward 部分来自数学定义变化，不能单独证明实际转向更好。
-3. `model_1750` 的行进转向指标最好，但低速启动死区使其 PointGoal 仍为 20/25；
-   `model_1500` 保留静止后双向启动能力，PointGoal 达到 25/25、0 跌倒、0 超时。
-4. `model_1500` 的完成时间与效率仍不及 Candidate A 已成功的目标，且单个
-   training seed 继续训练后会退化；它是优先复现候选，而不是最终冻结模型。
+3. seed 42 与 seed 43 的 `model_1500` 均保留静止后双向启动能力，PointGoal 合计
+   50/50、0 跌倒、0 超时；Candidate B 的早期任务能力已获得两次独立训练复现。
+4. seed 43 的 Path Efficiency 和完成时间弱于 seed 42；直行偏航方向也相反。
+   training seed 会影响质量与偏置，不能把单个 seed 的精确数值当成固定模型性质。
 5. 独立 Nominal holdout 使用全新 seeds 与目标得到 70/70、0 跌倒、0 超时，
    所有预设 Gate 均通过；固定 `model_1500.onnx` 的 Nominal 能力得到确认。
-6. 加上 holdout，本报告覆盖的 370 个部署 Episode 合计 0 跌倒；另有 50 个
-   官方 PT Reward Episode 用于归因。
+6. 两个 seed 都在 1500 后出现退化，但 seed 42 是较早的双侧启动崩塌，seed 43
+   是先变慢、后在 1999 出现单侧崩塌。当前应采用 `model_1500` 早停，并保留
+   行为 Gate 选 checkpoint，不能只看训练 Reward。
+7. 加上 seed 43 与本次随机速度检测，本报告覆盖的 900 个部署 Episode 合计 0 跌倒；
+   另有 50 个官方 PT Reward Episode 用于归因。该安全性统计不等同于任务成功率。
+8. 400-Episode 严格三轴 Nominal Success 为 0%，因此不能把 Candidate B 描述为
+   完整随机速度控制器；同时其 yaw 均值响应和双向对称性相对 baseline 明显改善。
+   PointGoal 能力与三轴 locomotion 能力必须分别报告。
 
 ## 下一步评测顺序
 
@@ -454,10 +552,17 @@ training seed：
    25/25 到达、0 跌倒、0 超时，左右侧目标均为 5/5。
 8. [x] 固定 seed 42 的 `model_1500.onnx`，完成 70-Episode 独立 Nominal
    holdout；70/70 到达、0 跌倒、0 超时，全部预设 Gate 通过。
-9. [ ] holdout 通过后，保持 Candidate B 配置不变，依次训练 seeds 43、44 至
-   `model_1500`，复测
-   启动 Gate、行进转向和同一 pilot；先判断 25/25 是否可复现，再决定是否需要
-   curriculum 单因素消融。
+9. [x] 保持 Candidate B 配置不变，用 training seed 43 从头训练至 `model_1500`；
+   启动 Gate 双侧均 5/5，行进转向 0 跌倒，同一 PointGoal pilot 为 25/25。
+10. [x] seed 43 从 `model_1500` 续训至 `model_1999` 并检查 1750/1999；1750
+    仍 25/25 但速度、完成时间和效率退化，1999 的稳定后右转降至 `wz=-0.019`。
+11. [x] 固定 seed 42 的 `model_1500.onnx`，完成 400-Episode 随机速度检测；
+    400/400 未跌倒，但严格三轴 RMSE Success 为 0%，确认完整随机速度能力未通过。
+12. [x] 保持已经确定的第一阶段 PointGoal 接口 `[vx,0,wz]`：非零 `vy` 记为范围外
+    能力，不用完整三轴 Success 覆盖闭环到达结果；停止漂移、`vx` 欠跟踪和 yaw
+    振荡作为 OOD 必须持续观察的已知风险。
+13. [ ] 进入 PointGoal OOD 快筛；只有任务结果或 OOD 暴露明确失败证据时，才围绕
+    单一因素写候选 C 假设。
 
 ## 产物
 
@@ -488,6 +593,27 @@ training seed：
   `summaries/pointgoal_nominal_holdout_70_model_1500.json`
 - `model_1500` Nominal holdout 图：
   `figures/pointgoal_nominal_holdout_70_model_1500.png`
+- seed 42 / 43 训练曲线窗口汇总：
+  `summaries/seed42_vs_seed43_training_metrics.json`
+- seed 42 / 43 训练曲线图：`figures/seed42_vs_seed43_training_metrics.png`
+- 两 seed 行为复现与续训退化汇总：`summaries/seed42_vs_seed43_repro.json`
+- seed 43 `model_1500 / 1750` PointGoal 轨迹图：
+  `figures/pointgoal_pilot_seed43_model_1500.png`、
+  `figures/pointgoal_pilot_seed43_model_1750.png`
+- seed 42 / 43 逐 iteration 训练长表：
+  `artifacts/week03/06_yaw_only_tracking_candidate/training_seed_repro/seed42_vs_seed43_training_metrics.csv`
+  （本地保留）
+- seed 43 的 ONNX、逐 Episode summary 与原始 CSV：
+  `artifacts/week03/06_yaw_only_tracking_candidate/training_seed_repro/seed43/`
+  （本地保留）
+- seed 42 `model_1500` 400-Episode 详细报告：
+  `random_velocity_400/README.md`
+- seed 42 `model_1500` 400-Episode 处理后汇总与图表：
+  `random_velocity_400/summaries/random_velocity_400_seed42_model_1500.json`、
+  `random_velocity_400/figures/random_velocity_400_seed42_model_1500.png`
+- 400-Episode 原始 summary、逐步 CSV 与断点文件：
+  `artifacts/week03/06_yaw_only_tracking_candidate/random_velocity_400/seed42_model_1500/`
+  （本地保留）
 - PointGoal pilot 原始逐步 CSV：
   `artifacts/week03/06_yaw_only_tracking_candidate/pointgoal_pilot/model_1500/`、
   `artifacts/week03/06_yaw_only_tracking_candidate/pointgoal_pilot/model_1750/`（本地保留）

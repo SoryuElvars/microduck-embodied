@@ -21,6 +21,11 @@ SUCCESS_ABSOLUTE_FLOORS = {
     "wz": 0.10,
 }
 AXIS_METRICS = {"vx": "rmse_vx", "vy": "rmse_vy", "wz": "rmse_wz"}
+MEAN_ACTUAL_METRICS = {
+    "vx": "mean_actual_vx",
+    "vy": "mean_actual_vy",
+    "wz": "mean_actual_wz",
+}
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -102,6 +107,22 @@ def episode_passes(episode: dict[str, Any]) -> bool:
     )
 
 
+def episode_mean_passes(
+    episode: dict[str, Any], axes: Sequence[str] = ("vx", "vy", "wz")
+) -> bool:
+    """Check episode-mean bias as a diagnostic, not the frozen RMSE gate."""
+
+    tolerances = success_tolerances(episode)
+    return not episode["fallen"] and all(
+        abs(
+            float(episode[MEAN_ACTUAL_METRICS[axis]])
+            - float(episode["command"][axis])
+        )
+        <= tolerances[axis]
+        for axis in axes
+    )
+
+
 def normalized_tracking_score(episode: dict[str, Any]) -> float:
     """Return lower-is-better tracking error normalized by success thresholds."""
 
@@ -135,12 +156,31 @@ def summarize_group(episodes: list[dict[str, Any]]) -> dict[str, Any]:
         "episode_count": len(episodes),
         "fall_rate": fmean(float(item["fallen"]) for item in episodes),
         "nominal_success_rate": fmean(float(episode_passes(item)) for item in episodes),
+        "episode_mean_tracking_success_rate": fmean(
+            float(episode_mean_passes(item)) for item in episodes
+        ),
+        "episode_mean_vx_wz_success_rate": fmean(
+            float(episode_mean_passes(item, ("vx", "wz"))) for item in episodes
+        ),
         "axis_pass_rate": {
             metric: fmean(
                 float(float(item[metric]) <= success_tolerances(item)[axis])
                 for item in episodes
             )
             for axis, metric in AXIS_METRICS.items()
+        },
+        "episode_mean_axis_pass_rate": {
+            axis: fmean(
+                float(
+                    abs(
+                        float(item[MEAN_ACTUAL_METRICS[axis]])
+                        - float(item["command"][axis])
+                    )
+                    <= success_tolerances(item)[axis]
+                )
+                for item in episodes
+            )
+            for axis in MEAN_ACTUAL_METRICS
         },
         "rmse_vx": describe([float(item["rmse_vx"]) for item in episodes]),
         "rmse_vy": describe([float(item["rmse_vy"]) for item in episodes]),
@@ -282,6 +322,16 @@ def process_summary(document: dict[str, Any], *, validate_csv: bool = True) -> d
                 "small absolute floors for zero and near-zero commands."
             ),
         },
+        "secondary_diagnostic": {
+            "name": "episode_mean_tracking_bias",
+            "frozen_acceptance_metric": False,
+            "description": (
+                "Uses the same per-axis tolerances on the difference between "
+                "command and episode-mean actual velocity. It separates mean "
+                "response bias from within-episode oscillation and must not "
+                "replace the predefined instantaneous-RMSE success metric."
+            ),
+        },
         "data_quality": {
             "unique_episode_indices": len(set(indices)),
             "unique_reset_seeds": len(set(seeds)),
@@ -300,8 +350,14 @@ def process_summary(document: dict[str, Any], *, validate_csv: bool = True) -> d
             "best_success": (
                 compact_episode(successful_motion[0]) if successful_motion else None
             ),
-            "typical_failure": compact_episode(failed_motion[middle_failure]),
-            "worst_failure": compact_episode(failed_motion[-1]),
+            "typical_failure": (
+                compact_episode(failed_motion[middle_failure])
+                if failed_motion
+                else None
+            ),
+            "worst_failure": (
+                compact_episode(failed_motion[-1]) if failed_motion else None
+            ),
         },
     }
     if validate_csv:
@@ -404,8 +460,48 @@ def write_report(
     turns = processed["turn_in_place_by_direction"]
     fits = processed["response_fit"]
     representatives = processed["representative_motion_episodes"]
+    best = representatives["best_success"]
     typical = representatives["typical_failure"]
     worst = representatives["worst_failure"]
+    report_date = str(document.get("created_at", "unknown"))[:10]
+    standing_count = processed["bucket_counts"].get("standing", 0)
+    motion_count = processed["motion_only"]["episode_count"]
+
+    def representative_line(label: str, episode: dict[str, Any] | None) -> str:
+        if episode is None:
+            return f"- {label}：无。"
+        return (
+            f"- {label}：Episode {episode['episode']}，seed {episode['seed']}，"
+            f"命令 `({episode['command']['vx']:+.3f}, "
+            f"{episode['command']['vy']:+.3f}, "
+            f"{episode['command']['wz']:+.3f})`，RMSE "
+            f"`({episode['rmse_vx']:.3f}, {episode['rmse_vy']:.3f}, "
+            f"{episode['rmse_wz']:.3f})`。"
+        )
+
+    representative_lines = "\n".join(
+        (
+            representative_line("最佳合格运动样本", best),
+            representative_line("典型失败", typical),
+            representative_line("最严重失败", worst),
+        )
+    )
+    if motion["nominal_success_rate"] >= 0.95 and overall["fall_rate"] == 0.0:
+        conclusion = (
+            "固定模型在本协议下同时保持了零跌倒和至少 95% 的运动指令成功率，"
+            "可以进入 OOD 快筛；这仍只是 Nominal 指令覆盖，不代表 Sim2Real 验证。"
+        )
+    elif motion["nominal_success_rate"] > 0.0:
+        conclusion = (
+            "固定模型在部分随机运动指令上通过严格的逐轴 RMSE 门槛，但尚未形成"
+            "接近全覆盖的 Nominal 跟踪能力。应结合分桶和单轴通过率定位剩余缺陷，"
+            "不能只用零跌倒或包含静止样本的总体成功率宣布冻结。"
+        )
+    else:
+        conclusion = (
+            "固定模型的运动指令均未通过严格的逐轴 RMSE 门槛。即使保持零跌倒，"
+            "也不能据此冻结为具有完整随机速度跟踪能力的控制器。"
+        )
     bucket_rows = "\n".join(
         f"| {bucket} | {summary['episode_count']} | "
         f"{summary['nominal_success_rate']:.1%} | {summary['fall_rate']:.1%} | "
@@ -413,9 +509,21 @@ def write_report(
         f"{summary['rmse_wz']['mean']:.3f} |"
         for bucket, summary in processed["by_bucket"].items()
     )
+    mean_diagnostic_rows = "\n".join(
+        f"| {label} | {summary['episode_count']} | "
+        f"{summary['episode_mean_tracking_success_rate']:.1%} | "
+        f"{summary['episode_mean_vx_wz_success_rate']:.1%} |"
+        for label, summary in (
+            ("general", processed["by_bucket"]["general"]),
+            ("standing", processed["by_bucket"]["standing"]),
+            ("turn_in_place", processed["by_bucket"]["turn_in_place"]),
+            ("motion_only", motion),
+            ("overall", overall),
+        )
+    )
     report = f"""# MicroDuck 400-Episode 随机速度基准
 
-日期：2026-09-11
+日期：{report_date}
 
 ## 协议
 
@@ -436,6 +544,14 @@ def write_report(
 vx/vy/wz 组合以及显式 standing/turn buckets。两套协议互补，结果分别报告，
 不合并为一个成功率，也不把重复子集再次计数。
 
+## 与 PointGoal 接口的边界
+
+该随机协议覆盖正负 `vx`、非零 `vy` 和全范围 `wz`，检验的是完整三轴速度命令
+覆盖。当前第一阶段 PointGoal Navigator 固定输出 `[vx, 0, wz]`，因此三轴联合
+Success 不是 PointGoal 到达率，也不能覆盖或推翻独立的闭环 PointGoal 结果。
+其中 `vx/wz` 响应、零命令停止行为和 Fall Rate 与当前任务直接相关；非零 `vy`
+结果记录为更广 locomotion 能力边界。
+
 ## 数据完整性
 
 - 汇总 Episode：{processed['episode_count']}
@@ -454,9 +570,23 @@ vx/vy/wz 组合以及显式 standing/turn buckets。两套协议互补，结果�
 把低速指令完全不响应错误地计为成功。
 
 - 运动指令 Nominal Success Rate：**{motion['nominal_success_rate']:.1%}**（排除静止 Episode）
-- 全部 Episode Nominal Success Rate：{overall['nominal_success_rate']:.1%}（包含 100 个静止 Episode）
+- 全部 Episode Nominal Success Rate：{overall['nominal_success_rate']:.1%}（包含 {standing_count} 个静止 Episode）
 - Fall Rate：**{overall['fall_rate']:.1%}**
 - vx / vy / wz 单轴通过率：{overall['axis_pass_rate']['rmse_vx']:.1%} / {overall['axis_pass_rate']['rmse_vy']:.1%} / {overall['axis_pass_rate']['rmse_wz']:.1%}
+
+## Episode 均值响应诊断
+
+下面使用相同容差检查“Episode 实际均值与命令的偏差”，用于区分长期响应偏置与
+Episode 内步态振荡。它是看到结果后补充的诊断，不是预先冻结的 Nominal Success，
+不能取代上面的逐步速度 RMSE Gate。`vx/wz` 列只对应当前 PointGoal Navigator 的
+`[vx, wz]` 接口边界，也不是新的通过门槛。
+
+| 分组 | Episodes | 三轴 Episode-mean pass | `vx/wz` Episode-mean pass |
+|---|---:|---:|---:|
+{mean_diagnostic_rows}
+
+三轴 Episode-mean 单轴通过率为：
+`vx {overall['episode_mean_axis_pass_rate']['vx']:.1%} / vy {overall['episode_mean_axis_pass_rate']['vy']:.1%} / wz {overall['episode_mean_axis_pass_rate']['wz']:.1%}`。
 
 ## 分桶结果
 
@@ -472,24 +602,26 @@ vx/vy/wz 组合以及显式 standing/turn buckets。两套协议互补，结果�
 | vy | {fits['vy']['slope']:.3f} | {fits['vy']['correlation']:.3f} | {fits['vy']['episode_mean_absolute_error']:.3f} m/s |
 | wz | {fits['wz']['slope']:.3f} | {fits['wz']['correlation']:.3f} | {fits['wz']['episode_mean_absolute_error']:.3f} rad/s |
 
-原地转向继续呈现方向和幅值相关的非线性：
+原地转向的分方向结果：
 
 - 正向：命令均值 {turns['positive']['mean_command_wz']:+.3f}，实际均值 {turns['positive']['mean_actual_wz']:+.3f} rad/s，成功率 {turns['positive']['nominal_success_rate']:.1%}
 - 负向：命令均值 {turns['negative']['mean_command_wz']:+.3f}，实际均值 {turns['negative']['mean_actual_wz']:+.3f} rad/s，成功率 {turns['negative']['nominal_success_rate']:.1%}
 
-静止 Episode 全部通过，但 300 个运动指令仅 {motion['nominal_success_rate']:.1%} 通过；因此不能用包含静止样本的 {overall['nominal_success_rate']:.1%} 作为控制器质量结论。
+{standing_count} 个静止 Episode 与 {motion_count} 个运动指令必须分开解释；运动指令
+成功率为 {motion['nominal_success_rate']:.1%}，不能用包含静止样本的
+{overall['nominal_success_rate']:.1%} 代替控制器的运动跟踪结论。
 
 ## 代表性运动样本
 
-- 合格成功样本：无。
-- 典型失败：Episode {typical['episode']}，seed {typical['seed']}，命令 `({typical['command']['vx']:+.3f}, {typical['command']['vy']:+.3f}, {typical['command']['wz']:+.3f})`，RMSE `({typical['rmse_vx']:.3f}, {typical['rmse_vy']:.3f}, {typical['rmse_wz']:.3f})`。
-- 最严重失败：Episode {worst['episode']}，seed {worst['seed']}，命令 `({worst['command']['vx']:+.3f}, {worst['command']['vy']:+.3f}, {worst['command']['wz']:+.3f})`，RMSE `({worst['rmse_vx']:.3f}, {worst['rmse_vy']:.3f}, {worst['rmse_wz']:.3f})`。
+{representative_lines}
 
 ## 结论
 
-该模型在 400 个 Episode 中保持 0% Fall Rate，说明 nominal 稳定性较好；但
-300 个运动指令的成功率为 0%，速度跟踪门禁明确失败。该结果完成第二周
-Locomotion Benchmark 的随机指令基线，但该 ONNX 不能冻结为导航控制器。
+{conclusion}
+
+当前第一阶段 PointGoal 接口继续固定为 `[vx,0,wz]`，非零 `vy` 作为范围外能力
+单独记录。该边界允许候选进入 PointGoal OOD 快筛，但停止漂移、`vx` 欠跟踪和
+yaw 振荡必须作为风险指标持续报告；不能把任务范围收窄写成完整 locomotion 通过。
 
 源汇总：`{source_path.relative_to(PROJECT_ROOT)}`
 """

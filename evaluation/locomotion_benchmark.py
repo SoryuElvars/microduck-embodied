@@ -139,6 +139,66 @@ class BenchmarkConfig:
     seed: int
 
 
+@dataclass(frozen=True)
+class RuntimePerturbation:
+    """One deployment-side physics/actuation perturbation.
+
+    The defaults are exactly nominal.  ``bam_voltage_scale`` is intentionally
+    named after the quantity that is changed: it is a practical motor-strength
+    proxy, not a claim that every motor torque is scaled linearly.
+    """
+
+    foot_friction: float | None = None
+    actuator_delay_ms: int = 0
+    bam_voltage_scale: float = 1.0
+    scene_xml_path: Path | None = None
+
+    def validate(self) -> None:
+        if self.foot_friction is not None and (
+            not math.isfinite(self.foot_friction) or self.foot_friction <= 0
+        ):
+            raise ValueError("foot_friction must be finite and > 0")
+        if self.actuator_delay_ms < 0:
+            raise ValueError("actuator_delay_ms must be >= 0")
+        control_period_ms = 1000.0 * PHYSICS_TIMESTEP_S * DECIMATION
+        delay_steps = self.actuator_delay_ms / control_period_ms
+        if not math.isclose(delay_steps, round(delay_steps), abs_tol=1e-9):
+            raise ValueError(
+                "actuator_delay_ms must be an integer multiple of the "
+                f"{control_period_ms:g} ms control period"
+            )
+        if not math.isfinite(self.bam_voltage_scale) or self.bam_voltage_scale <= 0:
+            raise ValueError("bam_voltage_scale must be finite and > 0")
+
+    @property
+    def actuator_delay_steps(self) -> int:
+        self.validate()
+        control_period_ms = 1000.0 * PHYSICS_TIMESTEP_S * DECIMATION
+        return round(self.actuator_delay_ms / control_period_ms)
+
+    def as_record(self, microduck_rl_root: Path) -> dict[str, Any]:
+        scene = self.scene_xml_path
+        return {
+            "foot_friction": self.foot_friction,
+            "actuator_delay_ms": self.actuator_delay_ms,
+            "actuator_delay_steps": self.actuator_delay_steps,
+            "bam_voltage_scale": self.bam_voltage_scale,
+            "bam_vin": BAM_VIN * self.bam_voltage_scale,
+            "motor_strength_interpretation": "BAM supply-voltage proxy",
+            "scene_xml_path": (
+                None
+                if scene is None
+                else path_for_record(scene, microduck_rl_root, PROJECT_ROOT)
+            ),
+            "backlash_observation_model": (
+                "motor-side actuated joint state; passive output-side joint is not "
+                "added to policy observation"
+                if scene is not None and "backlash" in scene.name
+                else None
+            ),
+        }
+
+
 @dataclass
 class Runtime:
     """Official deployment-rehearsal components for one fresh episode."""
@@ -151,6 +211,7 @@ class Runtime:
     qpos_adr: int
     qvel_adr: int
     control_dt: float
+    perturbation: RuntimePerturbation
 
 
 def load_command_set(path: Path) -> list[CommandCase]:
@@ -235,20 +296,30 @@ def create_runtime(
     config: BenchmarkConfig,
     episode_seed: int,
     initial_state_mode: str,
+    perturbation: RuntimePerturbation | None = None,
 ) -> tuple[Runtime, dict[str, float]]:
-    """Create a fresh nominal CPU MuJoCo + BAM + ONNX runtime."""
+    """Create a fresh CPU MuJoCo + BAM + ONNX runtime."""
 
     official = load_official_inference_module(config.microduck_rl_root)
     np = official.np
     mujoco = official.mujoco
+    perturbation = perturbation or RuntimePerturbation()
+    perturbation.validate()
 
     random.seed(episode_seed)
     np.random.seed(episode_seed)
 
-    xml_path = config.microduck_rl_root / official.MICRODUCK_XML
+    xml_path = (
+        config.microduck_rl_root / official.MICRODUCK_XML
+        if perturbation.scene_xml_path is None
+        else perturbation.scene_xml_path
+    ).resolve()
+    if not xml_path.is_file():
+        raise FileNotFoundError(f"MuJoCo scene not found: {xml_path}")
+    bam_vin = BAM_VIN * perturbation.bam_voltage_scale
     bam_model = official.load_bam_model(
         official.BAM_KP_FW,
-        BAM_VIN,
+        bam_vin,
         0.0,
     )
     model, data, bam_ctrl, _ = official.load_mujoco_with_bam(
@@ -258,6 +329,12 @@ def create_runtime(
         BAM_VIN_DROP_GAIN,
         official.BAM_VIN_MIN,
     )
+    if perturbation.foot_friction is not None:
+        for geom_name in ("left_foot_collision", "right_foot_collision"):
+            geom_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, geom_name)
+            if geom_id < 0:
+                raise ValueError(f"scene has no required foot geom: {geom_name}")
+            model.geom_friction[geom_id, 0] = perturbation.foot_friction
     policy = official.PolicyInference(
         model,
         data,
@@ -266,6 +343,8 @@ def create_runtime(
         bam_ctrl=bam_ctrl,
         use_projected_gravity=True,
         new_cmd_obs=True,
+        delay_min_lag=perturbation.actuator_delay_steps,
+        delay_max_lag=perturbation.actuator_delay_steps,
     )
 
     freejoint_id = mujoco.mj_name2id(
@@ -321,6 +400,7 @@ def create_runtime(
             qpos_adr=qpos_adr,
             qvel_adr=qvel_adr,
             control_dt=DECIMATION * model.opt.timestep,
+            perturbation=perturbation,
         ),
         initial_state,
     )
