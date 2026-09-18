@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import math
 import unittest
 from dataclasses import replace
+from pathlib import Path
 
 from evaluation.pointgoal_pilot import (
     DEFAULT_GOAL_SET,
@@ -82,6 +84,48 @@ class PointGoalProtocolTests(unittest.TestCase):
                 math.hypot(left.x_initial_body_m, left.y_initial_body_m),
                 math.hypot(right.x_initial_body_m, right.y_initial_body_m),
             )
+
+    def test_nominal_holdout_is_frozen_before_its_70_episode_run(self) -> None:
+        path = (
+            Path(__file__).parents[1]
+            / "evaluation"
+            / "goal_sets"
+            / "pointgoal_nominal_holdout_70.json"
+        )
+        protocol = load_goal_set(path)
+        document = json.loads(path.read_text(encoding="utf-8"))
+
+        self.assertEqual(protocol.protocol_status, "frozen")
+        self.assertEqual(protocol.episode_count, 70)
+        self.assertEqual(protocol.base_seed, 100)
+        self.assertEqual(len(protocol.goals), 14)
+        self.assertTrue(all(goal.episodes == 5 for goal in protocol.goals))
+        self.assertEqual(
+            document["acceptance_gate"],
+            {
+                "minimum_overall_success_rate": 0.95,
+                "minimum_per_goal_success_rate": 0.8,
+                "maximum_fall_rate": 0.0,
+                "maximum_timeout_rate": 0.05,
+                "maximum_absolute_mirror_success_rate_gap": 0.2,
+                "note": (
+                    "All criteria must pass. Efficiency and completion time are "
+                    "reported as quality metrics but are not tuned after the run."
+                ),
+            },
+        )
+
+        radii = sorted(
+            {
+                round(math.hypot(goal.x_initial_body_m, goal.y_initial_body_m), 3)
+                for goal in protocol.goals
+            }
+        )
+        self.assertEqual(radii, [1.0, 1.8])
+        self.assertEqual(
+            {goal.name for goal in protocol.goals if goal.mirror_group is None},
+            {"near_front_d100_a000", "far_front_d180_a000"},
+        )
 
     def test_initial_body_goal_is_rotated_into_world_frame(self) -> None:
         goal = goal_from_initial_body_frame(

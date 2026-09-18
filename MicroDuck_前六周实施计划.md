@@ -236,8 +236,9 @@ Classical Navigator 正式 Benchmark，不与后者合并 Episode 数或成功�
   `alpha_walking.onnx`；
 - 已完成的自训练候选 A：只将 angular-velocity tracking std 收紧到
   `sqrt(0.25)`，当前以 `model_2500` 作为 pilot 临时候选；
-- 已完成训练前准备的自训练候选 B：根据 PointGoal pilot 和低速 yaw 归因，
-  只把 angular tracking 改为 yaw-axis error；正式长训尚未开始。
+- 已完成 2000-iteration 正式训练的自训练候选 B：根据 PointGoal pilot 和低速
+  yaw 归因，只把 angular tracking 改为 yaw-axis error；已完成快筛与
+  同协议 PointGoal pilot，但尚未满足冻结条件。
 
 `model_5999` 用于保留失败基线，不再为它投入与优胜候选相同规模的完整 OOD
 预算。官方模型是否用于第四周，必须由本项目的统一评测决定，不能因“官方”身份
@@ -379,13 +380,27 @@ seed 和 envs 不变，不同时加 mirror loss。
 - [x] 用测试锁定只有一个预期配置或 Reward 定义发生改变。
 - [x] 先运行 `64 envs × 5 iterations` CUDA 冒烟，再运行 `64 envs × 25 iterations`
   预运行；检查 NaN、跌倒、Reward 量级和行为退化。
-- [ ] 通过后使用 4096 envs 从头训练，在 `500 / 1000 / 1500 / 2000` 及必要的
+- [x] 通过后使用 4096 envs 从头训练，在 `500 / 1000 / 1500 / 2000` 及必要的
   后续 checkpoint 保存与导出；不因为“还在上升”就无上限续训。
-- [ ] 每个快照先做固定指令与行进转向快筛，与 `model_2500` 使用配对 seeds。
-- [ ] 只有当新候选在目标指标上明确改善且稳定性未退化时，才复测同一个
+- [x] 对 `500 / 1000 / 1250 / 1500 / 1750 / 1999` 做行进转向快筛，与
+  `model_2500` 使用配对 seeds；`model_1750` 在直行偏航和左右对称性上最佳。
+- [x] 新候选在行进 yaw 对称性上明确改善且快筛 0 跌倒后，复测同一个
   25-Episode PointGoal pilot。
-- [ ] 候选有效后再增加 1～2 个独立 training seeds 判断训练随机性；不得用
-  evaluation seeds 代替 training seeds。
+- [x] 对失败 checkpoint 补做立即/稳定启动、原地转向 checkpoint sweep、官方
+  Reward Manager 和 ONNX 导出一致性检查，将退化定位到 1500–1750 的后期训练。
+- [x] 对仍保留静止后双向启动能力的 `model_1500` 复测同一 pilot；结果为
+  25/25 到达、0 跌倒、0 超时，左侧和右侧目标均为 5/5。
+- [x] 先冻结 seed 42 的 `model_1500.onnx` 与 Controller，使用未参与 checkpoint
+  选择的 evaluation seeds 100–104，运行 70-Episode Nominal holdout：距离
+  `1.0/1.8 m`，方向 `0°/±30°/±60°/±90°`。运行前写死总体/逐目标成功率、
+  Fall、Timeout 和镜像差门槛，运行中不调参。结果为 70/70 到达、0 跌倒、
+  0 超时，14 个目标均 5/5，最大镜像成功率差为 0，全部预设 Gate 通过。
+- [ ] 上述 holdout 通过后，再保持 Candidate B 配置不变，依次增加 training
+  seeds 43、44；每个从头训练至 `model_1500`，先复测静止后启动 Gate 和
+  行进转向，再用冻结 Controller 运行同一 25-Episode pilot。evaluation seeds
+  仍为 42–46，不得将其当作 training seeds。
+- [ ] 只有当独立 seed 无法复现或仍出现 1500 后能力崩塌时，才为候选 C 写明一个
+  可证伪的 curriculum 单因素假设；不同时修改 yaw-only Reward 和 command sampling。
 - [ ] 根据 locomotion 和 PointGoal 两层结果选择优胜者，再进入完整 Nominal/OOD
   评测和冻结流程。
 
@@ -394,7 +409,38 @@ seed 和 envs 不变，不同时加 mirror loss。
 command sampling、PPO、seed 42 和从头训练设置均继承候选 A。数值单测与配置差异
 测试共 5 项通过，`64×5` 和 `64×25` 两级 CUDA 预运行均正常结束且
 `nan_state=0`。短预运行从随机策略开始，跌倒率与 Reward 只用于检查运行异常，
-不得作为模型质量或候选优劣结论。正式 `4096 envs` 训练须在代码提交后由用户启动。
+不得作为模型质量或候选优劣结论。正式训练已在 commit `062921c` 上使用
+4096 envs、seed 42 从头完成至 `model_1999.pt`；训练曲线显示 yaw error 改善，
+但末段跌倒统计未同步改善。ONNX 行进转向快筛共 150 Episode、0 跌倒，选出
+`model_1750`；它的正常行进转向已接近镜像对称，但 `vx=0.05,wz=+0.50` 的
+低速正 yaw 响应仅 4.5%。同协议 PointGoal pilot 中，`model_1750` 与
+`model_2500` 均为 20/25 到达、0 跌倒；前者左侧目标仍 0/5，且中位
+Final Distance 从 0.935 m 退化到 1.498 m，其余目标的完成时间也更长。
+进一步的 10-Episode 原地转向诊断显示，在 `vx=0,wz=±0.5` 下实测 yaw
+响应只有 3.1%～3.9%，左右都几乎站立不动。虽然训练采样器已有 15%
+左右对称的原地转向桶，策略仍未学会该能力；因此低速联合命令覆盖不足
+不是唯一根因。后续 checkpoint 诊断进一步发现：`model_500/1000/1250/1500`
+在 1 秒零命令稳定后均能以 `wz=±0.5` 完成 5/5 双向转向，而
+`model_1750/1999` 两侧均变为 0/5，能力在 1500–1750 间发生突变。
+`model_1750` 在 reset 后立即下命令时仍有 3/5～5/5 的转向成功，但先站立
+1 秒后只剩低速负 yaw 为 5/5，其余三项为 0/5，说明后期策略形成了强烈的
+状态历史依赖型站立吸引域。
+
+官方 PT Reward 归因没有发现纯 yaw 关闭 gait Reward 的实现错误；静止失败
+主要损失 angular tracking 与 air time，总 Return 也低于正确转向。重新导出的
+ONNX 与现有模型在 100 组随机 Observation 上 Action 完全一致，可排除错误
+checkpoint 或导出不一致。由于训练在 1500 附近同时调整 action-rate、standing
+fraction、head-pose 和 CoM 等多项 curriculum，本轮尚不能把退化单独归因给
+某一个权重。随后使用完全相同的冻结 Controller 对 `model_1500` 运行
+25-Episode PointGoal pilot：五类目标全部 5/5 到达，合计 25/25、0 跌倒、
+0 超时；相同协议下 `model_2500` 和 `model_1750` 均为 20/25。说明 yaw-only
+Reward 在合适 checkpoint 上已经产生任务层改善，但路径效率和完成时间仍不及
+Candidate A 已成功的目标，而且该结果目前只来自一个 training seed。
+使用未见 evaluation seeds 和扩展目标完成的 70-Episode holdout 为 70/70、
+0 跌倒、0 超时，确认了固定 `model_1500.onnx` 的 Nominal 能力。下一步保持配置
+不变验证训练可复现性；若独立 seed 不能复现 1500 的能力，或仍在后期发生崩塌，
+再围绕 curriculum 做单因素消融。`model_1500` 当前是优先复现候选，尚不直接进入
+完整 OOD 或冻结流程。
 
 ### 5.5 必做鲁棒性参数
 
@@ -448,8 +494,8 @@ command sampling、PPO、seed 42 和从头训练设置均继承候选 A。数值
 - [x] `model_2500` PointGoal 行进转向报告
 - [x] `model_2500` 的 25-Episode Classical PointGoal pilot 报告与轨迹
 - [x] `model_2500` 的 20-Episode 低速 yaw 归因报告与图表
-- [ ] 由 pilot 证据驱动的新模型单变量训练报告
-- [ ] 新旧候选在同一 Locomotion 协议与 PointGoal pilot 下的配对对比
+- [x] 由 pilot 证据驱动的新模型单变量训练报告
+- [x] 新旧候选在同一 Locomotion 协议与 PointGoal pilot 下的配对对比
 - [ ] `model_5999` / 官方模型 / 自训练候选的 Nominal 对比表
 - [ ] 四类不确定因素的统一配置入口和完整实验数据
 - [ ] 最优两个模型的鲁棒性汇总表

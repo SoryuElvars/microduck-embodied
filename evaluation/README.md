@@ -77,6 +77,13 @@ uv run python \
 与 `reward_buf` 一致。名义配置关闭观测噪声、推力与域随机化，但保留官方
 reset、终止条件、BAM 执行器、Reward Manager 和 checkpoint 的课程状态。
 
+评测器会读取 command set 的 `warmup_s`：预热期间运行 policy 但固定零命令，
+预热 Reward 不计入测试段 Return，随后才切换到目标命令。可以用
+`--warmup-s 0` 显式构造 reset 后立即下命令的对照。输出除 Return 和各 Reward
+项外，还记录测试段的 `mean_actual_vx/vy/wz`，用于判断高 Reward 是否真的对应
+目标运动。旧结果文件会保留其当时记录的 `protocol.warmup_s`，不得与新协议
+静默合并。
+
 结果：
 `results/week02/01_baseline_5999/summaries/episode_return_8x5_model_5999.json`。
 这组 40 Episode 是独立协议，不与 ONNX 固定指令的 160 Episode 或随机指令的
@@ -203,6 +210,46 @@ viewer 中橙色球是目标点，半透明绿色圆盘是 `0.2 m` 成功区域�
 如果 WSL 无法弹出窗口，先在 WSL 中检查 `echo $DISPLAY` 是否有值；Windows 11 + WSLg
 通常无需额外 X Server。
 
+## PointGoal Nominal holdout
+
+当某个 checkpoint 通过 25-Episode pilot 后，先验证这个固定 ONNX 的能力，再决定
+是否投入多个 training seeds。独立 holdout 使用
+`evaluation/goal_sets/pointgoal_nominal_holdout_70.json`，在运行前冻结：
+
+- `model_1500.onnx` 和既有 Classical Controller；
+- 未用于 checkpoint 选择的 reset seeds `100–104`；
+- 两个距离 `1.0 / 1.8 m`；
+- 七个对称方向 `0° / ±30° / ±60° / ±90°`；
+- 14 个目标 × 5 seeds，共 70 Episode；
+- 1 秒零命令预热、20 秒 timeout、0.2 m 到达半径和 0.5 秒保持时间。
+
+运行顺序固定为：协议与 I/O 校验 → 一次性运行 70 Episode → 总体、逐目标、
+距离、角度和镜像对比 → 通过后才进入 OOD 或 training-seed 复现。运行中不得调整
+Controller、timeout 或目标。
+
+验收门槛同样在运行前写入 goal set：总体 Success Rate ≥95%，每个目标 ≥80%，
+Fall Rate=0，Timeout Rate ≤5%，任一镜像组左右成功率差绝对值 ≤20 个百分点。
+Path Efficiency 与 Completion Time 必须报告，但本轮不以运行后观察到的数值追设
+门槛。
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_pilot.py \
+  --policy ~/projects/microduck-embodied/artifacts/week03/06_yaw_only_tracking_candidate/models/model_1500.onnx \
+  --goal-set ~/projects/microduck-embodied/evaluation/goal_sets/pointgoal_nominal_holdout_70.json \
+  --output-dir ~/projects/microduck-embodied/artifacts/week03/06_yaw_only_tracking_candidate/pointgoal_nominal_holdout/model_1500
+```
+
+该协议仍是 ONNX + 原生 MuJoCo + BAM M6 的 Nominal 仿真，不加载训练 Reward，
+也不能替代 Reality Gap 或真机测试。
+
+`model_1500.onnx` 已按该冻结协议完成 70 Episode：70/70 到达、0 跌倒、0 超时，
+14 个目标均为 5/5，全部预设 Gate 通过。关键汇总与图表位于
+`results/week03/06_yaw_only_tracking_candidate/`；原始逐步 CSV 仅保存在
+`artifacts/week03/06_yaw_only_tracking_candidate/pointgoal_nominal_holdout/`。
+
 ## PointGoal 低速 yaw 归因
 
 用固定低速命令移除 Navigator 闭环，检查侧向目标的左右启动差异是否来自
@@ -222,6 +269,78 @@ uv run python \
 协议测试 `vx=0.05/0.10` 与 `wz=±0.50` 的四种组合，每条五个配对 seeds，
 共 20 Episode。它不使用 gait lead-in，不加载 Reward Manager，也不与
 PointGoal pilot 或行进转向协议合并。
+
+如需进一步区分低速联合命令覆盖和静止启动问题，使用配对的
+10-Episode 原地转向辅助诊断：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/locomotion_benchmark.py \
+  --policy ~/projects/microduck-embodied/artifacts/week03/06_yaw_only_tracking_candidate/models/model_1750.onnx \
+  --command-set ~/projects/microduck-embodied/evaluation/command_sets/pointgoal_turn_in_place_5.json \
+  --output-dir ~/projects/microduck-embodied/artifacts/week03/06_yaw_only_tracking_candidate/turn_in_place_diagnostic/model_1750 \
+  --seed 42
+```
+
+它只测试 `vx=0, vy=0, wz=±0.50`，每侧 5 个配对 seeds，仍属于辅助诊断，
+不作为 PointGoal 主验收门槛。
+
+若要区分 reset 初始状态和“先稳定站立再转向”，使用完全相同的四条命令运行
+立即启动对照：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/locomotion_benchmark.py \
+  --policy ~/projects/microduck-embodied/artifacts/week03/06_yaw_only_tracking_candidate/models/model_1750.onnx \
+  --command-set ~/projects/microduck-embodied/evaluation/command_sets/pointgoal_turn_startup_immediate_5.json \
+  --output-dir ~/projects/microduck-embodied/artifacts/week03/06_yaw_only_tracking_candidate/turn_startup_immediate/model_1750 \
+  --seed 42
+```
+
+该命令集以 `warmup_s=0` 测试 `vx=0/0.05,wz=±0.50`。它必须和 1 秒零命令
+预热结果分开报告；两者差异衡量的是启动状态历史依赖，不是普通的重复测量。
+
+官方 Reward 归因使用 PT checkpoint；默认从命令集继承 1 秒零命令预热：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/episode_return_benchmark.py \
+  --task Mjlab-Velocity-Flat-Yaw-Only-Tracking-MicroDuck \
+  --checkpoint <CANDIDATE_B_PT_CHECKPOINT> \
+  --command-set ~/projects/microduck-embodied/evaluation/command_sets/pointgoal_reward_attribution_5.json \
+  --output <OUTPUT_JSON>
+```
+
+如需立即启动对照，在同一命令后增加 `--warmup-s 0`。ONNX 部署轨迹仍不计算
+训练 Reward；这里的 Return 只来自官方 PT checkpoint + Reward Manager。
+
+## 汇总 TensorBoard 训练曲线
+
+用实际训练谱系合并初训与续训 event，按 checkpoint 前 100 iterations 汇总，
+并输出原始长表 CSV、关键 JSON 和对比图：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/summarize_training_metrics.py \
+  --series candidate_a=logs/rsl_rl/velocity_angular_std025/2026-09-14_20-50-41_angular-std025-seed42-from-scratch,logs/rsl_rl/velocity_angular_std025/2026-09-14_22-04-10_angular-std025-seed42-resume-750-to-2000 \
+  --series candidate_b=logs/rsl_rl/velocity_yaw_only_tracking/2026-09-16_09-56-12_yaw-only-tracking-seed42-from-scratch \
+  --output-csv ~/projects/microduck-embodied/artifacts/week03/06_yaw_only_tracking_candidate/training_metrics.csv \
+  --output-summary ~/projects/microduck-embodied/results/week03/06_yaw_only_tracking_candidate/summaries/training_metrics.json \
+  --output-figure ~/projects/microduck-embodied/results/week03/06_yaw_only_tracking_candidate/figures/candidate_a_vs_b_training.png
+```
+
+同一 `series` 中后列出的续训 event 会覆盖重复 iteration，以免 checkpoint 恢复处
+重复计数。`track_angular_velocity` 和总 Reward 在候选间定义不同，只能用于检查
+各自训练趋势；跨候选判断优先使用定义未变的 `error_vel_yaw`、`error_vel_xy`、
+episode length、termination 和后续部署评测指标。
 
 ## 绘制单 Episode 诊断图
 

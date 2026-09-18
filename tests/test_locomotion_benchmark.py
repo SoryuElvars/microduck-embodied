@@ -198,6 +198,77 @@ class CommandSetTests(unittest.TestCase):
             ],
         )
 
+    def test_pointgoal_turn_in_place_diagnostic_is_paired(self) -> None:
+        path = (
+            PROJECT_ROOT
+            / "evaluation"
+            / "command_sets"
+            / "pointgoal_turn_in_place_5.json"
+        )
+        commands = load_command_set(path)
+
+        self.assertEqual(len(commands), 2)
+        self.assertTrue(all(command.episodes == 5 for command in commands))
+        self.assertTrue(all(command.warmup_s == 1.0 for command in commands))
+        self.assertTrue(all(command.lead_in_s == 0.0 for command in commands))
+        self.assertTrue(all(command.duration_s == 8.0 for command in commands))
+        self.assertTrue(
+            all(command.initial_state_mode == "official_reset" for command in commands)
+        )
+        self.assertEqual(
+            [(command.vx, command.vy, command.wz) for command in commands],
+            [
+                (0.0, 0.0, 0.5),
+                (0.0, 0.0, -0.5),
+            ],
+        )
+
+    def test_pointgoal_reward_attribution_covers_settled_startup_cases(self) -> None:
+        path = (
+            PROJECT_ROOT
+            / "evaluation"
+            / "command_sets"
+            / "pointgoal_reward_attribution_5.json"
+        )
+        commands = load_command_set(path)
+
+        self.assertEqual(len(commands), 4)
+        self.assertTrue(all(command.episodes == 5 for command in commands))
+        self.assertTrue(all(command.warmup_s == 1.0 for command in commands))
+        self.assertTrue(all(command.duration_s == 8.0 for command in commands))
+        self.assertEqual(
+            [(command.vx, command.vy, command.wz) for command in commands],
+            [
+                (0.0, 0.0, 0.5),
+                (0.0, 0.0, -0.5),
+                (0.05, 0.0, 0.5),
+                (0.05, 0.0, -0.5),
+            ],
+        )
+
+    def test_pointgoal_immediate_startup_matches_settled_cases(self) -> None:
+        path = (
+            PROJECT_ROOT
+            / "evaluation"
+            / "command_sets"
+            / "pointgoal_turn_startup_immediate_5.json"
+        )
+        commands = load_command_set(path)
+
+        self.assertEqual(len(commands), 4)
+        self.assertTrue(all(command.episodes == 5 for command in commands))
+        self.assertTrue(all(command.warmup_s == 0.0 for command in commands))
+        self.assertTrue(all(command.duration_s == 8.0 for command in commands))
+        self.assertEqual(
+            [(command.vx, command.vy, command.wz) for command in commands],
+            [
+                (0.0, 0.0, 0.5),
+                (0.0, 0.0, -0.5),
+                (0.05, 0.0, 0.5),
+                (0.05, 0.0, -0.5),
+            ],
+        )
+
     def test_checkpoint_response_has_eight_paired_five_episode_cases(self) -> None:
         path = (
             PROJECT_ROOT

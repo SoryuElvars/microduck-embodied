@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-16",
+  "benchmark_kind": "settled_turn_in_place_checkpoint_screen",
+  "command_set": "evaluation/command_sets/pointgoal_turn_in_place_5.json",
+  "protocol": {
+    "warmup_s": 1.0,
+    "duration_s": 8.0,
+    "episodes_per_command": 5,
+    "paired_seeds": [42, 43, 44, 45, 46],
+    "success_definition": "correct yaw sign and abs(mean_actual_wz) >= 0.25 rad/s",
+    "note": "Auxiliary startup diagnostic only; not a PointGoal acceptance gate."
+  },
+  "checkpoints": [
+    {
+      "checkpoint": 500,
+      "positive_mean_actual_wz": 0.4171348719645992,
+      "positive_mean_net_yaw_deg": 190.69813356159497,
+      "positive_success_count": 5,
+      "negative_mean_actual_wz": -0.5277314117636673,
+      "negative_mean_net_yaw_deg": -240.82817941078574,
+      "negative_success_count": 5,
+      "fall_count": 0
+    },
+    {
+      "checkpoint": 1000,
+      "positive_mean_actual_wz": 0.5124734704226722,
+      "positive_mean_net_yaw_deg": 235.56233060284086,
+      "positive_success_count": 5,
+      "negative_mean_actual_wz": -0.5648813662131048,
+      "negative_mean_net_yaw_deg": -257.4954456185666,
+      "negative_success_count": 5,
+      "fall_count": 0
+    },
+    {
+      "checkpoint": 1250,
+      "positive_mean_actual_wz": 0.6069909989489357,
+      "positive_mean_net_yaw_deg": 279.5990426612369,
+      "positive_success_count": 5,
+      "negative_mean_actual_wz": -0.44447876320305746,
+      "negative_mean_net_yaw_deg": -202.5179290328304,
+      "negative_success_count": 5,
+      "fall_count": 0
+    },
+    {
+      "checkpoint": 1500,
+      "positive_mean_actual_wz": 0.5239925739635257,
+      "positive_mean_net_yaw_deg": 241.17193976924105,
+      "positive_success_count": 5,
+      "negative_mean_actual_wz": -0.5166293085998352,
+      "negative_mean_net_yaw_deg": -235.8720528292453,
+      "negative_success_count": 5,
+      "fall_count": 0
+    },
+    {
+      "checkpoint": 1750,
+      "positive_mean_actual_wz": 0.01953808556040724,
+      "positive_mean_net_yaw_deg": 9.170659412286934,
+      "positive_success_count": 0,
+      "negative_mean_actual_wz": -0.01555228198704332,
+      "negative_mean_net_yaw_deg": -7.6198211570797145,
+      "negative_success_count": 0,
+      "fall_count": 0
+    },
+    {
+      "checkpoint": 1999,
+      "positive_mean_actual_wz": 0.015311504413959842,
+      "positive_mean_net_yaw_deg": 7.02452973975719,
+      "positive_success_count": 0,
+      "negative_mean_actual_wz": -0.012371628504294603,
+      "negative_mean_net_yaw_deg": -5.656292844011922,
+      "negative_success_count": 0,
+      "fall_count": 0
+    }
+  ]
+}

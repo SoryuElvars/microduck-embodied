@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "description": "Immediate-reset ONNX control for turn startup attribution; paired against the one-second settled protocols.",
+  "defaults": {
+    "warmup_s": 0.0,
+    "lead_in_s": 0.0,
+    "duration_s": 8.0,
+    "episodes": 5,
+    "initial_state_mode": "official_reset"
+  },
+  "commands": [
+    {
+      "name": "immediate_turn_in_place_left_wz050",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": 0.5
+    },
+    {
+      "name": "immediate_turn_in_place_right_wzneg050",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": -0.5
+    },
+    {
+      "name": "immediate_low_speed_left_vx005_wz050",
+      "vx": 0.05,
+      "vy": 0.0,
+      "wz": 0.5
+    },
+    {
+      "name": "immediate_low_speed_right_vx005_wzneg050",
+      "vx": 0.05,
+      "vy": 0.0,
+      "wz": -0.5
+    }
+  ]
+}

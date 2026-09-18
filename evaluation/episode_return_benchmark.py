@@ -85,7 +85,7 @@ def aggregate_episodes(episodes: Sequence[dict[str, Any]]) -> dict[str, Any]:
     if not episodes:
         raise ValueError("cannot aggregate zero episodes")
     term_names = list(episodes[0]["reward_terms"].keys())
-    return {
+    aggregate = {
         "episode_count": len(episodes),
         "terminated_count": sum(bool(item["terminated"]) for item in episodes),
         "time_out_count": sum(bool(item["time_out"]) for item in episodes),
@@ -111,6 +111,10 @@ def aggregate_episodes(episodes: Sequence[dict[str, Any]]) -> dict[str, Any]:
             for name in term_names
         },
     }
+    for field in ("mean_actual_vx", "mean_actual_vy", "mean_actual_wz"):
+        if field in episodes[0]:
+            aggregate[field] = describe([float(item[field]) for item in episodes])
+    return aggregate
 
 
 def build_document(
@@ -121,6 +125,7 @@ def build_document(
     microduck_rl_commit: str,
     command_set: Path,
     base_seed: int,
+    warmup_s: float,
     duration_s: float,
     step_dt_s: float,
     common_step_counter: int,
@@ -149,7 +154,7 @@ def build_document(
             "episode_count": len(episodes),
             "episode_duration_s": duration_s,
             "step_dt_s": step_dt_s,
-            "warmup_s": 0.0,
+            "warmup_s": warmup_s,
             "observation_corruption": False,
             "fixed_zero_head_and_body_commands": True,
             "disabled_events": list(disabled_events),
@@ -237,17 +242,48 @@ def _set_fixed_commands(env: Any, command: CommandCase, active: Any | None = Non
     env.command_manager.get_term("body_pose")._command.zero_()
 
 
+def _set_zero_commands(env: Any) -> None:
+    twist = env.command_manager.get_term("twist")
+    twist.vel_command_b.zero_()
+    twist.vel_command_w.zero_()
+    for flag_name in (
+        "is_heading_env",
+        "is_standing_env",
+        "is_world_env",
+        "is_forward_env",
+    ):
+        getattr(twist, flag_name).zero_()
+    env.command_manager.get_term("head_pose")._command.zero_()
+    env.command_manager.get_term("body_pose")._command.zero_()
+
+
 def _run_command(
     *,
     wrapped_env: Any,
     policy: Any,
     command: CommandCase,
     reset_seed: int,
+    warmup_s: float,
+    duration_s: float,
 ) -> list[dict[str, Any]]:
     import torch
 
     env = wrapped_env.unwrapped
     env.reset(seed=reset_seed)
+    _set_zero_commands(env)
+    obs = wrapped_env.get_observations()
+
+    warmup_steps = round(warmup_s / env.step_dt)
+    for _ in range(warmup_steps):
+        _set_zero_commands(env)
+        with torch.inference_mode():
+            actions = policy(obs)
+        obs, _reward, dones, _extras = wrapped_env.step(actions)
+        if dones.any():
+            raise RuntimeError(
+                f"command {command.name} terminated during {warmup_s:.3f}s warmup"
+            )
+
     _set_fixed_commands(env, command)
     obs = wrapped_env.get_observations()
 
@@ -256,13 +292,14 @@ def _run_command(
     episode_return = torch.zeros(num_envs, device=env.device)
     term_return = torch.zeros((num_envs, len(term_names)), device=env.device)
     episode_steps = torch.zeros(num_envs, dtype=torch.long, device=env.device)
+    actual_velocity_sum = torch.zeros((num_envs, 3), device=env.device)
     terminated = torch.zeros(num_envs, dtype=torch.bool, device=env.device)
     timed_out = torch.zeros(num_envs, dtype=torch.bool, device=env.device)
     active = torch.ones(num_envs, dtype=torch.bool, device=env.device)
 
     reward_manager = env.reward_manager
     scale = env.step_dt if reward_manager._scale_by_dt else 1.0
-    max_steps = env.max_episode_length + 1
+    max_steps = round(duration_s / env.step_dt) + 1
 
     for _ in range(max_steps):
         _set_fixed_commands(env, command, active)
@@ -280,6 +317,9 @@ def _run_command(
 
         episode_return[active] += reward[active]
         term_return[active] += step_terms[active]
+        robot = env.scene["robot"]
+        actual_velocity_sum[active, :2] += robot.data.root_link_lin_vel_b[active, :2]
+        actual_velocity_sum[active, 2] += robot.data.root_link_ang_vel_b[active, 2]
         episode_steps[active] += 1
 
         done_now = active & dones.bool()
@@ -301,6 +341,7 @@ def _run_command(
 
     returns = episode_return.detach().cpu().tolist()
     term_returns = term_return.detach().cpu().tolist()
+    actual_velocity_sums = actual_velocity_sum.detach().cpu().tolist()
     steps = episode_steps.detach().cpu().tolist()
     terminated_list = terminated.detach().cpu().tolist()
     time_out_list = timed_out.detach().cpu().tolist()
@@ -320,6 +361,9 @@ def _run_command(
                 "episode_return": returns[pair_id],
                 "mean_reward_per_step": returns[pair_id] / steps[pair_id],
                 "mean_reward_rate": returns[pair_id] / elapsed,
+                "mean_actual_vx": actual_velocity_sums[pair_id][0] / steps[pair_id],
+                "mean_actual_vy": actual_velocity_sums[pair_id][1] / steps[pair_id],
+                "mean_actual_wz": actual_velocity_sums[pair_id][2] / steps[pair_id],
                 "reward_terms": {
                     name: {
                         "return": term_returns[pair_id][term_index],
@@ -355,8 +399,15 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         raise ValueError("command set contains no selected commands")
     episodes_per_command = args.episodes_per_command or commands[0].episodes
     duration_s = args.duration_s or commands[0].duration_s
-    if episodes_per_command <= 0 or duration_s <= 0:
-        raise ValueError("episodes-per-command and duration-s must be positive")
+    warmup_s = args.warmup_s if args.warmup_s is not None else commands[0].warmup_s
+    if args.warmup_s is None and any(
+        command.warmup_s != warmup_s for command in commands
+    ):
+        raise ValueError("all selected commands must use the same warmup_s")
+    if episodes_per_command <= 0 or duration_s <= 0 or warmup_s < 0:
+        raise ValueError(
+            "episodes-per-command and duration-s must be positive; warmup-s must be non-negative"
+        )
 
     device = args.device or ("cuda:0" if torch.cuda.is_available() else "cpu")
     env_cfg = load_env_cfg(args.task, play=True)
@@ -365,7 +416,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         env_cfg,
         num_envs=episodes_per_command,
         seed=args.seed,
-        duration_s=duration_s,
+        duration_s=warmup_s + duration_s,
     )
 
     env = ManagerBasedRlEnv(cfg=env_cfg, device=device)
@@ -402,6 +453,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                     policy=policy,
                     command=command,
                     reset_seed=args.seed,
+                    warmup_s=warmup_s,
+                    duration_s=duration_s,
                 )
             )
 
@@ -419,6 +472,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             microduck_rl_commit=commit,
             command_set=command_set.relative_to(PROJECT_ROOT),
             base_seed=args.seed,
+            warmup_s=warmup_s,
             duration_s=duration_s,
             step_dt_s=float(env.step_dt),
             common_step_counter=common_step_counter,
@@ -447,6 +501,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--episodes-per-command", type=int)
     parser.add_argument("--duration-s", type=float)
+    parser.add_argument("--warmup-s", type=float)
     parser.add_argument("--max-commands", type=int)
     parser.add_argument("--device")
     return parser

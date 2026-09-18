@@ -12,6 +12,9 @@ def _episode(name: str, value: float, terminated: bool = False) -> dict:
         "episode_return": value,
         "mean_reward_rate": value / 10.0,
         "episode_duration_s": 10.0,
+        "mean_actual_vx": value / 100.0,
+        "mean_actual_vy": -value / 200.0,
+        "mean_actual_wz": value / 50.0,
         "reward_terms": {
             "tracking": {"return": value * 0.75, "mean_rate": value * 0.075},
             "penalty": {"return": value * 0.25, "mean_rate": value * 0.025},
@@ -32,6 +35,9 @@ class EpisodeReturnBenchmarkTests(unittest.TestCase):
         self.assertEqual(result["time_out_count"], 2)
         self.assertEqual(result["terminated_count"], 0)
         self.assertEqual(result["episode_return"]["mean"], 15.0)
+        self.assertAlmostEqual(result["mean_actual_vx"]["mean"], 0.15)
+        self.assertAlmostEqual(result["mean_actual_vy"]["mean"], -0.075)
+        self.assertAlmostEqual(result["mean_actual_wz"]["mean"], 0.3)
         self.assertEqual(result["reward_terms"]["tracking"]["return"]["mean"], 11.25)
 
     def test_aggregate_counts_early_termination(self):

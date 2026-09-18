@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-16T07:28:45.274273+00:00",
+  "benchmark_kind": "onnx_cpu_bam_command_response_suite",
+  "reward_available": false,
+  "command_set_path": "evaluation/command_sets/pointgoal_turn_in_place_5.json",
+  "policy_path": "artifacts/week03/06_yaw_only_tracking_candidate/models/model_1750.onnx",
+  "policy_sha256": "87920b79c879e16b77a8161372b2d555b4ed287c34806a47df4111edca59cdcc",
+  "seed": 42,
+  "command_count": 2,
+  "total_episodes": 10,
+  "paired_episode_seeds": true,
+  "commands": [
+    {
+      "name": "pointgoal_turn_in_place_left_wz050",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": 0.5,
+      "warmup_s": 1.0,
+      "lead_in_s": 0.0,
+      "lead_in_vx": 0.0,
+      "lead_in_vy": 0.0,
+      "lead_in_wz": 0.0,
+      "duration_s": 8.0,
+      "episodes": 5,
+      "initial_state_mode": "official_reset",
+      "summary_json": "artifacts/week03/06_yaw_only_tracking_candidate/turn_in_place_diagnostic/model_1750/summary/pointgoal_turn_in_place_left_wz050_model_1750.json",
+      "aggregate": {
+        "episode_count": 5,
+        "fall_rate": 0.0,
+        "yaw_direction_counts": {
+          "positive": 5,
+          "near_zero": 0,
+          "negative": 0,
+          "near_zero_threshold_deg": 1.0
+        },
+        "net_yaw_deg": {
+          "mean": 9.170659412286934,
+          "median": 9.161830213238458,
+          "std": 0.09738447566176155,
+          "min": 9.014711997068247,
+          "max": 9.31452570091606
+        },
+        "mean_actual_vx": {
+          "mean": -0.00013618709701603392,
+          "median": -0.00013506455551578255,
+          "std": 1.5407999959471248e-05,
+          "min": -0.0001599486107534176,
+          "max": -0.00011405629952605522
+        },
+        "mean_actual_vy": {
+          "mean": -6.38368359271908e-05,
+          "median": -4.3256644858047366e-05,
+          "std": 3.7183668182422654e-05,
+          "min": -0.00011225557490661231,
+          "max": -2.059166496110265e-05
+        },
+        "mean_actual_wz": {
+          "mean": 0.01953808556040724,
+          "median": 0.0195282469005586,
+          "std": 0.0006262804136927494,
+          "min": 0.01852267585966485,
+          "max": 0.02040618636301677
+        },
+        "rmse_vx": {
+          "mean": 0.0012448887619878478,
+          "median": 0.001261349969136733,
+          "std": 7.384876772039023e-05,
+          "min": 0.0011303747324266573,
+          "max": 0.0013249273751704232
+        },
+        "rmse_vy": {
+          "mean": 0.001487731750712541,
+          "median": 0.0015425477974239446,
+          "std": 0.00012338318024277605,
+          "min": 0.0012987992679830518,
+          "max": 0.0016293239572321046
+        },
+        "rmse_wz": {
+          "mean": 0.48346025584183233,
+          "median": 0.48355362533136553,
+          "std": 0.0005719747623491923,
+          "min": 0.4827038416980135,
+          "max": 0.4842279578137905
+        },
+        "forward_distance_m": {
+          "mean": -0.0010679282759305188,
+          "median": -0.00108176803148084,
+          "std": 9.325526223315628e-05,
+          "min": -0.001195885323961787,
+          "max": -0.0009557157466734129
+        },
+        "lateral_displacement_m": {
+          "mean": -0.0006272298240065612,
+          "median": -0.0006175101182985926,
+          "std": 4.606126903778704e-05,
+          "min": -0.000709647802190267,
+          "max": -0.0005701269668833301
+        }
+      }
+    },
+    {
+      "name": "pointgoal_turn_in_place_right_wzneg050",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": -0.5,
+      "warmup_s": 1.0,
+      "lead_in_s": 0.0,
+      "lead_in_vx": 0.0,
+      "lead_in_vy": 0.0,
+      "lead_in_wz": 0.0,
+      "duration_s": 8.0,
+      "episodes": 5,
+      "initial_state_mode": "official_reset",
+      "summary_json": "artifacts/week03/06_yaw_only_tracking_candidate/turn_in_place_diagnostic/model_1750/summary/pointgoal_turn_in_place_right_wzneg050_model_1750.json",
+      "aggregate": {
+        "episode_count": 5,
+        "fall_rate": 0.0,
+        "yaw_direction_counts": {
+          "positive": 0,
+          "near_zero": 0,
+          "negative": 5,
+          "near_zero_threshold_deg": 1.0
+        },
+        "net_yaw_deg": {
+          "mean": -7.6198211570797145,
+          "median": -7.604635258690891,
+          "std": 0.19917724583477983,
+          "min": -7.934832815932793,
+          "max": -7.367404988316989
+        },
+        "mean_actual_vx": {
+          "mean": -0.00019865911314059301,
+          "median": -0.00020068244348294683,
+          "std": 2.064791997012421e-05,
+          "min": -0.0002304357413231628,
+          "max": -0.00016766697947900866
+        },
+        "mean_actual_vy": {
+          "mean": -3.074668626845778e-05,
+          "median": -3.676982803312967e-05,
+          "std": 4.3642461785228295e-05,
+          "min": -8.892155974535854e-05,
+          "max": 4.6281918921522445e-05
+        },
+        "mean_actual_wz": {
+          "mean": -0.01555228198704332,
+          "median": -0.015505858290167922,
+          "std": 0.00014370670603247677,
+          "min": -0.015735434026197072,
+          "max": -0.015393422518052504
+        },
+        "rmse_vx": {
+          "mean": 0.0014995771500404312,
+          "median": 0.001507566847647537,
+          "std": 5.99113859907839e-05,
+          "min": 0.0014143414934050884,
+          "max": 0.0015893043657840302
+        },
+        "rmse_vy": {
+          "mean": 0.002167134931819495,
+          "median": 0.002080232497304353,
+          "std": 0.0001581790304462677,
+          "min": 0.002023420244204115,
+          "max": 0.0024223385896591527
+        },
+        "rmse_wz": {
+          "mean": 0.4860233993323533,
+          "median": 0.486075717884498,
+          "std": 0.00016052118791972926,
+          "min": 0.4858321251994147,
+          "max": 0.4862307492920614
+        },
+        "forward_distance_m": {
+          "mean": -0.0011693120407278948,
+          "median": -0.0011552164606786703,
+          "std": 6.491619827167943e-05,
+          "min": -0.0012821210562943897,
+          "max": -0.001090225880106872
+        },
+        "lateral_displacement_m": {
+          "mean": 0.0003738932287759024,
+          "median": 0.0004094577454104933,
+          "std": 0.00010987016000002406,
+          "min": 0.00021878570516764844,
+          "max": 0.000519795995815454
+        }
+      }
+    }
+  ]
+}

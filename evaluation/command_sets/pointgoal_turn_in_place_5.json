@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "description": "PointGoal command-sampling diagnostic: paired turn-in-place commands from a settled reset, matching the low-speed yaw protocol except for vx=0.",
+  "defaults": {
+    "warmup_s": 1.0,
+    "lead_in_s": 0.0,
+    "duration_s": 8.0,
+    "episodes": 5,
+    "initial_state_mode": "official_reset"
+  },
+  "commands": [
+    {
+      "name": "pointgoal_turn_in_place_left_wz050",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": 0.5
+    },
+    {
+      "name": "pointgoal_turn_in_place_right_wzneg050",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": -0.5
+    }
+  ]
+}

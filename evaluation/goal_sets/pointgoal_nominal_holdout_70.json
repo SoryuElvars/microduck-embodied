@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "protocol_status": "frozen",
+  "description": "Independent 70-episode nominal holdout for a provisionally selected PointGoal locomotion policy. Controller and thresholds are frozen before model_1500 evaluation.",
+  "acceptance_gate": {
+    "minimum_overall_success_rate": 0.95,
+    "minimum_per_goal_success_rate": 0.8,
+    "maximum_fall_rate": 0.0,
+    "maximum_timeout_rate": 0.05,
+    "maximum_absolute_mirror_success_rate_gap": 0.2,
+    "note": "All criteria must pass. Efficiency and completion time are reported as quality metrics but are not tuned after the run."
+  },
+  "execution_order": [
+    "freeze policy, controller, goals, seeds, and thresholds",
+    "validate the 61 observation to 14 action contract",
+    "run all 70 nominal holdout episodes without parameter adjustment",
+    "report overall, per-goal, distance, angle, and mirror-pair results",
+    "only after nominal acceptance, run OOD or independent training-seed checks"
+  ],
+  "defaults": {
+    "episodes": 5,
+    "base_seed": 100,
+    "initial_state_mode": "official_reset",
+    "warmup_s": 1.0,
+    "timeout_s": 20.0,
+    "smoke_timeout_s": 5.0,
+    "success_radius_m": 0.2,
+    "success_hold_s": 0.5,
+    "navigator_frequency_hz": 10.0
+  },
+  "controller": {
+    "distance_gain": 0.8,
+    "heading_gain": 1.2,
+    "max_forward_speed_mps": 0.25,
+    "min_turn_speed_mps": 0.05,
+    "max_yaw_rate_radps": 0.5,
+    "max_forward_accel_mps2": 0.5,
+    "max_yaw_accel_radps2": 1.0,
+    "heading_slowdown_floor": 0.2
+  },
+  "goals": [
+    {
+      "name": "near_front_d100_a000",
+      "x_initial_body_m": 1.0,
+      "y_initial_body_m": 0.0,
+      "mirror_group": null,
+      "mirror_side": null
+    },
+    {
+      "name": "near_left_d100_a030",
+      "x_initial_body_m": 0.866025,
+      "y_initial_body_m": 0.5,
+      "mirror_group": "near_d100_a030",
+      "mirror_side": "left"
+    },
+    {
+      "name": "near_right_d100_a030",
+      "x_initial_body_m": 0.866025,
+      "y_initial_body_m": -0.5,
+      "mirror_group": "near_d100_a030",
+      "mirror_side": "right"
+    },
+    {
+      "name": "near_left_d100_a060",
+      "x_initial_body_m": 0.5,
+      "y_initial_body_m": 0.866025,
+      "mirror_group": "near_d100_a060",
+      "mirror_side": "left"
+    },
+    {
+      "name": "near_right_d100_a060",
+      "x_initial_body_m": 0.5,
+      "y_initial_body_m": -0.866025,
+      "mirror_group": "near_d100_a060",
+      "mirror_side": "right"
+    },
+    {
+      "name": "near_left_d100_a090",
+      "x_initial_body_m": 0.0,
+      "y_initial_body_m": 1.0,
+      "mirror_group": "near_d100_a090",
+      "mirror_side": "left"
+    },
+    {
+      "name": "near_right_d100_a090",
+      "x_initial_body_m": 0.0,
+      "y_initial_body_m": -1.0,
+      "mirror_group": "near_d100_a090",
+      "mirror_side": "right"
+    },
+    {
+      "name": "far_front_d180_a000",
+      "x_initial_body_m": 1.8,
+      "y_initial_body_m": 0.0,
+      "mirror_group": null,
+      "mirror_side": null
+    },
+    {
+      "name": "far_left_d180_a030",
+      "x_initial_body_m": 1.558846,
+      "y_initial_body_m": 0.9,
+      "mirror_group": "far_d180_a030",
+      "mirror_side": "left"
+    },
+    {
+      "name": "far_right_d180_a030",
+      "x_initial_body_m": 1.558846,
+      "y_initial_body_m": -0.9,
+      "mirror_group": "far_d180_a030",
+      "mirror_side": "right"
+    },
+    {
+      "name": "far_left_d180_a060",
+      "x_initial_body_m": 0.9,
+      "y_initial_body_m": 1.558846,
+      "mirror_group": "far_d180_a060",
+      "mirror_side": "left"
+    },
+    {
+      "name": "far_right_d180_a060",
+      "x_initial_body_m": 0.9,
+      "y_initial_body_m": -1.558846,
+      "mirror_group": "far_d180_a060",
+      "mirror_side": "right"
+    },
+    {
+      "name": "far_left_d180_a090",
+      "x_initial_body_m": 0.0,
+      "y_initial_body_m": 1.8,
+      "mirror_group": "far_d180_a090",
+      "mirror_side": "left"
+    },
+    {
+      "name": "far_right_d180_a090",
+      "x_initial_body_m": 0.0,
+      "y_initial_body_m": -1.8,
+      "mirror_group": "far_d180_a090",
+      "mirror_side": "right"
+    }
+  ]
+}

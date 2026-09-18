@@ -1,0 +1,367 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-16T07:58:27.954886+00:00",
+  "benchmark_kind": "onnx_cpu_bam_command_response_suite",
+  "reward_available": false,
+  "command_set_path": "evaluation/command_sets/pointgoal_turn_startup_immediate_5.json",
+  "policy_path": "artifacts/week03/06_yaw_only_tracking_candidate/models/model_1750.onnx",
+  "policy_sha256": "87920b79c879e16b77a8161372b2d555b4ed287c34806a47df4111edca59cdcc",
+  "seed": 42,
+  "command_count": 4,
+  "total_episodes": 20,
+  "paired_episode_seeds": true,
+  "commands": [
+    {
+      "name": "immediate_turn_in_place_left_wz050",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": 0.5,
+      "warmup_s": 0.0,
+      "lead_in_s": 0.0,
+      "lead_in_vx": 0.0,
+      "lead_in_vy": 0.0,
+      "lead_in_wz": 0.0,
+      "duration_s": 8.0,
+      "episodes": 5,
+      "initial_state_mode": "official_reset",
+      "summary_json": "artifacts/week03/06_yaw_only_tracking_candidate/turn_startup_immediate/model_1750/summary/immediate_turn_in_place_left_wz050_model_1750.json",
+      "aggregate": {
+        "episode_count": 5,
+        "fall_rate": 0.0,
+        "yaw_direction_counts": {
+          "positive": 5,
+          "near_zero": 0,
+          "negative": 0,
+          "near_zero_threshold_deg": 1.0
+        },
+        "net_yaw_deg": {
+          "mean": 123.86917420916527,
+          "median": 190.34869208261932,
+          "std": 92.85771021814692,
+          "min": 10.225595041764187,
+          "max": 208.95054686773912
+        },
+        "mean_actual_vx": {
+          "mean": -0.010005462079715357,
+          "median": -0.015844586476232506,
+          "std": 0.008074121733185356,
+          "min": -0.017698190109513234,
+          "max": -0.00013635749714239865
+        },
+        "mean_actual_vy": {
+          "mean": -0.0016251868631531926,
+          "median": -0.0022290776840236505,
+          "std": 0.0013268673317367407,
+          "min": -0.0031059260986512527,
+          "max": -3.551118793092556e-05
+        },
+        "mean_actual_wz": {
+          "mean": 0.26898006419981535,
+          "median": 0.4129087822549476,
+          "std": 0.2019617932307346,
+          "min": 0.022104356286592085,
+          "max": 0.45596038210070405
+        },
+        "rmse_vx": {
+          "mean": 0.013139172902215857,
+          "median": 0.019938808795587945,
+          "std": 0.00884797846506362,
+          "min": 0.0023010611725488876,
+          "max": 0.020977598630271863
+        },
+        "rmse_vy": {
+          "mean": 0.05361890028391545,
+          "median": 0.08384036170203463,
+          "std": 0.040367465981712064,
+          "min": 0.0036072691610538024,
+          "max": 0.08933080217810721
+        },
+        "rmse_wz": {
+          "mean": 0.33565652917891514,
+          "median": 0.2507054215233644,
+          "std": 0.11979918091631124,
+          "min": 0.22612872296225195,
+          "max": 0.4823160487391646
+        },
+        "forward_distance_m": {
+          "mean": 0.02317326729601022,
+          "median": 0.03213398128540991,
+          "std": 0.020246164020590006,
+          "min": -0.0010137003620138971,
+          "max": 0.046336764749462134
+        },
+        "lateral_displacement_m": {
+          "mean": -0.048689145285575344,
+          "median": -0.0761631572979195,
+          "std": 0.039454149844257255,
+          "min": -0.08852030196573471,
+          "max": -0.0005877995326504478
+        }
+      }
+    },
+    {
+      "name": "immediate_turn_in_place_right_wzneg050",
+      "vx": 0.0,
+      "vy": 0.0,
+      "wz": -0.5,
+      "warmup_s": 0.0,
+      "lead_in_s": 0.0,
+      "lead_in_vx": 0.0,
+      "lead_in_vy": 0.0,
+      "lead_in_wz": 0.0,
+      "duration_s": 8.0,
+      "episodes": 5,
+      "initial_state_mode": "official_reset",
+      "summary_json": "artifacts/week03/06_yaw_only_tracking_candidate/turn_startup_immediate/model_1750/summary/immediate_turn_in_place_right_wzneg050_model_1750.json",
+      "aggregate": {
+        "episode_count": 5,
+        "fall_rate": 0.0,
+        "yaw_direction_counts": {
+          "positive": 0,
+          "near_zero": 0,
+          "negative": 5,
+          "near_zero_threshold_deg": 1.0
+        },
+        "net_yaw_deg": {
+          "mean": -133.3830925757433,
+          "median": -209.2842941610277,
+          "std": 103.73849165382859,
+          "min": -224.76523939597575,
+          "max": -6.397357336143859
+        },
+        "mean_actual_vx": {
+          "mean": -0.004470347123769898,
+          "median": -0.007230811496992828,
+          "std": 0.0035955484004026664,
+          "min": -0.007743645452865167,
+          "max": -2.1202726020419505e-05
+        },
+        "mean_actual_vy": {
+          "mean": -0.0003556745709392999,
+          "median": -0.000437743733782554,
+          "std": 0.0003314467727750858,
+          "min": -0.0007695912820054219,
+          "max": 5.575420753302751e-05
+        },
+        "mean_actual_wz": {
+          "mean": -0.28943702374483415,
+          "median": -0.4552279356027507,
+          "std": 0.2250289250244524,
+          "min": -0.4864447839236872,
+          "max": -0.013391279569708021
+        },
+        "rmse_vx": {
+          "mean": 0.010088280842962167,
+          "median": 0.013622155212389256,
+          "std": 0.005222159552626252,
+          "min": 0.0036693668596579207,
+          "max": 0.015070174419966456
+        },
+        "rmse_vy": {
+          "mean": 0.05571776702541228,
+          "median": 0.08878613396033053,
+          "std": 0.04300470605948097,
+          "min": 0.002792345237945955,
+          "max": 0.09198504076540967
+        },
+        "rmse_wz": {
+          "mean": 0.3224171028459918,
+          "median": 0.23487621187842764,
+          "std": 0.13578551895458676,
+          "min": 0.19632464038077338,
+          "max": 0.4888029191364413
+        },
+        "forward_distance_m": {
+          "mean": 0.01649845251909399,
+          "median": 0.023116801926146076,
+          "std": 0.014430725478610523,
+          "min": -0.0007579305941203645,
+          "max": 0.03346440361474323
+        },
+        "lateral_displacement_m": {
+          "mean": 0.021819091246865662,
+          "median": 0.03426546690285814,
+          "std": 0.01756415821761941,
+          "min": 0.00020046486388713693,
+          "max": 0.03727277407392766
+        }
+      }
+    },
+    {
+      "name": "immediate_low_speed_left_vx005_wz050",
+      "vx": 0.05,
+      "vy": 0.0,
+      "wz": 0.5,
+      "warmup_s": 0.0,
+      "lead_in_s": 0.0,
+      "lead_in_vx": 0.0,
+      "lead_in_vy": 0.0,
+      "lead_in_wz": 0.0,
+      "duration_s": 8.0,
+      "episodes": 5,
+      "initial_state_mode": "official_reset",
+      "summary_json": "artifacts/week03/06_yaw_only_tracking_candidate/turn_startup_immediate/model_1750/summary/immediate_low_speed_left_vx005_wz050_model_1750.json",
+      "aggregate": {
+        "episode_count": 5,
+        "fall_rate": 0.0,
+        "yaw_direction_counts": {
+          "positive": 5,
+          "near_zero": 0,
+          "negative": 0,
+          "near_zero_threshold_deg": 1.0
+        },
+        "net_yaw_deg": {
+          "mean": 177.48825900851014,
+          "median": 219.22842333539157,
+          "std": 83.47313677547085,
+          "min": 10.552319982560523,
+          "max": 220.11591208372738
+        },
+        "mean_actual_vx": {
+          "mean": 0.007408201397913217,
+          "median": 0.008972935067213257,
+          "std": 0.0037030422583280154,
+          "min": 2.634983837197069e-05,
+          "max": 0.009729702727963741
+        },
+        "mean_actual_vy": {
+          "mean": -0.003702580868488439,
+          "median": -0.004549774019833422,
+          "std": 0.001763893382942444,
+          "min": -0.004978162108309334,
+          "max": -0.00021244868554276764
+        },
+        "mean_actual_wz": {
+          "mean": 0.38625672999358773,
+          "median": 0.4780840068242698,
+          "std": 0.1816911923177517,
+          "min": 0.022973315227404156,
+          "max": 0.48121829573322783
+        },
+        "rmse_vx": {
+          "mean": 0.043390609572656516,
+          "median": 0.041918648194192144,
+          "std": 0.0033591585618721245,
+          "min": 0.041274303090464474,
+          "max": 0.05008652838445126
+        },
+        "rmse_vy": {
+          "mean": 0.07438427043532504,
+          "median": 0.09139602548744692,
+          "std": 0.034385371607639804,
+          "min": 0.005616833961642795,
+          "max": 0.09215085679483274
+        },
+        "rmse_wz": {
+          "mean": 0.3218659081662215,
+          "median": 0.2860386611765031,
+          "std": 0.0803670756907202,
+          "min": 0.275169482559504,
+          "max": 0.48238708927183654
+        },
+        "forward_distance_m": {
+          "mean": 0.011680791712093559,
+          "median": 0.013787567507058472,
+          "std": 0.005852020730344733,
+          "min": 0.0003016548163322358,
+          "max": 0.0169882809758
+        },
+        "lateral_displacement_m": {
+          "mean": 0.02523096009559884,
+          "median": 0.03074209083868389,
+          "std": 0.01371846197304791,
+          "min": -0.0017811050492681402,
+          "max": 0.035183279571216114
+        }
+      }
+    },
+    {
+      "name": "immediate_low_speed_right_vx005_wzneg050",
+      "vx": 0.05,
+      "vy": 0.0,
+      "wz": -0.5,
+      "warmup_s": 0.0,
+      "lead_in_s": 0.0,
+      "lead_in_vx": 0.0,
+      "lead_in_vy": 0.0,
+      "lead_in_wz": 0.0,
+      "duration_s": 8.0,
+      "episodes": 5,
+      "initial_state_mode": "official_reset",
+      "summary_json": "artifacts/week03/06_yaw_only_tracking_candidate/turn_startup_immediate/model_1750/summary/immediate_low_speed_right_vx005_wzneg050_model_1750.json",
+      "aggregate": {
+        "episode_count": 5,
+        "fall_rate": 0.0,
+        "yaw_direction_counts": {
+          "positive": 0,
+          "near_zero": 0,
+          "negative": 5,
+          "near_zero_threshold_deg": 1.0
+        },
+        "net_yaw_deg": {
+          "mean": -237.5280933569833,
+          "median": -238.40349301554062,
+          "std": 2.1548752246604894,
+          "min": -239.56142788430853,
+          "max": -233.60669921645808
+        },
+        "mean_actual_vx": {
+          "mean": 0.01722102566358808,
+          "median": 0.01703501565614715,
+          "std": 0.00025573031645090966,
+          "min": 0.016994121858733707,
+          "max": 0.01762317386834184
+        },
+        "mean_actual_vy": {
+          "mean": 0.0004040840633679181,
+          "median": 0.0004958584439009428,
+          "std": 0.00044864912217983495,
+          "min": -0.0003435636090580374,
+          "max": 0.000978588368743658
+        },
+        "mean_actual_wz": {
+          "mean": -0.514997785608964,
+          "median": -0.5159240261045767,
+          "std": 0.0042519380862162245,
+          "min": -0.5198527497539619,
+          "max": -0.5077271291295304
+        },
+        "rmse_vx": {
+          "mean": 0.036346153978844144,
+          "median": 0.036429078479831935,
+          "std": 0.0002134728269727116,
+          "min": 0.035959421782588985,
+          "max": 0.036597342012659885
+        },
+        "rmse_vy": {
+          "mean": 0.09174070276825766,
+          "median": 0.09208652612909411,
+          "std": 0.0006200975303064738,
+          "min": 0.09072302386018988,
+          "max": 0.09234451088553548
+        },
+        "rmse_wz": {
+          "mean": 0.23327832082989505,
+          "median": 0.23365858899835792,
+          "std": 0.004098738553188253,
+          "min": 0.22597680932392483,
+          "max": 0.23789033317319846
+        },
+        "forward_distance_m": {
+          "mean": -0.014033121546723417,
+          "median": -0.013049264623938588,
+          "std": 0.0030216246184190574,
+          "min": -0.019549207785932145,
+          "max": -0.010981944740437302
+        },
+        "lateral_displacement_m": {
+          "mean": -0.0504050821342335,
+          "median": -0.05194230493583767,
+          "std": 0.0033456433818593633,
+          "min": -0.054372994722398295,
+          "max": -0.0453506626725666
+        }
+      }
+    }
+  ]
+}
