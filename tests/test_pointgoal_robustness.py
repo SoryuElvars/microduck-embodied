@@ -6,6 +6,7 @@ from pathlib import Path
 from evaluation.pointgoal_pilot import load_goal_set
 from evaluation.pointgoal_robustness import (
     DEFAULT_CONFIG,
+    DEFAULT_SENSOR_MASS_CONFIG,
     RobustnessCondition,
     evaluate_condition_gate,
     load_robustness_protocol,
@@ -20,6 +21,7 @@ class PointGoalRobustnessTests(unittest.TestCase):
         goals = load_goal_set(protocol.goal_set_path)
 
         self.assertEqual(protocol.protocol_status, "frozen")
+        self.assertIsNone(protocol.output_subdir)
         self.assertEqual(len(protocol.quick_condition_ids), 5)
         self.assertEqual(len(protocol.full_condition_ids), 14)
         self.assertEqual(
@@ -41,6 +43,49 @@ class PointGoalRobustnessTests(unittest.TestCase):
         self.assertEqual(protocol.conditions[0].factor, "nominal")
         self.assertEqual(len(protocol.conditions), 14)
         for condition in protocol.conditions:
+            condition.validate()
+
+    def test_sensor_mass_extension_has_six_frozen_conditions(self) -> None:
+        protocol = load_robustness_protocol(DEFAULT_SENSOR_MASS_CONFIG)
+        goals = load_goal_set(protocol.goal_set_path)
+
+        self.assertEqual(protocol.protocol_status, "frozen")
+        self.assertEqual(protocol.output_subdir, "sensor_mass_v1")
+        self.assertEqual(len(protocol.quick_condition_ids), 6)
+        self.assertEqual(len(protocol.full_condition_ids), 6)
+        self.assertEqual(
+            len(protocol.quick_condition_ids)
+            * len(goals.goals)
+            * protocol.quick_episodes_per_goal,
+            30,
+        )
+        self.assertEqual(
+            {condition.factor for condition in protocol.conditions},
+            {"mass_inertia", "imu_observation_noise", "joint_encoder_noise"},
+        )
+        for condition in protocol.conditions:
+            condition.validate()
+
+    def test_sensor_condition_rejects_cross_factor_perturbations(self) -> None:
+        condition = RobustnessCondition(
+            condition_id="mixed",
+            factor="mass_inertia",
+            trunk_mass_inertia_scale=1.1,
+            imu_ang_vel_noise_uniform_radps=0.03,
+            imu_gravity_noise_uniform=0.01,
+        )
+
+        with self.assertRaisesRegex(ValueError, "must change only"):
+            condition.validate()
+
+    def test_sensor_condition_requires_both_observation_channels(self) -> None:
+        condition = RobustnessCondition(
+            condition_id="partial_imu",
+            factor="imu_observation_noise",
+            imu_ang_vel_noise_uniform_radps=0.03,
+        )
+
+        with self.assertRaisesRegex(ValueError, "projected-gravity"):
             condition.validate()
 
     def test_quick_subset_preserves_frozen_order(self) -> None:

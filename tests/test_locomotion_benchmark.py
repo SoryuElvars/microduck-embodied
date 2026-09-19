@@ -18,6 +18,60 @@ from evaluation.locomotion_benchmark import (
 )
 
 
+class _FakeNoise:
+    def __init__(self, values: list[float]) -> None:
+        self.values = values
+
+    def astype(self, _dtype: object, copy: bool = False) -> "_FakeNoise":
+        return self
+
+
+class _FakeSlice:
+    def __init__(self, parent: "_FakeObservation", obs_slice: slice) -> None:
+        self.parent = parent
+        self.obs_slice = obs_slice
+        self.indices = list(range(*obs_slice.indices(len(parent.values))))
+        self.shape = (len(self.indices),)
+
+    def __iadd__(self, noise: _FakeNoise) -> "_FakeSlice":
+        for index, value in zip(self.indices, noise.values, strict=True):
+            self.parent.values[index] += value
+        return self
+
+
+class _FakeObservation:
+    dtype = "float32"
+
+    def __init__(self, values: list[float]) -> None:
+        self.values = values
+
+    @property
+    def size(self) -> int:
+        return len(self.values)
+
+    def copy(self) -> "_FakeObservation":
+        return _FakeObservation(self.values.copy())
+
+    def __getitem__(self, key: slice) -> _FakeSlice:
+        return _FakeSlice(self, key)
+
+    def __setitem__(self, key: slice, value: _FakeSlice) -> None:
+        # ``slice +=`` writes the already-mutated view back on numpy arrays.
+        if value.parent is not self or value.obs_slice != key:
+            raise AssertionError("unexpected fake slice assignment")
+
+
+class _FakeRng:
+    def uniform(
+        self,
+        lower: float,
+        upper: float,
+        size: tuple[int, ...],
+    ) -> _FakeNoise:
+        midpoint = (lower + upper) / 2.0
+        return _FakeNoise([upper if index % 2 else midpoint for index in range(size[0])])
+
+
 class CommandSetTests(unittest.TestCase):
     def test_runtime_perturbation_requires_delay_on_control_ticks(self) -> None:
         self.assertEqual(RuntimePerturbation(actuator_delay_ms=60).actuator_delay_steps, 3)
@@ -29,6 +83,25 @@ class CommandSetTests(unittest.TestCase):
             RuntimePerturbation(foot_friction=0.0).validate()
         with self.assertRaisesRegex(ValueError, "bam_voltage_scale"):
             RuntimePerturbation(bam_voltage_scale=0.0).validate()
+        with self.assertRaisesRegex(ValueError, "trunk_mass_inertia_scale"):
+            RuntimePerturbation(trunk_mass_inertia_scale=0.0).validate()
+        with self.assertRaisesRegex(ValueError, "joint_pos_noise"):
+            RuntimePerturbation(joint_pos_noise_uniform_rad=-0.1).validate()
+
+    def test_observation_noise_changes_only_declared_actor_slices(self) -> None:
+        observation = _FakeObservation([0.0] * 61)
+        perturbation = RuntimePerturbation(
+            imu_ang_vel_noise_uniform_radps=0.03,
+            imu_gravity_noise_uniform=0.01,
+            joint_pos_noise_uniform_rad=0.001,
+            joint_vel_noise_uniform_radps=0.25,
+        )
+
+        perturbed = perturbation.perturb_observation(observation, _FakeRng())
+
+        self.assertTrue(any(value != 0.0 for value in perturbed.values[:34]))
+        self.assertEqual(perturbed.values[34:], observation.values[34:])
+        self.assertEqual(observation.values, [0.0] * 61)
 
     def test_policy_path_can_be_recorded_from_official_or_project_root(self) -> None:
         official_root = Path("/workspace/microduck_rl")

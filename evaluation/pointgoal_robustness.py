@@ -44,6 +44,11 @@ DEFAULT_POLICY = (
 DEFAULT_CONFIG = (
     Path(__file__).parent / "robustness_configs" / "pointgoal_ood_v1.json"
 )
+DEFAULT_SENSOR_MASS_CONFIG = (
+    Path(__file__).parent
+    / "robustness_configs"
+    / "pointgoal_sensor_mass_v1.json"
+)
 DEFAULT_OUTPUT_DIR = (
     PROJECT_ROOT
     / "artifacts"
@@ -57,6 +62,9 @@ FACTORS = {
     "actuator_delay",
     "motor_strength_proxy",
     "backlash",
+    "mass_inertia",
+    "imu_observation_noise",
+    "joint_encoder_noise",
 }
 
 
@@ -68,6 +76,11 @@ class RobustnessCondition:
     actuator_delay_ms: int = 0
     bam_voltage_scale: float = 1.0
     scene_xml_path: str | None = None
+    trunk_mass_inertia_scale: float = 1.0
+    imu_ang_vel_noise_uniform_radps: float = 0.0
+    imu_gravity_noise_uniform: float = 0.0
+    joint_pos_noise_uniform_rad: float = 0.0
+    joint_vel_noise_uniform_radps: float = 0.0
 
     @classmethod
     def from_mapping(cls, raw: dict[str, Any]) -> "RobustnessCondition":
@@ -86,6 +99,21 @@ class RobustnessCondition:
                 if raw.get("scene_xml_path") is None
                 else str(raw["scene_xml_path"])
             ),
+            trunk_mass_inertia_scale=float(
+                raw.get("trunk_mass_inertia_scale", 1.0)
+            ),
+            imu_ang_vel_noise_uniform_radps=float(
+                raw.get("imu_ang_vel_noise_uniform_radps", 0.0)
+            ),
+            imu_gravity_noise_uniform=float(
+                raw.get("imu_gravity_noise_uniform", 0.0)
+            ),
+            joint_pos_noise_uniform_rad=float(
+                raw.get("joint_pos_noise_uniform_rad", 0.0)
+            ),
+            joint_vel_noise_uniform_radps=float(
+                raw.get("joint_vel_noise_uniform_radps", 0.0)
+            ),
         )
         condition.validate()
         return condition
@@ -100,6 +128,15 @@ class RobustnessCondition:
             "actuator_delay": self.actuator_delay_ms != 0,
             "motor_strength_proxy": self.bam_voltage_scale != 1.0,
             "backlash": self.scene_xml_path is not None,
+            "mass_inertia": self.trunk_mass_inertia_scale != 1.0,
+            "imu_observation_noise": (
+                self.imu_ang_vel_noise_uniform_radps != 0.0
+                or self.imu_gravity_noise_uniform != 0.0
+            ),
+            "joint_encoder_noise": (
+                self.joint_pos_noise_uniform_rad != 0.0
+                or self.joint_vel_noise_uniform_radps != 0.0
+            ),
         }
         expected = set() if self.factor == "nominal" else {self.factor}
         actual = {name for name, enabled in active.items() if enabled}
@@ -108,10 +145,33 @@ class RobustnessCondition:
                 f"condition {self.condition_id!r} must change only {self.factor!r}; "
                 f"active perturbations: {sorted(actual)}"
             )
+        if self.factor == "imu_observation_noise" and not (
+            self.imu_ang_vel_noise_uniform_radps > 0
+            and self.imu_gravity_noise_uniform > 0
+        ):
+            raise ValueError(
+                "imu_observation_noise must define positive angular-velocity "
+                "and projected-gravity half-ranges"
+            )
+        if self.factor == "joint_encoder_noise" and not (
+            self.joint_pos_noise_uniform_rad > 0
+            and self.joint_vel_noise_uniform_radps > 0
+        ):
+            raise ValueError(
+                "joint_encoder_noise must define positive joint-position and "
+                "joint-velocity half-ranges"
+            )
         RuntimePerturbation(
             foot_friction=self.foot_friction,
             actuator_delay_ms=self.actuator_delay_ms,
             bam_voltage_scale=self.bam_voltage_scale,
+            trunk_mass_inertia_scale=self.trunk_mass_inertia_scale,
+            imu_ang_vel_noise_uniform_radps=(
+                self.imu_ang_vel_noise_uniform_radps
+            ),
+            imu_gravity_noise_uniform=self.imu_gravity_noise_uniform,
+            joint_pos_noise_uniform_rad=self.joint_pos_noise_uniform_rad,
+            joint_vel_noise_uniform_radps=self.joint_vel_noise_uniform_radps,
         ).validate()
 
     def to_runtime_perturbation(
@@ -127,6 +187,13 @@ class RobustnessCondition:
             actuator_delay_ms=self.actuator_delay_ms,
             bam_voltage_scale=self.bam_voltage_scale,
             scene_xml_path=scene,
+            trunk_mass_inertia_scale=self.trunk_mass_inertia_scale,
+            imu_ang_vel_noise_uniform_radps=(
+                self.imu_ang_vel_noise_uniform_radps
+            ),
+            imu_gravity_noise_uniform=self.imu_gravity_noise_uniform,
+            joint_pos_noise_uniform_rad=self.joint_pos_noise_uniform_rad,
+            joint_vel_noise_uniform_radps=self.joint_vel_noise_uniform_radps,
         )
         perturbation.validate()
         return perturbation
@@ -138,6 +205,7 @@ class RobustnessProtocol:
     protocol_status: str
     description: str
     goal_set_path: Path
+    output_subdir: str | None
     quick_episodes_per_goal: int
     quick_condition_ids: tuple[str, ...]
     quick_safety_gate: dict[str, Any]
@@ -196,11 +264,22 @@ def load_robustness_protocol(path: Path) -> RobustnessProtocol:
         raise ValueError("episodes_per_goal must be >= 1")
     goal_set_path = _resolve_project_path(str(document.get("goal_set_path", "")))
     load_goal_set(goal_set_path)
+    raw_output_subdir = document.get("output_subdir")
+    output_subdir = None if raw_output_subdir is None else str(raw_output_subdir)
+    if output_subdir is not None:
+        output_path = Path(output_subdir)
+        if (
+            not output_subdir.strip()
+            or output_path.is_absolute()
+            or ".." in output_path.parts
+        ):
+            raise ValueError("output_subdir must be a safe relative path")
     return RobustnessProtocol(
         source_path=path.resolve(),
         protocol_status=status,
         description=str(document.get("description", "")),
         goal_set_path=goal_set_path,
+        output_subdir=output_subdir,
         quick_episodes_per_goal=quick_episodes,
         quick_condition_ids=plan_ids(quick, "quick"),
         quick_safety_gate=dict(quick.get("safety_gate", {})),
@@ -532,7 +611,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--microduck-rl-root", type=Path, default=DEFAULT_MICRODUCK_RL_ROOT)
     parser.add_argument("--policy", type=Path, default=DEFAULT_POLICY)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Override the protocol-specific output directory.",
+    )
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument("--validate-only", action="store_true")
     modes.add_argument("--smoke", action="store_true")
@@ -560,8 +643,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     microduck_rl_root = _resolved(args.microduck_rl_root)
     policy_path = _resolved(args.policy)
     config_path = _resolved(args.config)
-    output_dir = _resolved(args.output_dir)
     robustness_protocol = load_robustness_protocol(config_path)
+    default_output_dir = (
+        DEFAULT_OUTPUT_DIR
+        if robustness_protocol.output_subdir is None
+        else DEFAULT_OUTPUT_DIR / robustness_protocol.output_subdir
+    )
+    output_dir = _resolved(args.output_dir or default_output_dir)
     goal_protocol = load_goal_set(robustness_protocol.goal_set_path)
     if not policy_path.is_file():
         parser.error(f"ONNX policy not found: {policy_path}")

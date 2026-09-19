@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "created_from": "artifacts/week03/08_pointgoal_robustness/model_1500/sensor_mass_v1/quick/summary/pointgoal_robustness_quick_model_1500.json",
+  "benchmark_kind": "classical_pointgoal_sensor_mass_quick_screen_processed",
+  "run_mode": "quick",
+  "policy_sha256": "533b820c13b3782f2c35bfaa7171c29b095d1b5c121c0fe5d8bef80ab37e785d",
+  "microduck_rl_commit": "062921c4c9f65107e391df042f8de424136213c3",
+  "run_signature": "d06090fd0d9a75b03af1d7fbde551a977615f21bc1266bae29a1ca035838ea13",
+  "protocol": {
+    "conditions": 6,
+    "goals_per_condition": 5,
+    "episodes_per_goal": 1,
+    "reset_seed": 42,
+    "episode_count": 30,
+    "paired_across_conditions": true,
+    "one_factor_at_a_time": true
+  },
+  "result": {
+    "successes": 30,
+    "falls": 0,
+    "timeouts": 0,
+    "invalid_states": 0,
+    "all_quick_safety_gates_passed": true,
+    "maximum_mirror_success_rate_gap": 0.0
+  },
+  "nominal_reference": {
+    "source": "results/week03/07_pointgoal_robustness/summaries/pointgoal_ood_quick_model_1500_processed.json",
+    "median_path_efficiency": 0.805141,
+    "vx_rmse": 0.122833,
+    "wz_rmse": 0.488682,
+    "zero_command_planar_speed": 0.047913,
+    "zero_command_wz_rms": 0.173901,
+    "warmup_planar_drift": 0.003659
+  },
+  "conditions": [
+    {
+      "condition_id": "mass_inertia_90pct",
+      "successes": 5,
+      "episodes": 5,
+      "median_path_efficiency": 0.811928,
+      "vx_rmse": 0.120389,
+      "wz_rmse": 0.515231,
+      "zero_command_planar_speed": 0.053836,
+      "zero_command_wz_rms": 0.185423,
+      "warmup_planar_drift": 0.003918,
+      "quick_safety_gate_passed": true
+    },
+    {
+      "condition_id": "mass_inertia_110pct",
+      "successes": 5,
+      "episodes": 5,
+      "median_path_efficiency": 0.798252,
+      "vx_rmse": 0.124897,
+      "wz_rmse": 0.469072,
+      "zero_command_planar_speed": 0.045804,
+      "zero_command_wz_rms": 0.166637,
+      "warmup_planar_drift": 0.003320,
+      "quick_safety_gate_passed": true
+    },
+    {
+      "condition_id": "imu_noise_low",
+      "successes": 5,
+      "episodes": 5,
+      "median_path_efficiency": 0.802711,
+      "vx_rmse": 0.123006,
+      "wz_rmse": 0.488300,
+      "zero_command_planar_speed": 0.050037,
+      "zero_command_wz_rms": 0.179190,
+      "warmup_planar_drift": 0.003731,
+      "quick_safety_gate_passed": true
+    },
+    {
+      "condition_id": "imu_noise_high",
+      "successes": 5,
+      "episodes": 5,
+      "median_path_efficiency": 0.801477,
+      "vx_rmse": 0.124645,
+      "wz_rmse": 0.492133,
+      "zero_command_planar_speed": 0.052624,
+      "zero_command_wz_rms": 0.200336,
+      "warmup_planar_drift": 0.002887,
+      "quick_safety_gate_passed": true
+    },
+    {
+      "condition_id": "joint_encoder_noise_low",
+      "successes": 5,
+      "episodes": 5,
+      "median_path_efficiency": 0.806311,
+      "vx_rmse": 0.122754,
+      "wz_rmse": 0.498035,
+      "zero_command_planar_speed": 0.048832,
+      "zero_command_wz_rms": 0.184226,
+      "warmup_planar_drift": 0.003829,
+      "quick_safety_gate_passed": true
+    },
+    {
+      "condition_id": "joint_encoder_noise_high",
+      "successes": 5,
+      "episodes": 5,
+      "median_path_efficiency": 0.806689,
+      "vx_rmse": 0.122966,
+      "wz_rmse": 0.491929,
+      "zero_command_planar_speed": 0.049981,
+      "zero_command_wz_rms": 0.187619,
+      "warmup_planar_drift": 0.004225,
+      "quick_safety_gate_passed": true
+    }
+  ],
+  "decision": {
+    "quick_screen": "passed",
+    "interpretation": "No safety or task-level regression was exposed by the single-seed screen. Metric changes are descriptive only.",
+    "next_step": "User runs the frozen 150-episode full protocol; rerunning the same command resumes progress."
+  }
+}

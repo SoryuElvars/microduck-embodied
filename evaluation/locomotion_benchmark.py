@@ -26,6 +26,10 @@ from typing import Any, Sequence
 
 EXPECTED_OBSERVATION_SIZE = 61
 EXPECTED_ACTION_SIZE = 14
+BASE_ANG_VEL_OBS_SLICE = slice(0, 3)
+PROJECTED_GRAVITY_OBS_SLICE = slice(3, 6)
+JOINT_POS_OBS_SLICE = slice(6, 20)
+JOINT_VEL_OBS_SLICE = slice(20, 34)
 PHYSICS_TIMESTEP_S = 0.005
 DECIMATION = 4
 BAM_VIN = 7.4
@@ -141,7 +145,7 @@ class BenchmarkConfig:
 
 @dataclass(frozen=True)
 class RuntimePerturbation:
-    """One deployment-side physics/actuation perturbation.
+    """One deployment-side physics, actuation, or observation perturbation.
 
     The defaults are exactly nominal.  ``bam_voltage_scale`` is intentionally
     named after the quantity that is changed: it is a practical motor-strength
@@ -152,6 +156,11 @@ class RuntimePerturbation:
     actuator_delay_ms: int = 0
     bam_voltage_scale: float = 1.0
     scene_xml_path: Path | None = None
+    trunk_mass_inertia_scale: float = 1.0
+    imu_ang_vel_noise_uniform_radps: float = 0.0
+    imu_gravity_noise_uniform: float = 0.0
+    joint_pos_noise_uniform_rad: float = 0.0
+    joint_vel_noise_uniform_radps: float = 0.0
 
     def validate(self) -> None:
         if self.foot_friction is not None and (
@@ -169,6 +178,20 @@ class RuntimePerturbation:
             )
         if not math.isfinite(self.bam_voltage_scale) or self.bam_voltage_scale <= 0:
             raise ValueError("bam_voltage_scale must be finite and > 0")
+        if (
+            not math.isfinite(self.trunk_mass_inertia_scale)
+            or self.trunk_mass_inertia_scale <= 0
+        ):
+            raise ValueError("trunk_mass_inertia_scale must be finite and > 0")
+        noise_values = {
+            "imu_ang_vel_noise_uniform_radps": self.imu_ang_vel_noise_uniform_radps,
+            "imu_gravity_noise_uniform": self.imu_gravity_noise_uniform,
+            "joint_pos_noise_uniform_rad": self.joint_pos_noise_uniform_rad,
+            "joint_vel_noise_uniform_radps": self.joint_vel_noise_uniform_radps,
+        }
+        for name, value in noise_values.items():
+            if not math.isfinite(value) or value < 0:
+                raise ValueError(f"{name} must be finite and >= 0")
 
     @property
     def actuator_delay_steps(self) -> int:
@@ -178,6 +201,15 @@ class RuntimePerturbation:
 
     def as_record(self, microduck_rl_root: Path) -> dict[str, Any]:
         scene = self.scene_xml_path
+        observation_noise_active = any(
+            value > 0
+            for value in (
+                self.imu_ang_vel_noise_uniform_radps,
+                self.imu_gravity_noise_uniform,
+                self.joint_pos_noise_uniform_rad,
+                self.joint_vel_noise_uniform_radps,
+            )
+        )
         return {
             "foot_friction": self.foot_friction,
             "actuator_delay_ms": self.actuator_delay_ms,
@@ -190,6 +222,28 @@ class RuntimePerturbation:
                 if scene is None
                 else path_for_record(scene, microduck_rl_root, PROJECT_ROOT)
             ),
+            "trunk_mass_inertia_scale": self.trunk_mass_inertia_scale,
+            "mass_inertia_interpretation": (
+                "scale trunk_base mass and diagonal inertia together"
+                if self.trunk_mass_inertia_scale != 1.0
+                else None
+            ),
+            "imu_ang_vel_noise_uniform_radps": (
+                self.imu_ang_vel_noise_uniform_radps
+            ),
+            "imu_gravity_noise_uniform": self.imu_gravity_noise_uniform,
+            "joint_pos_noise_uniform_rad": self.joint_pos_noise_uniform_rad,
+            "joint_vel_noise_uniform_radps": self.joint_vel_noise_uniform_radps,
+            "observation_noise_sampling": (
+                "independent per-control-step uniform noise; episode-seeded"
+                if observation_noise_active
+                else None
+            ),
+            "observation_noise_scope": (
+                "low-level actor observation only; navigator keeps simulator truth"
+                if observation_noise_active
+                else None
+            ),
             "backlash_observation_model": (
                 "motor-side actuated joint state; passive output-side joint is not "
                 "added to policy observation"
@@ -197,6 +251,43 @@ class RuntimePerturbation:
                 else None
             ),
         }
+
+    @property
+    def has_observation_noise(self) -> bool:
+        return any(
+            value > 0
+            for value in (
+                self.imu_ang_vel_noise_uniform_radps,
+                self.imu_gravity_noise_uniform,
+                self.joint_pos_noise_uniform_rad,
+                self.joint_vel_noise_uniform_radps,
+            )
+        )
+
+    def perturb_observation(self, observation: Any, rng: Any) -> Any:
+        """Apply deterministic episode-seeded uniform noise to actor inputs."""
+
+        self.validate()
+        if observation.size != EXPECTED_OBSERVATION_SIZE:
+            raise ValueError(
+                f"unexpected observation size: {observation.size}; "
+                f"expected {EXPECTED_OBSERVATION_SIZE}"
+            )
+        perturbed = observation.copy()
+
+        def add_noise(obs_slice: slice, half_range: float) -> None:
+            if half_range > 0:
+                perturbed[obs_slice] += rng.uniform(
+                    -half_range,
+                    half_range,
+                    size=perturbed[obs_slice].shape,
+                ).astype(perturbed.dtype, copy=False)
+
+        add_noise(BASE_ANG_VEL_OBS_SLICE, self.imu_ang_vel_noise_uniform_radps)
+        add_noise(PROJECTED_GRAVITY_OBS_SLICE, self.imu_gravity_noise_uniform)
+        add_noise(JOINT_POS_OBS_SLICE, self.joint_pos_noise_uniform_rad)
+        add_noise(JOINT_VEL_OBS_SLICE, self.joint_vel_noise_uniform_radps)
+        return perturbed
 
 
 @dataclass
@@ -212,6 +303,7 @@ class Runtime:
     qvel_adr: int
     control_dt: float
     perturbation: RuntimePerturbation
+    observation_rng: Any
 
 
 def load_command_set(path: Path) -> list[CommandCase]:
@@ -329,6 +421,17 @@ def create_runtime(
         BAM_VIN_DROP_GAIN,
         official.BAM_VIN_MIN,
     )
+    if perturbation.trunk_mass_inertia_scale != 1.0:
+        trunk_id = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            "trunk_base",
+        )
+        if trunk_id < 0:
+            raise ValueError("scene has no required body: trunk_base")
+        model.body_mass[trunk_id] *= perturbation.trunk_mass_inertia_scale
+        model.body_inertia[trunk_id] *= perturbation.trunk_mass_inertia_scale
+        mujoco.mj_setConst(model, data)
     if perturbation.foot_friction is not None:
         for geom_name in ("left_foot_collision", "right_foot_collision"):
             geom_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, geom_name)
@@ -401,6 +504,7 @@ def create_runtime(
             qvel_adr=qvel_adr,
             control_dt=DECIMATION * model.opt.timestep,
             perturbation=perturbation,
+            observation_rng=np.random.default_rng(episode_seed + 1_000_003),
         ),
         initial_state,
     )
@@ -454,7 +558,20 @@ def _base_state(runtime: Runtime) -> dict[str, Any]:
 
 def _advance_control_step(runtime: Runtime) -> tuple[Any, Any, dict[str, Any]]:
     observation = runtime.policy.get_observations().copy()
-    action = runtime.policy.infer()
+    if runtime.perturbation.has_observation_noise:
+        observation = runtime.perturbation.perturb_observation(
+            observation,
+            runtime.observation_rng,
+        )
+        obs_batch = observation.reshape(1, -1)
+        action = runtime.policy.ort_session.run(
+            [runtime.policy.output_name],
+            {runtime.policy.input_name: obs_batch},
+        )[0]
+        action = action.squeeze(0).astype(runtime.official.np.float32)
+        runtime.policy.last_action = action.copy()
+    else:
+        action = runtime.policy.infer()
     runtime.policy.apply_action(action)
     for _ in range(DECIMATION):
         runtime.bam_ctrl.update()

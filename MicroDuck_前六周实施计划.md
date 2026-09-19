@@ -229,33 +229,32 @@ Classical Navigator 正式 Benchmark，不与后者合并 Episode 数或成功�
 第三周完成的鲁棒性结论仍是控制器级 `Sim2Real proxy`；没有真机数据时，
 不得写成已经完成真实 Reality Gap 验证。
 
-候选模型分为：
+第三周的模型关系已经收敛为：
 
-- 已有失败基线：自训练 `model_5999`；
-- 官方参考模型：固定 Hugging Face revision 和 SHA-256 的
-  `alpha_walking.onnx`；
-- 已完成的自训练候选 A：只将 angular-velocity tracking std 收紧到
-  `sqrt(0.25)`，当前以 `model_2500` 作为 pilot 临时候选；
-- 已完成 2000-iteration 正式训练的自训练候选 B：根据 PointGoal pilot 和低速
-  yaw 归因，只把 angular tracking 改为 yaw-axis error；已完成快筛与
-  同协议 PointGoal pilot，但尚未满足冻结条件。
+- 官方参考模型 `alpha_walking.onnx` 只保留独立兼容性与行为报告，不再作为本周
+  完整 OOD 矩阵的待评对象；
+- 自训练候选 A `model_2500.onnx` 用于早期 PointGoal pilot 与失败归因，保留为
+  训练候选 B 的证据来源；
+- 自训练候选 B 使用 yaw-axis angular tracking。两个 training seeds 都证明
+  `model_1500` 具备早停能力、继续训练后会发生不同形式的退化；
+- 当前唯一冻结的评测对象是 seed 42 `model_1500.onnx`。后续 Nominal、PointGoal
+  与 OOD 条件必须使用同一模型 SHA-256、Controller、目标集和配对 reset seeds。
 
-`model_5999` 用于保留失败基线，不再为它投入与优胜候选相同规模的完整 OOD
-预算。官方模型是否用于第四周，必须由本项目的统一评测决定，不能因“官方”身份
-免除验收。
+早期模型只用于解释模型选择过程，不再继续追加正式评测预算。第三周剩余工作围绕
+`model_1500.onnx` 的能力边界和鲁棒性证据展开。
 
-### 5.1 官方模型接入与 Nominal 评测
+### 5.1 官方参考模型归档与评测边界
 
 - [x] 固定官方模型 revision、SHA-256、下载来源和本地结果路径。
 - [x] 验证 ONNX 的 `Observation 61 → Action 14` 合约。
 - [x] 核对 50 Hz 控制频率、Observation 排列和 command encoding。
 - [x] 运行固定八指令 × 5 seeds 快筛，并完成 MJCF、Normalizer、执行器和运行时兼容性排查。
-- [ ] 快筛通过后，运行固定八指令 × 20 seeds 正式对比。
-- [ ] 运行独立的 400-Episode 随机速度指令协议。
-- [ ] 运行 Action 镜像诊断，记录正负转向和横移的不对称性。
+- [x] 根据兼容性与快筛结果，将官方模型保留为独立参考，不再为其追加固定八指令
+  × 20 seeds、400-Episode 或完整 OOD 矩阵。
 
 固定八指令、随机速度指令和官方 PT Reward Manager Return 继续作为不同协议
-分别报告，不合并 Episode 数或成功率。
+分别报告，不合并 Episode 数或成功率。第三周正式 Nominal 与 OOD 评测对象统一为
+seed 42 `model_1500.onnx`。
 
 ### 5.2 已完成的 angular std 单变量候选
 
@@ -322,10 +321,11 @@ yaw 指令”的协议；纯原地转向只作为辅助能力报告。
 
 #### 目的与边界
 
-使用 `model_2500.onnx` 和一个最小可用的 Constrained Go-to-Goal Controller，回答两个
-问题：现有航向闭环能否抵消直行右偏，以及左右转向不对称是否会直接转化为
-到达失败。本 pilot 只在 Nominal 物理参数下运行，不调参对比 Naive P 与受限控制器，
-不替代第四周的 `200 Episode` 正式评测。
+最初使用 `model_2500.onnx` 和一个最小可用的 Constrained Go-to-Goal Controller，
+检查航向闭环能否抵消直行右偏，以及左右转向不对称是否会直接转化为到达失败。
+随后冻结同一 Controller、目标和 seeds，对候选 B 的 checkpoint 做配对复测，最终选出
+`model_1500.onnx`。本 pilot 只在 Nominal 物理参数下运行，不调参对比 Naive P 与
+受限控制器，也不替代第四周的正式 Benchmark。
 
 为了避免写出一次性脚本，pilot 仍遵循第四周的接口边界：
 
@@ -468,116 +468,126 @@ training seed 43 的 `model_1500` 在同一 pilot 中也达到 25/25、0 跌倒�
 说明早停能力已在两个独立训练中复现；但 seed 43 的路径效率略低，直行偏航方向也与
 seed 42 相反。两个 seed 继续训练后都出现性能回退：seed 42 在 1750 双侧启动崩塌，
 seed 43 先整体变慢并在 1999 出现右侧启动崩塌。训练方法的早期有效性与后期不稳定性
-均有了跨 seed 证据，`model_1500` 因而升级为推荐早停 checkpoint；它仍需先完成
-400-Episode 随机速度检测。检测中 400/400 未跌倒，但严格三轴逐步 RMSE Success
+均有了跨 seed 证据，`model_1500` 因而升级为推荐早停 checkpoint。随后完成的
+400-Episode 随机速度检测为 400/400 未跌倒，但严格三轴逐步 RMSE Success
 为 0%；yaw 的 Episode 均值响应和左右对称性相对 baseline 明显改善，`vx` 欠跟踪、
 非零 `vy`、停止漂移和步态内 yaw 振荡仍是明确能力边界。该随机协议比当前
 `[vx,0,wz]` PointGoal 接口更宽，因此结果不覆盖 70/70 闭环 holdout，也不能被
 闭环到达率掩盖。第一阶段继续维持 `vy=0` 的既定范围。随后完成的 PointGoal OOD
 快筛显示，friction 0.3、motor 80% 和 backlash 未立即退化，但 delay 60 ms 导致
-3/5 跌倒，并同步放大停止漂移、`vx/wz` tracking error 和 yaw 振荡。下一步先用
-20/40 ms 配对评测定位延迟阈值，再决定是否设计 action-delay randomization
-单因素新候选。
+3/5 跌倒，并同步放大停止漂移、`vx/wz` tracking error 和 yaw 振荡。后续配对评测
+确认 0/20/40 ms 均为 25/25、0 跌倒，60 ms 为 8/25 且有 17 次跌倒；完整矩阵将
+失效边界定位在 `(40,60] ms`。action-delay randomization 只保留为以后单因素增强
+候选，不在当前阶段立即重新训练。
 
-### 5.5 必做鲁棒性参数
+### 5.5 `model_1500.onnx` 鲁棒性参数
 
-完整鲁棒性矩阵放在新模型训练之后：候选必须先通过 Nominal 固定指令快筛，并在
-同一 25-Episode PointGoal pilot 中相对 `model_2500` 显示出目标改善。当前不单独为
-已知持续右偏和速度欠跟踪的 `model_2500` 消耗完整矩阵预算。
+核心矩阵只评测冻结的 seed 42 `model_1500.onnx`。候选 A 与后期退化 checkpoint
+已经完成选型用途，不再消耗完整 OOD 预算。
 
-| 不确定因素 | 推荐测试值 |
-|---|---|
-| Ground Friction | 0.3 / 0.5 / 0.7 / 0.9 / 1.1 |
-| Control Delay | 0 / 20 / 40 / 60 / 80 ms |
-| Motor Strength | 80% / 90% / 100% / 110% |
-| Backlash | Normal / Backlash Model |
+第一层环境与执行器侧矩阵已经完成：
 
-有余力时再增加：
+| 不确定因素 | 测试值 | 状态 |
+|---|---|---|
+| Ground Friction | 0.3 / 0.5 / 0.7 / 0.9 / 1.1 | 已完成 |
+| Control Delay | 0 / 20 / 40 / 60 / 80 ms | 已完成 |
+| Motor Strength Proxy | 80% / 90% / 100% / 110% | 已完成 |
+| Backlash | Normal / 2 deg Backlash Model | 已完成 |
 
-- [ ] Mass ±10%
-- [ ] IMU Noise
-- [ ] Joint Encoder Noise
+第二层补充质量参数与低层策略观测噪声，仍归入同一鲁棒性实验：
 
-### 5.6 控制器级鲁棒性评测
+- [x] Mass `-10% / +10%`：`trunk_base` mass 与 diagonal inertia 同比缩放；
+- [x] IMU Noise：Low 为 `base_ang_vel ±0.03 rad/s`、`projected_gravity ±0.01`，
+  High 为两者的 2 倍；
+- [x] Joint Encoder Noise：Low 为 `joint_pos ±0.001 rad`、
+  `joint_vel ±0.25 rad/s`，High 为两者的 2 倍。
 
-- [x] 为四类必做不确定因素建立统一配置入口：采用同一冻结 ONNX、Controller、
+第二层先运行 `6 条件 × 5 个对称目标 × 1 个配对 seed = 30 Episode` 快筛。
+原计划只把出现跌倒、超时、到达率下降或 tracking/漂移显著恶化的条件扩展为每条件
+25 Episode；为用统一的五 seeds 证据完整关闭第三周，实际将冻结的六个条件都扩展，
+且没有在看到结果后修改噪声档位。IMU 与编码器噪声只注入低层 policy observation；
+Navigator 继续使用仿真真值位姿，避免混入第四周才处理的定位/目标观测误差。
+
+### 5.6 `model_1500.onnx` 控制器级鲁棒性评测
+
+- [x] 为第一层四类不确定因素建立统一配置入口：采用同一冻结 ONNX、Controller、
   对称目标与配对 seeds，每次只注入一个因素；支持协议签名、逐 Episode 进度和
-  断点续跑。四种注入均已完成不计入正式结果的短 smoke。
-- [ ] 完成新旧候选的 Nominal 固定指令和 PointGoal pilot 配对对比。
-- [x] 对当前冻结的 seed 42 `model_1500.onnx` 运行 25-Episode PointGoal OOD
-  快筛：Nominal、friction 0.3、delay 60 ms、motor 80% 和 backlash 各覆盖五类
-  对称目标；结果为 22/25 到达，所有 3 次跌倒均来自 delay 60 ms。
-- [x] 完成 delay 阈值定位：40 ms 仍通过完整任务/安全 Gate，60 ms 在所有五类目标
-  上均出现跌倒或成功率下降；不直接运行完整四因素矩阵。
-- [ ] 所有模型共享指令、seeds、终止条件和参数档位。
-- [ ] 记录配置、模型 revision/checkpoint、种子和结果路径。
-- [ ] 统计 Tracking RMSE、方向成功率、直行偏航、Fall Rate、恢复时间和停止漂移。
-- [ ] 生成 Delay/Friction/Motor Strength/Backlash 敏感性曲线。
-- [ ] 分析 MicroDuck 对哪类 Reality Gap 因素最敏感。
+  断点续跑。
+- [x] 完成候选 A、候选 B checkpoints 的同协议 Locomotion 快筛和 PointGoal pilot
+  对比，并据此选择 seed 42 `model_1500.onnx`。
+- [x] 完成 25-Episode PointGoal OOD 快筛：Nominal、friction 0.3、motor 80% 和
+  backlash 均为 5/5、0 跌倒；delay 60 ms 为 2/5，并发生 3/5 跌倒。
+- [x] 完成 delay 阈值定位：0/20/40 ms 均为 25/25、0 跌倒；60 ms 为 8/25，
+  发生 17/25 跌倒，硬安全失效阈值位于 `(40,60] ms`。
+- [x] 完成 14 条件 × 25 Episode 的第一层完整矩阵。12/14 条件通过；只有
+  delay 60/80 ms 未通过完整 Gate。
+- [x] 固定指令、目标、seeds、终止条件、参数档位、模型 SHA-256 和上游 commit，
+  记录 Tracking RMSE、成功率、Fall/Timeout、路径效率、停止漂移与左右镜像差。
+- [x] 生成第一层完整矩阵与 delay 阈值图，并完成 friction、motor proxy、backlash
+  的解释边界和 delay Failure Cases 分析。
+- [x] 为 Mass、IMU Noise 与 Joint Encoder Noise 建立版本化配置、单因素校验和
+  注入链路；Low 档对齐官方训练配置，High 档固定为 2 倍 stress level。
+- [x] 完成三类非正式 smoke：质量和惯量实际缩放为 90%，IMU 只扰动 Observation
+  `0:6`，Encoder 只扰动 `6:34`，幅度均在配置边界内；扩展协议已冻结。
+- [x] 完成第二层 30-Episode 快筛：六个条件均为 5/5 到达、0 跌倒、0 超时、
+  0 invalid state，所有 quick safety Gate 通过；结果已合并到
+  `results/week03/07_pointgoal_robustness/`。
+- [x] 完成冻结的六条件 × 25 Episode 正式扩展矩阵，共150 Episode：六个条件均
+  25/25到达，0跌倒、0超时、0 invalid state，全部 Full Gate 通过。
 
-400-Episode 随机速度指令只代表 Nominal 指令覆盖；若物理参数没有改变，不能将
-它单独称为鲁棒性测试。
+400-Episode 随机速度指令只代表 Nominal 指令覆盖；若物理参数或 observation 没有
+改变，不能将它单独称为鲁棒性测试。
 
-### 对比表模板
+### 当前冻结模型汇总
 
-| Test Condition | `model_5999` | Official | Self-trained Candidate | 主要现象 |
-|---|---:|---:|---:|---|
-| Nominal |  |  |  |  |
-| Low Friction |  |  |  |  |
-| 40 ms Delay |  |  |  |  |
-| 80% Motor Strength |  |  |  |  |
-| Backlash |  |  |  |  |
+| Test Condition | seed 42 `model_1500.onnx` | 主要现象 |
+|---|---:|---|
+| Nominal PointGoal | 25/25，0 跌倒 | 通过 |
+| Ground Friction 0.3～1.1 | 各 25/25，0 跌倒 | 当前协议未触发摩擦退化 |
+| Delay 20/40 ms | 各 25/25，0 跌倒 | 通过，但停止漂移增加 |
+| Delay 60 ms | 8/25，17 跌倒 | 未通过 |
+| Delay 80 ms | 0/25，25 跌倒 | 未通过 |
+| Motor Proxy 80/90/110% | 各 25/25，0 跌倒 | 通过当前电压代理测试 |
+| Backlash 2 deg | 25/25，0 跌倒 | 通过，但有观测边界限制 |
+| Mass / IMU / Encoder Noise | 六条件各 25/25，0 跌倒 | 正式矩阵通过；yaw 漂移仍是敏感指标 |
 
 ### 本周交付物
 
-- [x] 官方 `alpha_walking.onnx` 独立评测报告
-- [x] angular tracking std 单变量训练报告
-- [x] `model_2500` PointGoal 行进转向报告
-- [x] `model_2500` 的 25-Episode Classical PointGoal pilot 报告与轨迹
-- [x] `model_2500` 的 20-Episode 低速 yaw 归因报告与图表
-- [x] 由 pilot 证据驱动的新模型单变量训练报告
-- [x] 新旧候选在同一 Locomotion 协议与 PointGoal pilot 下的配对对比
-- [ ] `model_5999` / 官方模型 / 自训练候选的 Nominal 对比表
-- [x] 四类不确定因素的统一配置入口、短 smoke 与断点续跑框架
-- [x] 25-Episode OOD 快筛、关键汇总与敏感性图
-- [ ] Delay 阈值定位和完整四因素实验数据
-- [ ] 最优两个模型的鲁棒性汇总表
-- [ ] 2～4 张敏感性或对比曲线
-- [ ] Reality Gap / Sim2Real proxy 影响分析
-- [ ] 典型 Failure Cases
-- [ ] 一个冻结供第四周使用的 Locomotion Policy
+- [x] 官方 `alpha_walking.onnx` 独立参考报告
+- [x] Candidate A angular tracking std 单变量训练与 PointGoal 诊断报告
+- [x] Candidate B yaw-only tracking 单变量训练、checkpoint 退化与双 training-seed
+  复现报告
+- [x] seed 42 `model_1500.onnx` 的 25-Episode pilot、70-Episode Nominal holdout
+  和 400-Episode 随机速度报告
+- [x] 第一层四因素统一配置入口、smoke、断点续跑框架和 350-Episode 完整矩阵
+- [x] Delay 阈值、完整矩阵图、Reality Gap / Sim2Real proxy 边界和典型 Failure Cases
+- [x] Mass、IMU Noise、Joint Encoder Noise 的版本化配置与注入链路
+- [x] Mass、IMU Noise、Joint Encoder Noise 的注入 smoke
+- [x] Mass、IMU Noise、Joint Encoder Noise 的 30-Episode 快筛
+- [x] Mass、IMU Noise、Joint Encoder Noise 的 150-Episode 正式扩展矩阵
+- [x] 冻结供第四周使用的 seed 42 `model_1500.onnx`、Normalizer、上游 commit、
+  评测配置和 SHA-256
 
 ### 验收标准
 
-最终导航底层候选至少满足：
+当前冻结的 seed 42 `model_1500.onnx` 已满足进入第四周的条件：
 
-- 行进中正负转向方向均正确，且不是单个 checkpoint 的偶然行为；
-- 直行偏航显著低于 `model_5999`；
-- 低速命令存在可预测响应，静止保持稳定；
-- Nominal 条件无明显跌倒；
-- OOD 退化能够量化，且不是轻微扰动下立即全面失效。
+- 行进中正负转向方向正确，静止后双向启动能力在两个 training seeds 的
+  `model_1500` 上复现；
+- 同一 PointGoal pilot 为 25/25 到达，扩展 Nominal holdout 为 70/70 到达，均为
+  0 跌倒、0 超时；
+- 400-Episode 随机速度协议为 400/400 未跌倒，同时如实记录 `vx` 欠跟踪、非零
+  `vy` 能力弱、停止漂移和 yaw 振荡等范围外或已知缺陷；
+- 第一层完整 OOD 矩阵已量化 delay `(40,60] ms` 的硬失效边界，并明确其他代理
+  条件尚不能证明 Sim2Real-ready；
+- 第二层150-Episode矩阵为150/150到达、0跌倒，Mass/Inertia ±10%、训练噪声档与
+  2倍噪声压力档均通过冻结 Gate；同时保留高档噪声下预热 yaw 漂移增加的边界记录；
+- ONNX、Normalizer、上游 commit、模型 SHA-256、Controller 和评测协议均已冻结。
 
-冻结前至少完成：
-
-```text
-官方模型评测
-    +
-自训练单变量候选
-    +
-25-Episode PointGoal pilot
-    +
-根据 pilot 训练并复测新候选
-    +
-4 类 Uncertainty
-    +
-最优两个底层模型统一对比
-    +
-冻结第四周底层策略
-```
-
-若某个模型通过上述门禁，则冻结其 ONNX、Normalizer、上游 commit、评测配置和
-SHA-256 后进入第四周。若所有模型均未通过，第四周可继续完善接口与控制器
-单元测试，但不得把使用不合格底层得到的 pilot 结果写成最终导航结论。
+第三周的有界底层评测已经完成。接下来不重新选择底层模型，也不无证据增加扰动类型；
+进入第四周，在不改 `model_1500.onnx` 的前提下建立正式 Classical PointGoal
+Benchmark。现有结果只能称为已完成当前配置覆盖的仿真鲁棒性测试，不能称为
+Sim2Real-ready。
 
 > 完成本周后结束 M1 的主要实验，不继续无限调步态，立即转入 M2。
 

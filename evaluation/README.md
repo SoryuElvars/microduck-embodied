@@ -330,6 +330,79 @@ Success Rate。当前 Navigator 范围仍为 `[vx,0,wz]`；`vy` 不纳入本轮 
 `results/week03/07_pointgoal_robustness/README.md`；延迟阈值和完整矩阵已经合并
 到同一份 Week03/07 报告中。
 
+### Mass 与低层传感器噪声扩展
+
+第二层扩展使用独立的版本化配置
+`evaluation/robustness_configs/pointgoal_sensor_mass_v1.json`，避免修改已经完成并
+用于350 Episode核心矩阵的冻结配置。扩展仍固定 seed 42 `model_1500.onnx`、同一
+Constrained Go-to-Goal Controller、五个对称目标和配对 reset seeds，每次只改变
+一个因素：
+
+- `trunk_base` mass 与 diagonal inertia 同比缩放至 `90% / 110%`；
+- IMU Low：`base_ang_vel ±0.03 rad/s`、`projected_gravity ±0.01`；High 为2倍；
+- Joint Encoder Low：`joint_pos ±0.001 rad`、`joint_vel ±0.25 rad/s`；High 为2倍。
+
+Low 档来自官方训练配置 commit `062921c`；High 档是明确标记的2倍仿真压力测试，
+不是实机测量。噪声按 Episode seed 确定，在每个50 Hz控制步独立均匀采样，只修改
+低层 actor observation。Navigator 位姿和 GoalState 继续使用仿真真值；本协议也不
+包含常量 IMU 安装偏差或 encoder bias。
+
+配置已在三类注入 smoke 后冻结。静态校验命令为：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_robustness.py \
+  --config ~/projects/microduck-embodied/evaluation/robustness_configs/pointgoal_sensor_mass_v1.json \
+  --validate-only
+```
+
+2026-09-19 使用 `front / seed 42 / 5 s` 完成不计入正式结果的代表性 smoke：
+
+- Mass 90%：`trunk_base` mass 从 `0.199224` 变为 `0.1793016`，三个 inertia
+  分量的比例也均为 `0.9`；
+- IMU High：首步只改变 Observation `0:6`，最大绝对差为 `0.050914`，未超过
+  `0.06` 的配置边界；
+- Encoder High：首步 Observation `0:6` 不变，joint position/velocity 最大差分别为
+  `0.001914 rad` 和 `0.480545 rad/s`，未超过 `0.002/0.5` 的配置边界。
+
+三个 smoke 均无跌倒和 invalid state，但都在5秒 smoke 时限到达前终止；这只用于
+验证注入链路，不作为行为 Gate。冻结后的 quick 为6个条件 × 5个目标 × 1个配对 seed，
+共30 Episode。原计划只对出现安全、到达、tracking或漂移退化的条件选择性扩展；
+为用统一的五 seeds 证据关闭第三周范围，实际将冻结的六个条件都扩展到每条件
+25 Episode，且没有在看到结果后改变档位。
+
+30-Episode quick 已完成：六个条件均为 `5/5` 到达、0跌倒、0超时、0 invalid state，
+左右镜像成功率差均为0，全部 quick safety Gate 通过。High档没有暴露任务级失败；
+相对 Nominal，较明显但仍属单 seed 描述性的变化是 IMU High 的零命令 yaw RMS
+增加15.2%，以及 Encoder High 的预热平面漂移增加15.5%。原始结果使用独立目录：
+
+```text
+artifacts/week03/08_pointgoal_robustness/model_1500/sensor_mass_v1/
+```
+
+正式扩展矩阵已于2026-09-19完成：每条件25 Episode，共150 Episode。六个条件均为
+25/25到达，合计0跌倒、0超时、0 invalid state，每目标到达率100%，左右镜像成功率
+差为0，六个 Full Gate 全部通过。相对同一组 seeds/目标的25-Episode Nominal，Path
+Efficiency 最大绝对变化1.0%，完成时间最大变化2.3%；High噪声的预热 yaw 漂移相对
+增幅较大，但绝对量不超过0.033 rad，且未伴随任务级失败。处理后汇总位于：
+
+```text
+results/week03/07_pointgoal_robustness/summaries/pointgoal_sensor_mass_full_model_1500_processed.json
+```
+
+以下为可中断续跑的复现命令：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_robustness.py \
+  --config ~/projects/microduck-embodied/evaluation/robustness_configs/pointgoal_sensor_mass_v1.json \
+  --full
+```
+
 ## PointGoal 低速 yaw 归因
 
 用固定低速命令移除 Navigator 闭环，检查侧向目标的左右启动差异是否来自

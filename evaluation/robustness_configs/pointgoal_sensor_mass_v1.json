@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "protocol_status": "frozen",
+  "description": "One-factor-at-a-time PointGoal extension for trunk mass/inertia and low-level actor sensor noise using the frozen seed-42 model_1500 ONNX policy.",
+  "goal_set_path": "evaluation/goal_sets/pointgoal_pilot_5.json",
+  "output_subdir": "sensor_mass_v1",
+  "parameter_basis": {
+    "microduck_rl_commit": "062921c4c9f65107e391df042f8de424136213c3",
+    "source_path": "src/mjlab_microduck/tasks/microduck_velocity_env_cfg.py",
+    "mass_inertia": "The training task scales trunk_base mass and inertia together by 0.95-1.05. This evaluation uses 0.90 and 1.10 as explicit 2x stress levels.",
+    "imu_noise_low": "Matches actor training uniform noise: base_ang_vel +/-0.03 rad/s and projected_gravity +/-0.01.",
+    "imu_noise_high": "Explicit 2x training-noise stress: base_ang_vel +/-0.06 rad/s and projected_gravity +/-0.02.",
+    "joint_encoder_noise_low": "Matches actor training uniform noise: joint_pos +/-0.001 rad and joint_vel +/-0.25 rad/s.",
+    "joint_encoder_noise_high": "Explicit 2x training-noise stress: joint_pos +/-0.002 rad and joint_vel +/-0.50 rad/s.",
+    "scope_note": "Noise is sampled independently at each 50 Hz control step and changes only low-level actor observation slices. Navigator pose and goal state remain simulator ground truth. Constant IMU mounting error and constant encoder bias are outside this protocol."
+  },
+  "quick": {
+    "episodes_per_goal": 1,
+    "condition_ids": [
+      "mass_inertia_90pct",
+      "mass_inertia_110pct",
+      "imu_noise_low",
+      "imu_noise_high",
+      "joint_encoder_noise_low",
+      "joint_encoder_noise_high"
+    ],
+    "safety_gate": {
+      "maximum_fall_rate": 0.0,
+      "maximum_invalid_state_rate": 0.0,
+      "note": "The 30-episode extension screen is diagnostic. Escalate a condition to 25 episodes only after a verified safety, success, tracking, or drift regression."
+    }
+  },
+  "full": {
+    "episodes_per_goal": 5,
+    "condition_ids": [
+      "mass_inertia_90pct",
+      "mass_inertia_110pct",
+      "imu_noise_low",
+      "imu_noise_high",
+      "joint_encoder_noise_low",
+      "joint_encoder_noise_high"
+    ],
+    "acceptance_gate": {
+      "minimum_overall_success_rate": 0.8,
+      "minimum_per_goal_success_rate": 0.6,
+      "maximum_fall_rate": 0.0,
+      "maximum_timeout_rate": 0.2,
+      "maximum_invalid_state_rate": 0.0,
+      "maximum_absolute_mirror_success_rate_gap": 0.4,
+      "note": "Full runs are selective escalation, not automatic follow-up for every condition. Evaluate each condition independently."
+    }
+  },
+  "conditions": [
+    {
+      "id": "mass_inertia_90pct",
+      "factor": "mass_inertia",
+      "trunk_mass_inertia_scale": 0.9
+    },
+    {
+      "id": "mass_inertia_110pct",
+      "factor": "mass_inertia",
+      "trunk_mass_inertia_scale": 1.1
+    },
+    {
+      "id": "imu_noise_low",
+      "factor": "imu_observation_noise",
+      "imu_ang_vel_noise_uniform_radps": 0.03,
+      "imu_gravity_noise_uniform": 0.01
+    },
+    {
+      "id": "imu_noise_high",
+      "factor": "imu_observation_noise",
+      "imu_ang_vel_noise_uniform_radps": 0.06,
+      "imu_gravity_noise_uniform": 0.02
+    },
+    {
+      "id": "joint_encoder_noise_low",
+      "factor": "joint_encoder_noise",
+      "joint_pos_noise_uniform_rad": 0.001,
+      "joint_vel_noise_uniform_radps": 0.25
+    },
+    {
+      "id": "joint_encoder_noise_high",
+      "factor": "joint_encoder_noise",
+      "joint_pos_noise_uniform_rad": 0.002,
+      "joint_vel_noise_uniform_radps": 0.5
+    }
+  ]
+}

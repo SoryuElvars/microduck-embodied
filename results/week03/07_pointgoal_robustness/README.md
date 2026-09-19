@@ -120,6 +120,79 @@ Backlash `2 deg` 也为 25/25，且效率表面提高；不能把它解释为齿
 Policy 仍观察 actuated motor-side joint state，未把 passive output-side backlash joint
 作为真实编码器读数反馈给策略，因此只覆盖一种明确边界下的机械齿隙代理。
 
+## 第二层扩展：Mass 与低层传感器噪声
+
+第二层继续使用同一 `model_1500.onnx`、Controller、目标集和配对 seeds，新增独立
+冻结配置 `evaluation/robustness_configs/pointgoal_sensor_mass_v1.json`。六个
+快筛条件为 Mass/Inertia `90/110%`、IMU Noise Low/High 和 Joint Encoder Noise
+Low/High。
+
+2026-09-19 先对三个因素各运行一个 `front / seed 42 / 5 s` 非正式 smoke：
+
+| 代表条件 | 跌倒 / invalid | 注入核对 |
+|---|---:|---|
+| Mass/Inertia 90% | 0 / 0 | trunk mass `0.199224 → 0.1793016`，mass/inertia ratio 均为 `0.9` |
+| IMU Noise High | 0 / 0 | 只改变 Observation `0:6`；首步最大差 `0.050914 ≤ 0.06` |
+| Encoder Noise High | 0 / 0 | 只改变 `6:34`；首步 position/velocity 最大差 `0.001914/0.480545`，均在边界内 |
+
+三个 Episode 均因5秒 smoke 时限而未到达1.5米外目标，不能据此判定鲁棒性通过或失败。
+它们只证明质量/惯量和两类 Observation 注入按配置生效；原始 CSV 与 smoke summary
+保存在 `artifacts/week03/08_pointgoal_robustness/model_1500/smoke/`。
+
+### 30-Episode 快筛
+
+快筛使用六个条件 × 五个对称目标 × seed 42：
+
+| 条件 | 到达 | 跌倒 | Path Efficiency | `vx` RMSE | `wz` RMSE | Safety Gate |
+|---|---:|---:|---:|---:|---:|---|
+| Mass/Inertia 90% | 5/5 | 0/5 | 0.812 | 0.120 | 0.515 | 通过 |
+| Mass/Inertia 110% | 5/5 | 0/5 | 0.798 | 0.125 | 0.469 | 通过 |
+| IMU Noise Low | 5/5 | 0/5 | 0.803 | 0.123 | 0.488 | 通过 |
+| IMU Noise High | 5/5 | 0/5 | 0.801 | 0.125 | 0.492 | 通过 |
+| Encoder Noise Low | 5/5 | 0/5 | 0.806 | 0.123 | 0.498 | 通过 |
+| Encoder Noise High | 5/5 | 0/5 | 0.807 | 0.123 | 0.492 | 通过 |
+
+合计30/30到达、0跌倒、0超时、0 invalid state，所有左右镜像成功率差均为0。
+相对同一 seed 42 Nominal，IMU High 的零命令 yaw RMS 增加15.2%，Encoder High 的
+预热平面漂移增加15.5%，Mass 90%的零命令平面速度增加12.4%；这些变化尚未伴随
+任务或安全失败，也只有单个 reset seed，因此只作为正式矩阵需要观察的信号。
+
+快筛通过，可以升级到冻结的六条件 × 25 Episode 正式矩阵。扩展原始数据使用独立
+`sensor_mass_v1/` 子目录，避免与此前核心四因素矩阵混合。
+
+### 150-Episode 正式扩展矩阵
+
+正式矩阵使用 seeds 42–46；每个条件覆盖五个对称目标，每目标五个 Episode。下表中的
+Nominal 是第一层完整矩阵中同一组目标与 seeds 的 25-Episode 配对参考，不计入本次
+150 Episode：
+
+| 条件 | 到达 | Path Efficiency | 完成时间 / s | `vx` RMSE | `wz` RMSE | 零命令 `wz` RMS | 预热 `|Δyaw|` / rad | Full Gate |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| Nominal 参考 | 25/25 | 0.806 | 12.38 | 0.123 | 0.486 | 0.167 | 0.019 | 参考 |
+| Mass/Inertia 90% | 25/25 | 0.813 | 12.10 | 0.119 | 0.519 | 0.185 | 0.025 | 通过 |
+| Mass/Inertia 110% | 25/25 | 0.798 | 12.62 | 0.125 | 0.466 | 0.161 | 0.017 | 通过 |
+| IMU Noise Low | 25/25 | 0.806 | 12.34 | 0.123 | 0.488 | 0.179 | 0.012 | 通过 |
+| IMU Noise High | 25/25 | 0.804 | 12.48 | 0.123 | 0.492 | 0.182 | 0.028 | 通过 |
+| Encoder Noise Low | 25/25 | 0.806 | 12.36 | 0.123 | 0.488 | 0.173 | 0.011 | 通过 |
+| Encoder Noise High | 25/25 | 0.803 | 12.38 | 0.123 | 0.494 | 0.187 | 0.033 | 通过 |
+
+六个条件合计150/150到达，0跌倒、0超时、0 invalid state；每个目标到达率均为
+100%，左右镜像成功率差均为0，六个 Full Gate 全部通过。相对 Nominal，Path
+Efficiency 的最大绝对变化为1.0%，中位完成时间最大变化为2.3%，因此没有发现会改变
+当前 PointGoal 任务结论的任务级退化。
+
+细粒度指标仍显示 yaw 对扰动更敏感：Mass 90%的零命令 `wz` RMS 增加11.1%，IMU
+High 的预热绝对 yaw 漂移增加49.3%，Encoder High 的零命令 `wz` RMS 增加12.2%、
+预热绝对 yaw 漂移增加75.4%。但预热 yaw 的 Nominal 绝对值仅0.019 rad，Encoder
+High 也只有0.033 rad，且没有伴随任务或安全失败，所以把它记录为敏感性信号，不单独
+判为失败。快筛中 Encoder High 的预热平面漂移增加15.5%没有在五 seeds 中保持；
+正式中位数反而比 Nominal 低21.8%，说明不能用单 seed 快筛波动下稳定退化结论。
+
+该结论只覆盖 `trunk_base` mass/inertia ±10% 与逐控制步 iid uniform actor
+observation noise。Navigator 仍使用仿真真值位姿；常量偏置、安装误差、长期漂移、
+量化、丢包、定位误差和真实硬件噪声分布均不在本协议内，因此不能据此宣称
+Sim2Real-ready。
+
 ## 决策
 
 1. `model_1500` 冻结为后续 Classical PointGoal 与高层 Navigator 工作的仿真下层
@@ -129,11 +202,13 @@ Policy 仍观察 actuated motor-side joint state，未把 passive output-side ba
 3. 若以后独立增强下层鲁棒性，最有证据的单变量候选是 action-delay randomization；
    保持 yaw-only Reward、command sampling 和 curriculum 其余因素不变，并复跑同一
    350-Episode 矩阵与 Nominal Gate。
-4. 当前按六周计划进入 Week 4 Classical PointGoal 正式 benchmark，不为了没有实机
-   而无限扩展仿真扰动种类。
+4. 第二层150-Episode正式矩阵已通过；至此关闭第三周的有界鲁棒性扩展，进入
+   Week 4，不继续无证据增加仿真扰动种类。
 
 机器可读关键汇总：
 
 - `summaries/pointgoal_ood_quick_model_1500_processed.json`
 - `summaries/pointgoal_delay_threshold_model_1500_processed.json`
 - `summaries/pointgoal_robustness_full_model_1500_processed.json`
+- `summaries/pointgoal_sensor_mass_quick_model_1500_processed.json`
+- `summaries/pointgoal_sensor_mass_full_model_1500_processed.json`

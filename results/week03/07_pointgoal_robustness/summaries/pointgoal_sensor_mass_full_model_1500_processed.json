@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "created_from": "artifacts/week03/08_pointgoal_robustness/model_1500/sensor_mass_v1/full/summary/pointgoal_robustness_full_model_1500.json",
+  "benchmark_kind": "classical_pointgoal_sensor_mass_full_processed",
+  "run_mode": "full",
+  "created_at": "2026-09-19T07:48:21.518385+00:00",
+  "policy": {
+    "path": "artifacts/week03/06_yaw_only_tracking_candidate/models/model_1500.onnx",
+    "sha256": "533b820c13b3782f2c35bfaa7171c29b095d1b5c121c0fe5d8bef80ab37e785d"
+  },
+  "microduck_rl_commit": "062921c4c9f65107e391df042f8de424136213c3",
+  "run_signature": "eb6c5bfe5bde22ff25e1a93d97598fa43a25dc53322c61e90120b9a5f6d192b9",
+  "protocol": {
+    "conditions": 6,
+    "goals_per_condition": 5,
+    "paired_reset_seeds": [42, 43, 44, 45, 46],
+    "episodes_per_goal": 5,
+    "episodes_per_condition": 25,
+    "episode_count": 150,
+    "paired_across_conditions": true,
+    "one_factor_at_a_time": true,
+    "navigator_action_scope": "[vx, 0, wz]"
+  },
+  "acceptance_gate": {
+    "minimum_overall_success_rate": 0.8,
+    "minimum_per_goal_success_rate": 0.6,
+    "maximum_fall_rate": 0.0,
+    "maximum_timeout_rate": 0.2,
+    "maximum_invalid_state_rate": 0.0,
+    "maximum_absolute_mirror_success_rate_gap": 0.4
+  },
+  "nominal_reference": {
+    "source": "artifacts/week03/08_pointgoal_robustness/model_1500/full/summary/pointgoal_robustness_full_model_1500.json",
+    "run_signature": "329d8191885de196102cd41de21ff3f2315d062a3a696e5722a412288b406d23",
+    "episodes": 25,
+    "median_final_distance_m": 0.188388,
+    "median_path_efficiency": 0.806228,
+    "median_completion_time_s": 12.38,
+    "vx_rmse": 0.122833,
+    "wz_rmse": 0.485561,
+    "zero_command_planar_speed": 0.047666,
+    "zero_command_wz_rms": 0.166868,
+    "warmup_planar_drift": 0.003659,
+    "warmup_absolute_yaw_drift": 0.018967
+  },
+  "result": {
+    "successes": 150,
+    "falls": 0,
+    "timeouts": 0,
+    "invalid_states": 0,
+    "conditions_passing_full_gate": 6,
+    "condition_count": 6,
+    "minimum_per_goal_success_rate": 1.0,
+    "maximum_absolute_mirror_success_rate_gap": 0.0
+  },
+  "conditions": [
+    {
+      "condition_id": "mass_inertia_90pct",
+      "factor": "mass_inertia",
+      "parameters": {"trunk_mass_inertia_scale": 0.9},
+      "successes": 25,
+      "episodes": 25,
+      "falls": 0,
+      "timeouts": 0,
+      "invalid_states": 0,
+      "median_final_distance_m": 0.189418,
+      "median_path_efficiency": 0.812793,
+      "median_completion_time_s": 12.10,
+      "vx_rmse": 0.119343,
+      "wz_rmse": 0.519331,
+      "zero_command_planar_speed": 0.049879,
+      "zero_command_wz_rms": 0.185423,
+      "warmup_planar_drift": 0.003729,
+      "warmup_absolute_yaw_drift": 0.025483,
+      "relative_to_nominal_percent": {
+        "path_efficiency": 0.8,
+        "completion_time": -2.3,
+        "vx_rmse": -2.8,
+        "wz_rmse": 7.0,
+        "zero_command_wz_rms": 11.1,
+        "warmup_absolute_yaw_drift": 34.4
+      },
+      "minimum_per_goal_success_rate": 1.0,
+      "maximum_absolute_mirror_success_rate_gap": 0.0,
+      "full_gate_passed": true
+    },
+    {
+      "condition_id": "mass_inertia_110pct",
+      "factor": "mass_inertia",
+      "parameters": {"trunk_mass_inertia_scale": 1.1},
+      "successes": 25,
+      "episodes": 25,
+      "falls": 0,
+      "timeouts": 0,
+      "invalid_states": 0,
+      "median_final_distance_m": 0.188900,
+      "median_path_efficiency": 0.798252,
+      "median_completion_time_s": 12.62,
+      "vx_rmse": 0.124651,
+      "wz_rmse": 0.466164,
+      "zero_command_planar_speed": 0.046265,
+      "zero_command_wz_rms": 0.161236,
+      "warmup_planar_drift": 0.003343,
+      "warmup_absolute_yaw_drift": 0.017141,
+      "relative_to_nominal_percent": {
+        "path_efficiency": -1.0,
+        "completion_time": 1.9,
+        "vx_rmse": 1.5,
+        "wz_rmse": -4.0,
+        "zero_command_wz_rms": -3.4,
+        "warmup_absolute_yaw_drift": -9.6
+      },
+      "minimum_per_goal_success_rate": 1.0,
+      "maximum_absolute_mirror_success_rate_gap": 0.0,
+      "full_gate_passed": true
+    },
+    {
+      "condition_id": "imu_noise_low",
+      "factor": "imu_observation_noise",
+      "parameters": {
+        "imu_ang_vel_noise_uniform_radps": 0.03,
+        "imu_gravity_noise_uniform": 0.01
+      },
+      "successes": 25,
+      "episodes": 25,
+      "falls": 0,
+      "timeouts": 0,
+      "invalid_states": 0,
+      "median_final_distance_m": 0.187672,
+      "median_path_efficiency": 0.806495,
+      "median_completion_time_s": 12.34,
+      "vx_rmse": 0.122600,
+      "wz_rmse": 0.487714,
+      "zero_command_planar_speed": 0.048610,
+      "zero_command_wz_rms": 0.178670,
+      "warmup_planar_drift": 0.003516,
+      "warmup_absolute_yaw_drift": 0.012131,
+      "relative_to_nominal_percent": {
+        "path_efficiency": 0.0,
+        "completion_time": -0.3,
+        "vx_rmse": -0.2,
+        "wz_rmse": 0.4,
+        "zero_command_wz_rms": 7.1,
+        "warmup_absolute_yaw_drift": -36.0
+      },
+      "minimum_per_goal_success_rate": 1.0,
+      "maximum_absolute_mirror_success_rate_gap": 0.0,
+      "full_gate_passed": true
+    },
+    {
+      "condition_id": "imu_noise_high",
+      "factor": "imu_observation_noise",
+      "parameters": {
+        "imu_ang_vel_noise_uniform_radps": 0.06,
+        "imu_gravity_noise_uniform": 0.02
+      },
+      "successes": 25,
+      "episodes": 25,
+      "falls": 0,
+      "timeouts": 0,
+      "invalid_states": 0,
+      "median_final_distance_m": 0.187795,
+      "median_path_efficiency": 0.803526,
+      "median_completion_time_s": 12.48,
+      "vx_rmse": 0.122935,
+      "wz_rmse": 0.491883,
+      "zero_command_planar_speed": 0.047068,
+      "zero_command_wz_rms": 0.182401,
+      "warmup_planar_drift": 0.002887,
+      "warmup_absolute_yaw_drift": 0.028319,
+      "relative_to_nominal_percent": {
+        "path_efficiency": -0.3,
+        "completion_time": 0.8,
+        "vx_rmse": 0.1,
+        "wz_rmse": 1.3,
+        "zero_command_wz_rms": 9.3,
+        "warmup_absolute_yaw_drift": 49.3
+      },
+      "minimum_per_goal_success_rate": 1.0,
+      "maximum_absolute_mirror_success_rate_gap": 0.0,
+      "full_gate_passed": true
+    },
+    {
+      "condition_id": "joint_encoder_noise_low",
+      "factor": "joint_encoder_noise",
+      "parameters": {
+        "joint_pos_noise_uniform_rad": 0.001,
+        "joint_vel_noise_uniform_radps": 0.25
+      },
+      "successes": 25,
+      "episodes": 25,
+      "falls": 0,
+      "timeouts": 0,
+      "invalid_states": 0,
+      "median_final_distance_m": 0.188730,
+      "median_path_efficiency": 0.806052,
+      "median_completion_time_s": 12.36,
+      "vx_rmse": 0.122514,
+      "wz_rmse": 0.487777,
+      "zero_command_planar_speed": 0.045495,
+      "zero_command_wz_rms": 0.172503,
+      "warmup_planar_drift": 0.003839,
+      "warmup_absolute_yaw_drift": 0.010812,
+      "relative_to_nominal_percent": {
+        "path_efficiency": 0.0,
+        "completion_time": -0.2,
+        "vx_rmse": -0.3,
+        "wz_rmse": 0.5,
+        "zero_command_wz_rms": 3.4,
+        "warmup_absolute_yaw_drift": -43.0
+      },
+      "minimum_per_goal_success_rate": 1.0,
+      "maximum_absolute_mirror_success_rate_gap": 0.0,
+      "full_gate_passed": true
+    },
+    {
+      "condition_id": "joint_encoder_noise_high",
+      "factor": "joint_encoder_noise",
+      "parameters": {
+        "joint_pos_noise_uniform_rad": 0.002,
+        "joint_vel_noise_uniform_radps": 0.5
+      },
+      "successes": 25,
+      "episodes": 25,
+      "falls": 0,
+      "timeouts": 0,
+      "invalid_states": 0,
+      "median_final_distance_m": 0.188521,
+      "median_path_efficiency": 0.802902,
+      "median_completion_time_s": 12.38,
+      "vx_rmse": 0.122966,
+      "wz_rmse": 0.494479,
+      "zero_command_planar_speed": 0.047029,
+      "zero_command_wz_rms": 0.187162,
+      "warmup_planar_drift": 0.002862,
+      "warmup_absolute_yaw_drift": 0.033275,
+      "relative_to_nominal_percent": {
+        "path_efficiency": -0.4,
+        "completion_time": 0.0,
+        "vx_rmse": 0.1,
+        "wz_rmse": 1.8,
+        "zero_command_wz_rms": 12.2,
+        "warmup_absolute_yaw_drift": 75.4
+      },
+      "minimum_per_goal_success_rate": 1.0,
+      "maximum_absolute_mirror_success_rate_gap": 0.0,
+      "full_gate_passed": true
+    }
+  ],
+  "observations": [
+    "All six conditions passed the frozen full gate with 25/25 successes and no falls, timeouts, or invalid states.",
+    "Relative to the paired 25-episode nominal reference, path efficiency changed by at most 1.0% and completion time by at most 2.3%.",
+    "The clearest non-task-level sensitivity was yaw motion during zero-command or warmup segments: mass_inertia_90pct zero-command yaw RMS +11.1%, imu_noise_high warmup absolute yaw drift +49.3%, and joint_encoder_noise_high zero-command yaw RMS +12.2% / warmup absolute yaw drift +75.4%.",
+    "Warmup yaw drift has a small nominal denominator and no task-level failure accompanied these increases; treat it as a sensitivity signal, not an independent failure.",
+    "This protocol covers iid uniform actor-observation noise and trunk mass/inertia scale only. Navigator pose remains simulator ground truth; constant bias, drift, dropout, quantization, localization error, and measured hardware distributions remain out of scope."
+  ],
+  "decision": {
+    "status": "passed",
+    "model": "Keep seed-42 model_1500.onnx frozen as the Week 4 low-level simulation baseline.",
+    "next_step": "Close the bounded Week 3 robustness extension and proceed to the Week 4 Classical PointGoal benchmark. Do not add new perturbation types without new evidence.",
+    "sim2real_claim": "Not established; no real robot or measured hardware disturbance distribution was used."
+  }
+}
