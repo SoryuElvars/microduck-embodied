@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "result_status": "quick_screen_only",
+  "created_at": "2026-09-21T13:44:14.533103+00:00",
+  "source_summary": "artifacts/week04/01_classical_pointgoal_benchmark/model_1500/quick/summary/pointgoal_quick_model_1500.json",
+  "single_changed_factor": {
+    "name": "shared_controller_goal_tolerance_m",
+    "previous": 0.2,
+    "current": 0.15,
+    "unchanged_task_success_radius_m": 0.2
+  },
+  "protocol": {
+    "id": "week04_classical_v1",
+    "status": "draft",
+    "episode_manifest_status": "frozen",
+    "path": "evaluation/pointgoal_protocols/week04_classical_v1.json",
+    "protocol_sha256": "947bd0394de5e4e2293eb55009f9e900d2531f11e8a7fd8c01f75d9c69b1025c",
+    "episode_manifest_sha256": "b2d4c62121e0c1b4f290094079512c09cf7f6eaf8e1918622f12483c2292337c",
+    "shared_scenario_count": 10,
+    "controller_episode_count": 20,
+    "post_arrival_observation_time_s": 2.0
+  },
+  "policy": {
+    "name": "model_1500.onnx",
+    "sha256": "533b820c13b3782f2c35bfaa7171c29b095d1b5c121c0fe5d8bef80ab37e785d",
+    "microduck_rl_commit": "062921c4c9f65107e391df042f8de424136213c3"
+  },
+  "run_signature": "ef0e2f22a14b0ed9a7538487bbf0bc2e587fdb0d70bafc56d02ccb98b5da531e",
+  "quick_gate": {
+    "passed": true,
+    "maximum_fall_rate": 0.0,
+    "maximum_invalid_state_rate": 0.0
+  },
+  "controllers": {
+    "naive_p": {
+      "episode_count": 10,
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "timeout_rate": 0.0,
+      "invalid_state_rate": 0.0,
+      "median_final_distance_m": 0.14803020157830368,
+      "median_path_length_to_arrival_m": 2.260730944594973,
+      "median_path_efficiency_arrivals": 0.6958569380421793,
+      "median_completion_time_s_arrivals": 14.43,
+      "mean_vx_saturation_fraction": 0.7641801309687436,
+      "mean_wz_saturation_fraction": 0.21772091566904037,
+      "median_post_arrival_stop_drift_m": 0.02120838581151204,
+      "median_post_arrival_max_drift_m": 0.02535549197574516,
+      "post_arrival_redeparture_rate": 0.0,
+      "median_post_arrival_max_goal_distance_m": 0.16721725808014293,
+      "maximum_post_arrival_goal_distance_m": 0.16980988672477812
+    },
+    "constrained": {
+      "episode_count": 10,
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "timeout_rate": 0.0,
+      "invalid_state_rate": 0.0,
+      "median_final_distance_m": 0.1575317626549035,
+      "median_path_length_to_arrival_m": 1.8223675572237221,
+      "median_path_efficiency_arrivals": 0.731334895935016,
+      "median_completion_time_s_arrivals": 13.530000000000001,
+      "mean_vx_saturation_fraction": 0.0,
+      "mean_wz_saturation_fraction": 0.1950871063790116,
+      "median_post_arrival_stop_drift_m": 0.01457544156935072,
+      "median_post_arrival_max_drift_m": 0.028510083790751338,
+      "post_arrival_redeparture_rate": 0.0,
+      "median_post_arrival_max_goal_distance_m": 0.1674616106975486,
+      "maximum_post_arrival_goal_distance_m": 0.17172942844660163
+    }
+  },
+  "paired_median_constrained_minus_naive": {
+    "success_wins_constrained": 0,
+    "success_wins_naive": 0,
+    "success_ties": 10,
+    "final_distance_m": 0.00964238314897338,
+    "path_length_to_arrival_m": -0.11876029852163272,
+    "path_efficiency": 0.037590564001804105,
+    "completion_time_s": 0.1999999999999993,
+    "vx_saturation_fraction": -0.7820877407729037,
+    "wz_saturation_fraction": -0.02028006101669086,
+    "post_arrival_stop_drift_m": -0.006922971419951217
+  },
+  "conclusion": {
+    "controller_winner_selected": false,
+    "quick_redeparture_issue_resolved": true,
+    "protocol_frozen_for_full": false,
+    "full_run_started": false,
+    "reason": "Both controllers completed all 10 quick scenarios without fall, timeout, invalid state, or post-arrival re-departure. Formal paired evidence is still required to select a winner."
+  }
+}

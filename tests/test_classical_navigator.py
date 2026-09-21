@@ -6,6 +6,8 @@ import unittest
 from navigation.classical_navigator import (
     ConstrainedGoToGoalConfig,
     ConstrainedGoToGoalNavigator,
+    NaivePConfig,
+    NaivePNavigator,
     goal_error,
     wrap_angle,
 )
@@ -91,11 +93,67 @@ class ClassicalNavigatorTests(unittest.TestCase):
         self.assertEqual(command.vy_mps, 0.0)
         self.assertEqual(command.wz_radps, 0.0)
 
+    def test_constrained_goal_stop_is_latched_until_reset(self) -> None:
+        navigator = ConstrainedGoToGoalNavigator(self.config)
+        navigator.compute_command(robot_state(), GoalState(2.0, 0.0), 0.1)
+        for _ in range(5):
+            navigator.compute_command(robot_state(), GoalState(0.1, 0.0), 0.1)
+
+        after_drift = navigator.compute_command(
+            robot_state(), GoalState(2.0, 0.0), 0.1
+        )
+        self.assertEqual(after_drift.vx_mps, 0.0)
+        self.assertEqual(after_drift.wz_radps, 0.0)
+
+        navigator.reset()
+        after_reset = navigator.compute_command(
+            robot_state(), GoalState(2.0, 0.0), 0.1
+        )
+        self.assertGreater(after_reset.vx_mps, 0.0)
+
+    def test_constrained_goal_hold_resets_after_early_redeparture(self) -> None:
+        navigator = ConstrainedGoToGoalNavigator(self.config)
+        for _ in range(4):
+            navigator.compute_command(robot_state(), GoalState(0.1, 0.0), 0.1)
+
+        after_early_redeparture = navigator.compute_command(
+            robot_state(), GoalState(2.0, 0.0), 0.1
+        )
+
+        self.assertGreater(after_early_redeparture.vx_mps, 0.0)
+
     def test_non_finite_state_is_rejected(self) -> None:
         with self.assertRaisesRegex(ValueError, "non-finite"):
             ConstrainedGoToGoalNavigator(self.config).compute_command(
                 robot_state(finite=False), GoalState(1.0, 0.0), 0.1
             )
+
+    def test_naive_p_uses_only_proportional_terms_and_clamps(self) -> None:
+        config = NaivePConfig()
+        command = NaivePNavigator(config).compute_command(
+            robot_state(), GoalState(-2.0, 0.0), 0.1
+        )
+
+        self.assertEqual(command.vx_mps, config.max_forward_speed_mps)
+        self.assertAlmostEqual(abs(command.wz_radps), config.max_yaw_rate_radps)
+        self.assertEqual(command.vy_mps, 0.0)
+
+    def test_naive_p_is_not_rate_limited(self) -> None:
+        config = NaivePConfig(max_forward_speed_mps=0.25)
+        command = NaivePNavigator(config).compute_command(
+            robot_state(), GoalState(2.0, 0.0), 0.001
+        )
+
+        self.assertEqual(command.vx_mps, 0.25)
+
+    def test_naive_p_stops_inside_goal_tolerance(self) -> None:
+        command = NaivePNavigator(NaivePConfig()).compute_command(
+            robot_state(), GoalState(0.1, 0.0), 0.1
+        )
+
+        self.assertEqual(command.vx_mps, 0.0)
+        self.assertEqual(command.vy_mps, 0.0)
+        self.assertEqual(command.wz_radps, 0.0)
 
 
 if __name__ == "__main__":

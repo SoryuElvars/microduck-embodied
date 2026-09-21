@@ -110,6 +110,7 @@ MicroDuck
 - [第 1 周：官方 Locomotion 链路复现记录](./results/week01_official_locomotion_chain.md)
 - [第 2 周：Locomotion 自动评测与训练诊断](./results/week02/)
 - [第 3 周：底层模型选择与鲁棒性实验](./results/week03/)
+- [第 4 周：Classical PointGoal Benchmark](./results/week04/01_classical_pointgoal_benchmark/)
 
 ## 附录：官方 `microduck_rl` 速查表
 

@@ -1,4 +1,4 @@
-"""Constrained go-to-goal controller for the lightweight PointGoal pilot."""
+"""Classical go-to-goal controllers sharing the PointGoal Navigator contract."""
 
 from __future__ import annotations
 
@@ -37,6 +37,7 @@ class ConstrainedGoToGoalConfig:
     max_yaw_accel_radps2: float = 1.0
     heading_slowdown_floor: float = 0.2
     goal_tolerance_m: float = 0.2
+    arrival_hold_time_s: float = 0.5
 
     def validate(self) -> None:
         values = asdict(self)
@@ -50,6 +51,7 @@ class ConstrainedGoToGoalConfig:
             "max_forward_accel_mps2",
             "max_yaw_accel_radps2",
             "goal_tolerance_m",
+            "arrival_hold_time_s",
         )
         for name in positive:
             if values[name] <= 0:
@@ -62,6 +64,25 @@ class ConstrainedGoToGoalConfig:
             raise ValueError("heading_slowdown_floor must be between 0 and 1")
 
 
+@dataclass(frozen=True)
+class NaivePConfig:
+    """Plain proportional PointGoal baseline without smoothing or heuristics."""
+
+    distance_gain: float = 0.8
+    heading_gain: float = 1.2
+    max_forward_speed_mps: float = 0.25
+    max_yaw_rate_radps: float = 0.5
+    goal_tolerance_m: float = 0.2
+
+    def validate(self) -> None:
+        values = asdict(self)
+        if not all(math.isfinite(float(value)) for value in values.values()):
+            raise ValueError("controller parameters must be finite")
+        for name, value in values.items():
+            if value <= 0:
+                raise ValueError(f"{name} must be > 0")
+
+
 def _clamp(value: float, lower: float, upper: float) -> float:
     return max(lower, min(upper, value))
 
@@ -70,16 +91,15 @@ def _rate_limit(current: float, target: float, max_delta: float) -> float:
     return current + _clamp(target - current, -max_delta, max_delta)
 
 
-class ConstrainedGoToGoalNavigator:
-    """P controller with command bounds, curvature and slew-rate constraints."""
+class NaivePNavigator:
+    """Distance/heading P controller with only command bounds and goal tolerance."""
 
-    def __init__(self, config: ConstrainedGoToGoalConfig) -> None:
+    def __init__(self, config: NaivePConfig) -> None:
         config.validate()
         self.config = config
-        self._previous = VelocityCommand(0.0, 0.0, 0.0)
 
     def reset(self) -> None:
-        self._previous = VelocityCommand(0.0, 0.0, 0.0)
+        """The memoryless baseline has no state to clear."""
 
     def compute_command(
         self,
@@ -94,6 +114,56 @@ class ConstrainedGoToGoalNavigator:
 
         distance, heading_error = goal_error(robot, goal)
         if distance <= self.config.goal_tolerance_m:
+            return VelocityCommand(0.0, 0.0, 0.0)
+        return VelocityCommand(
+            vx_mps=_clamp(
+                self.config.distance_gain * distance,
+                0.0,
+                self.config.max_forward_speed_mps,
+            ),
+            vy_mps=0.0,
+            wz_radps=_clamp(
+                self.config.heading_gain * heading_error,
+                -self.config.max_yaw_rate_radps,
+                self.config.max_yaw_rate_radps,
+            ),
+        )
+
+
+class ConstrainedGoToGoalNavigator:
+    """P controller with command bounds, curvature and slew-rate constraints."""
+
+    def __init__(self, config: ConstrainedGoToGoalConfig) -> None:
+        config.validate()
+        self.config = config
+        self._previous = VelocityCommand(0.0, 0.0, 0.0)
+        self._goal_reached = False
+        self._inside_goal_time_s = 0.0
+
+    def reset(self) -> None:
+        self._previous = VelocityCommand(0.0, 0.0, 0.0)
+        self._goal_reached = False
+        self._inside_goal_time_s = 0.0
+
+    def compute_command(
+        self,
+        robot: RobotState,
+        goal: GoalState,
+        dt_s: float,
+    ) -> VelocityCommand:
+        if not robot.finite:
+            raise ValueError("cannot navigate from a non-finite RobotState")
+        if not math.isfinite(dt_s) or dt_s <= 0:
+            raise ValueError("dt_s must be finite and > 0")
+
+        distance, heading_error = goal_error(robot, goal)
+        inside_goal = distance <= self.config.goal_tolerance_m
+        self._inside_goal_time_s = (
+            self._inside_goal_time_s + dt_s if inside_goal else 0.0
+        )
+        if self._inside_goal_time_s + 1e-12 >= self.config.arrival_hold_time_s:
+            self._goal_reached = True
+        if inside_goal or self._goal_reached:
             target_vx = 0.0
             target_wz = 0.0
         else:

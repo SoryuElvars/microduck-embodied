@@ -210,6 +210,87 @@ viewer 中橙色球是目标点，半透明绿色圆盘是 `0.2 m` 成功区域�
 如果 WSL 无法弹出窗口，先在 WSL 中检查 `echo $DISPLAY` 是否有值；Windows 11 + WSLg
 通常无需额外 X Server。
 
+## Week 4 Classical PointGoal Benchmark v1
+
+第四周使用新的正式入口 `evaluation/pointgoal_benchmark.py`，不会读取或覆盖第三周 pilot
+结果。任务是位置型 PointGoal：输入等价于
+`[delta_x_body, delta_y_body] / [distance, heading_error]`，输出固定为
+`[vx, 0, wz]`；`heading_error` 表示当前朝向到目标点的误差，不要求最终目标 yaw。
+指定最终姿态属于以后单独扩展的 PoseGoal。
+
+版本化协议位于 `evaluation/pointgoal_protocols/week04_classical_v1.json`：
+
+- 200 个 `EpisodeSpec` 已由固定生成 seed 生成并保存，分别记录 reset seed、世界系
+  Start/Goal、timeout、成功半径、保持时间和 2 秒 post-arrival 观察时间；
+- Episode 清单状态为 `frozen`，并带独立 SHA-256；运行时不再随机采样场景；
+- Naive P 与 Constrained 参数已在 smoke/quick 通过后确认，协议整体状态为 `frozen`；
+  后续正式评测不得根据结果追调 Controller 参数；
+- 两个 Controller 共享 `0.25 m/s` 最大前进速度、`0.5 rad/s` 最大 yaw rate、
+  `0.15 m` Goal tolerance、同一个 `model_1500.onnx` 和完全相同的 Episode 顺序；
+  任务成功半径独立保持为 `0.20 m`，提供停止余量。
+
+检查生成器仍能精确复现冻结的 Episode 清单、选择和清单哈希：
+
+```bash
+cd ~/projects/microduck-embodied
+python3 evaluation/generate_pointgoal_protocol.py --check
+```
+
+静态校验协议、模型 SHA、官方 commit 与 ONNX 文件：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_benchmark.py \
+  --validate-only
+```
+
+headless smoke 使用冻结清单中最接近正前、左、右、后方的 4 个场景，对两个 Controller
+各运行一次，共 8 个 Controller-Episode。smoke 的导航时限缩短为 5 秒，只验证加载、
+reset/goal 注入、终止、post-arrival、记录和输出，不计入 quick 或 formal：
+
+```bash
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_benchmark.py \
+  --smoke
+```
+
+Viewer 每次只观看一个 Controller/Episode；当前四个冻结 smoke ID 为
+`front=w04e008 / left=w04e017 / right=w04e080 / behind=w04e072`：
+
+```bash
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_benchmark.py \
+  --viewer \
+  --controller naive_p \
+  --episode-id w04e008
+```
+
+快筛固定使用清单中的 10 个共享随机场景，对两个 Controller 各运行一次，共 20 个
+Controller-Episode：
+
+```bash
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_benchmark.py \
+  --quick
+```
+
+runner 每个 Episode 写入带 run signature 的进度文件并默认断点续跑。协议、场景清单、
+模型、官方 commit、评测代码或运行模式改变后，旧进度会被拒绝。smoke、quick 和以后
+人工冻结后的 full 分别写入
+`artifacts/week04/01_classical_pointgoal_benchmark/model_1500/<mode>/`，不会混合计数。
+
+汇总分别报告 Success、Final Distance、到达前 Path Length/Efficiency、Completion Time、
+Fall/Timeout/Invalid State、`vx/wz` 饱和比例、post-arrival 停止漂移和重新离开成功半径，
+并输出逐场景 `Constrained - Naive P` 配对差值。ONNX 运行仍没有训练 Reward。
+
+2026-09-21 只把共享 Goal tolerance 从 `0.20 m` 改为 `0.15 m` 后，使用同一组 10 个
+EpisodeSpec 重跑 quick：两个 Controller 都是 10/10 到达、0 fall、0 timeout、
+0 invalid state，post-arrival re-departure rate 均从 100% 降至 0%。两个 Controller
+及协议随后冻结，尚未运行 `--full`。阶段表格、单变量对照、配对差值和决策边界见
+`results/week04/01_classical_pointgoal_benchmark/README.md`。
+
 ## PointGoal Nominal holdout
 
 当某个 checkpoint 通过 25-Episode pilot 后，先验证这个固定 ONNX 的能力，再决定

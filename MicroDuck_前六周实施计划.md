@@ -609,16 +609,19 @@ Sim2Real-ready。
 
 ### 6.1 任务定义
 
-高层接收：
+第一版高层只接收位置型 PointGoal 的目标相对位置：
 
 $$
-[\Delta x,\ \Delta y,\ \Delta yaw]
+[\Delta x_{body},\ \Delta y_{body}]
 $$
+
+等价表示为 `[distance, heading_error]`。这里的 `heading_error` 是机器人当前朝向到
+目标点连线的误差，不是独立的最终目标姿态；指定最终 yaw 属于 PoseGoal，应另立协议。
 
 高层输出：
 
 $$
-[v_x,\ v_y,\ \omega]
+[v_x,\ 0,\ \omega]
 $$
 
 底层调用第三周冻结的 Locomotion Policy：
@@ -648,11 +651,11 @@ vy = 0
 
 建立清晰的数据和模块接口：
 
-- [ ] `RobotState`
-- [ ] `GoalState`
-- [ ] `VelocityCommand`
-- [ ] `Navigator`
-- [ ] `MujocoBackend`
+- [x] `RobotState`
+- [x] `GoalState`
+- [x] `VelocityCommand`
+- [x] `Navigator`
+- [x] `MujocoBackend`
 
 禁止让 Navigator 直接读取 `mj_data.qpos`。应采用：
 
@@ -695,44 +698,37 @@ Naive P 只增加必要的速度限幅，作为最简单、可解释的传统基
 
 在相同误差定义上增加：
 
-- [ ] Velocity Limit
-- [ ] Acceleration Limit
-- [ ] Goal Tolerance
-- [ ] 大航向误差时优先转向并抑制前进速度
-- [ ] 接近目标时连续减速
-- [ ] 到达目标后的停止保持
-- [ ] 指令低通或变化率限制
-- [ ] 超时、跌倒和失败判定
+- [x] Velocity Limit
+- [x] Acceleration Limit
+- [x] Goal Tolerance
+- [x] 大航向误差时优先转向并抑制前进速度
+- [x] 接近目标时连续减速
+- [x] 到达目标后的停止保持
+- [x] 指令低通或变化率限制
+- [x] 超时、跌倒和失败判定
 
 第四周首先回答：加入这些工程约束是否相对 Naive P 提高成功率、减少过冲并改善
 停止稳定性。
 
-### 6.5 底层策略替换对比
+### 6.5 本周底层策略边界
 
-如果第三周同时得到合格的官方模型和自训练模型，则保持 Constrained
-Go-to-Goal 的所有参数不变，只替换底层 ONNX：
-
-```text
-Constrained Go-to-Goal + Official Locomotion
-                       vs
-Constrained Go-to-Goal + Self-trained Locomotion
-```
-
-该实验用于隔离底层控制质量对导航的影响，报告名称应为
-`Official vs Self-trained Low-level Policy under the same Classical Navigator`。
-不得将它称为 Classical vs RL Navigator，因为两组使用的高层仍是传统控制器。
+第四周固定使用第三周经过同等选型流程后冻结的 `model_1500.onnx`，不重新训练底层、
+不接入 `vy`，也不加入尚未通过同等选型流程的官方底层模型。底层策略替换只能作为以后
+独立的单变量实验，不能混入 Naive P 与 Constrained Controller 的主对比。
 
 ### 6.6 评测任务
 
-开发阶段先使用固定 Goal：
+开发阶段先从冻结随机清单选择最接近以下方向的代表场景做 viewer/headless smoke：
 
-- [ ] 正前方
-- [ ] 左前方
-- [ ] 右前方
-- [ ] 后方
-- [ ] 不同初始 yaw
+- [x] 正前方
+- [x] 左前方
+- [x] 右前方
+- [x] 后方
+- [x] 不同初始 yaw
 
 逻辑通过后冻结 controller 参数，再运行：
+
+- [x] Naive P 与 Constrained 参数按 `week04_classical_v1` 冻结
 
 - [ ] 随机 Start Position
 - [ ] 随机 Start Yaw
@@ -743,7 +739,7 @@ Constrained Go-to-Goal + Self-trained Locomotion
 
 - [ ] Success Rate
 - [ ] Final Position Error
-- [ ] Final Yaw Error
+- [ ] Heading Error（只作过程诊断，不作为最终 yaw 成功条件）
 - [ ] Path Length / Path Efficiency
 - [ ] Completion Time
 - [ ] Fall Rate
@@ -755,7 +751,7 @@ Constrained Go-to-Goal + Self-trained Locomotion
 
 ### 6.7 导航系统轻量 OOD 验证
 
-第四周不重复第三周的完整四因素敏感性矩阵，只对最终 Classical Controller 选择
+第四周不重复第三周的完整四因素敏感性矩阵，只对胜出的 Classical Controller 选择
 三个代表条件运行小规模闭环测试：
 
 - [ ] Low Friction
@@ -767,12 +763,12 @@ Constrained Go-to-Goal + Self-trained Locomotion
 
 ### 本周交付物
 
-- [ ] Robot / Goal / Command / Navigator 抽象接口
-- [ ] Naive P Controller
-- [ ] Constrained Go-to-Goal Controller
-- [ ] PointGoal 自动评测脚本
+- [x] Robot / Goal / Command / Navigator 抽象接口
+- [x] Naive P Controller
+- [x] Constrained Go-to-Goal Controller
+- [x] PointGoal 自动评测脚本
 - [ ] 两种传统控制器的统一对比表
-- [ ] 必要时完成官方 vs 自训练底层模型替换对比
+- [x] 冻结同一个 `model_1500.onnx`，不混入底层模型替换变量
 - [ ] 200 个随机 Start/Goal 的冻结参数评测结果
 - [ ] 轨迹、位置误差和完成时间图表
 - [ ] 典型成功与失败案例
