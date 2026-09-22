@@ -776,7 +776,12 @@ def build_parser() -> argparse.ArgumentParser:
     modes.add_argument("--quick", action="store_true")
     modes.add_argument("--full", action="store_true")
     modes.add_argument("--viewer", action="store_true")
+    modes.add_argument("--viewer", action="store_true")
     parser.add_argument("--controller", choices=CONTROLLER_IDS, default="constrained")
+    parser.add_argument(
+        "--episode-id",
+        help="Viewer EpisodeSpec id; defaults to the frozen front smoke scenario.",
+    )
     parser.add_argument(
         "--episode-id",
         help="Viewer EpisodeSpec id; defaults to the frozen front smoke scenario.",
@@ -852,6 +857,72 @@ def main(argv: Sequence[str] | None = None) -> int:
         except KeyboardInterrupt:
             print("viewer interrupted")
         return 0
+
+        if args.viewer:
+            selected_ids = tuple(args.condition_ids or ())
+            if len(selected_ids) != 1:
+                parser.error("--viewer requires exactly one --condition")
+
+            condition_id = selected_ids[0]
+            if condition_id not in protocol.condition_map:
+                parser.error(f"unknown OOD condition: {condition_id!r}")
+            condition = protocol.condition_map[condition_id]
+
+            episode_id = (
+                args.episode_id
+                or protocol.base_protocol.smoke_episode_ids["front"]
+            )
+            if episode_id not in protocol.base_protocol.episode_map:
+                parser.error(f"unknown EpisodeSpec id: {episode_id!r}")
+            spec = protocol.base_protocol.episode_map[episode_id]
+
+            viewer_dir = (
+                output_dir
+                / "viewer"
+                / condition.condition_id
+                / protocol.controller_id
+                / episode_id
+            )
+            backend = MujocoBackend(
+                microduck_rl_root=microduck_rl_root,
+                policy_path=policy_path,
+                metadata_path=config_path,
+                output_dir=viewer_dir,
+                perturbation=condition.to_runtime_perturbation(),
+            )
+            backend.validate()
+            backend.reset(
+                spec.simulation_reset_seed,
+                protocol.base_protocol.initial_state_mode,
+            )
+            print(
+                "viewer runtime perturbation: "
+                f"{json.dumps(backend.perturbation_record, ensure_ascii=False)}"
+            )
+
+            try:
+                with backend.open_viewer() as viewer:
+                    result = run_episode(
+                        backend=backend,
+                        protocol=protocol.base_protocol,
+                        spec=spec,
+                        controller_id=protocol.controller_id,
+                        output_dir=viewer_dir,
+                        viewer=viewer,
+                        realtime=True,
+                        reset_backend=False,
+                    )
+                    print(
+                        f"viewer result: {result['termination_reason']}, "
+                        f"final_distance={result['final_distance_m']:.3f} m"
+                    )
+                    print("Episode finished; close the MuJoCo viewer window to exit")
+                    while viewer.is_running():
+                        viewer.sync()
+                        time.sleep(0.02)
+            except KeyboardInterrupt:
+                print("viewer interrupted")
+            return 0
 
     mode = "smoke" if args.smoke else "quick" if args.quick else "full"
     try:

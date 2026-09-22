@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "benchmark_kind": "classical_pointgoal_winner_ood_v1_processed",
+  "protocol_id": "week04_classical_ood_v1",
+  "protocol_status": "frozen",
+  "evaluation_status": "all_planned_conditions_full",
+  "policy_sha256": "533b820c13b3782f2c35bfaa7171c29b095d1b5c121c0fe5d8bef80ab37e785d",
+  "microduck_rl_commit": "062921c4c9f65107e391df042f8de424136213c3",
+  "source_summaries": {
+    "corrected_low_friction_quick": {
+      "path": "artifacts/week04/02_classical_pointgoal_ood/model_1500_constrained_friction_readback/quick/summary/classical_pointgoal_ood_quick_model_1500.json",
+      "sha256": "7f106064dc27553ca7c6f0a08431a98854818ed75b81e1f37bb932a62d9b74a6"
+    },
+    "corrected_low_friction_full": {
+      "path": "artifacts/week04/02_classical_pointgoal_ood/model_1500_constrained_friction_readback/full/summary/classical_pointgoal_ood_full_model_1500.json",
+      "sha256": "ae1dd05e3eabe626bcb4e2e933ba3bdcfdad96854e8ef2c16a9f4d4f1a651a4a"
+    },
+    "delay_40ms_full": {
+      "path": "artifacts/week04/02_classical_pointgoal_ood/model_1500_constrained_delay40_full/full/summary/classical_pointgoal_ood_full_model_1500.json",
+      "sha256": "56061a0148848f4e934f2e873cc501d7fedb2674b89a1e7ca28fad21f24039cb"
+    },
+    "motor_80pct_full": {
+      "path": "artifacts/week04/02_classical_pointgoal_ood/model_1500_constrained_motor80_full/full/summary/classical_pointgoal_ood_full_model_1500.json",
+      "sha256": "f10d6310329cc82d3f25248f272522f22c7ff018e1b42f6bb3342bce764d4ad4"
+    }
+  },
+  "excluded_results": {
+    "early_low_friction_quick": "Excluded: only feet were changed while floor remained 1.0, so the effective same-priority contact friction remained 1.0."
+  },
+  "full_conditions": {
+    "low_friction_0p3": {
+      "episode_count": 25,
+      "applied_friction": {
+        "floor": 0.3,
+        "left_foot_collision": 0.3,
+        "right_foot_collision": 0.3
+      },
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "timeout_rate": 0.0,
+      "invalid_state_rate": 0.0,
+      "post_arrival_redeparture_rate": 0.0,
+      "median_completion_time_s": 12.98,
+      "median_path_efficiency": 0.8684904816405952,
+      "median_post_arrival_stop_drift_m": 0.019540818641391882,
+      "paired_median_delta_ood_minus_nominal": {
+        "completion_time_s": 0.120000000000001,
+        "path_efficiency": 0.12655282850527405,
+        "post_arrival_stop_drift_m": 0.008374242340380547
+      }
+    },
+    "delay_40ms": {
+      "episode_count": 25,
+      "actuator_delay_steps": 2,
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "timeout_rate": 0.0,
+      "invalid_state_rate": 0.0,
+      "post_arrival_redeparture_rate": 0.0,
+      "median_completion_time_s": 8.52,
+      "median_path_efficiency": 0.7522156652930356,
+      "median_post_arrival_stop_drift_m": 0.03943338803568365,
+      "paired_median_delta_ood_minus_nominal": {
+        "completion_time_s": -3.4799999999999986,
+        "path_efficiency": 0.008546313827984209,
+        "post_arrival_stop_drift_m": 0.027546716760303614
+      }
+    },
+    "motor_80pct": {
+      "episode_count": 25,
+      "bam_voltage_scale": 0.8,
+      "bam_vin": 5.920000000000001,
+      "success_rate": 1.0,
+      "fall_rate": 0.0,
+      "timeout_rate": 0.0,
+      "invalid_state_rate": 0.0,
+      "post_arrival_redeparture_rate": 0.0,
+      "median_completion_time_s": 13.22,
+      "median_path_efficiency": 0.7341441162477408,
+      "median_post_arrival_stop_drift_m": 0.025348176697073413,
+      "paired_median_delta_ood_minus_nominal": {
+        "completion_time_s": 0.6400000000000006,
+        "path_efficiency": -0.012793229285683494,
+        "post_arrival_stop_drift_m": 0.014117782891482902
+      }
+    }
+  },
+  "non_pooling_rule": "Different conditions and quick/full stages are reported separately; their episode counts and success rates are never pooled."
+}

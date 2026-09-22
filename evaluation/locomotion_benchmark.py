@@ -36,6 +36,7 @@ BAM_VIN = 7.4
 BAM_VIN_DROP_GAIN = 0.1
 FALL_TILT_DEG = 70.0
 INITIAL_STATE_MODES = {"fixed", "official_reset"}
+FRICTION_GEOM_NAMES = ("floor", "left_foot_collision", "right_foot_collision")
 OFFICIAL_RESET_RANGES = {
     "x": (-0.5, 0.5),
     "y": (-0.5, 0.5),
@@ -303,6 +304,7 @@ class Runtime:
     qvel_adr: int
     control_dt: float
     perturbation: RuntimePerturbation
+    applied_friction: dict[str, float] | None
     observation_rng: Any
 
 
@@ -389,6 +391,7 @@ def create_runtime(
     episode_seed: int,
     initial_state_mode: str,
     perturbation: RuntimePerturbation | None = None,
+    applied_friction: dict[str, float] | None = None,
 ) -> tuple[Runtime, dict[str, float]]:
     """Create a fresh CPU MuJoCo + BAM + ONNX runtime."""
 
@@ -432,12 +435,24 @@ def create_runtime(
         model.body_mass[trunk_id] *= perturbation.trunk_mass_inertia_scale
         model.body_inertia[trunk_id] *= perturbation.trunk_mass_inertia_scale
         mujoco.mj_setConst(model, data)
+    applied_friction: dict[str, float] | None = None
     if perturbation.foot_friction is not None:
-        for geom_name in ("left_foot_collision", "right_foot_collision"):
-            geom_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, geom_name)
+        friction_geom_ids: dict[str, int] = {}
+        for geom_name in FRICTION_GEOM_NAMES:
+            geom_id = mujoco.mj_name2id(
+                model,
+                mujoco.mjtObj.mjOBJ_GEOM,
+                geom_name,
+            )
             if geom_id < 0:
-                raise ValueError(f"scene has no required foot geom: {geom_name}")
+                raise ValueError(f"scene has no required friction geom: {geom_name}")
+            friction_geom_ids[geom_name] = geom_id
             model.geom_friction[geom_id, 0] = perturbation.foot_friction
+
+        applied_friction = {
+            geom_name: float(model.geom_friction[geom_id, 0])
+            for geom_name, geom_id in friction_geom_ids.items()
+        }
     policy = official.PolicyInference(
         model,
         data,
@@ -505,6 +520,7 @@ def create_runtime(
             control_dt=DECIMATION * model.opt.timestep,
             perturbation=perturbation,
             observation_rng=np.random.default_rng(episode_seed + 1_000_003),
+            applied_friction=applied_friction,
         ),
         initial_state,
     )

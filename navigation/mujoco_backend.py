@@ -149,9 +149,13 @@ class MujocoBackend:
 
     @property
     def perturbation_record(self) -> dict[str, Any]:
-        return self._perturbation.as_record(
+        record = self._perturbation.as_record(
             self._benchmark_config.microduck_rl_root
         )
+        record["applied_friction"] = (
+            None if self._runtime is None else self._runtime.applied_friction
+        )
+        return record
 
     def reset(self, episode_seed: int, initial_state_mode: str) -> RobotState:
         self.validate()

@@ -730,21 +730,21 @@ Naive P 只增加必要的速度限幅，作为最简单、可解释的传统基
 
 - [x] Naive P 与 Constrained 参数按 `week04_classical_v1` 冻结
 
-- [ ] 随机 Start Position
-- [ ] 随机 Start Yaw
-- [ ] 随机 Goal Position
-- [ ] 至少 200 个共享 Episode
+- [x] 随机 Start Position
+- [x] 随机 Start Yaw
+- [x] 随机 Goal Position
+- [x] 至少 200 个共享 Episode
 
 统计：
 
-- [ ] Success Rate
-- [ ] Final Position Error
-- [ ] Heading Error（只作过程诊断，不作为最终 yaw 成功条件）
-- [ ] Path Length / Path Efficiency
-- [ ] Completion Time
-- [ ] Fall Rate
-- [ ] Timeout Rate
-- [ ] 到达后的停止漂移
+- [x] Success Rate
+- [x] Final Position Error
+- [x] Heading Error（只作过程诊断，不作为最终 yaw 成功条件）
+- [x] Path Length / Path Efficiency
+- [x] Completion Time
+- [x] Fall Rate
+- [x] Timeout Rate
+- [x] 到达后的停止漂移
 
 两种传统控制器及不同底层模型组合必须使用完全相同的 Start/Goal、seeds、终止
 条件和成功门槛。
@@ -767,9 +767,9 @@ Naive P 只增加必要的速度限幅，作为最简单、可解释的传统基
 - [x] Naive P Controller
 - [x] Constrained Go-to-Goal Controller
 - [x] PointGoal 自动评测脚本
-- [ ] 两种传统控制器的统一对比表
+- [x] 两种传统控制器的统一对比表
 - [x] 冻结同一个 `model_1500.onnx`，不混入底层模型替换变量
-- [ ] 200 个随机 Start/Goal 的冻结参数评测结果
+- [x] 200 个随机 Start/Goal 的冻结参数评测结果
 - [ ] 轨迹、位置误差和完成时间图表
 - [ ] 典型成功与失败案例
 - [ ] 随机 Start/Goal 自主导航视频

@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "protocol_id": "week04_classical_ood_v1",
+  "protocol_status": "frozen",
+  "description": "Lightweight one-factor-at-a-time OOD evaluation for the winning frozen Week 4 Constrained controller.",
+  "base_protocol_path": "evaluation/pointgoal_protocols/week04_classical_v1.json",
+  "base_protocol_sha256": "69db75465d5958f6c41ff49691cec0ff849cc6c5521ae4c28264f2806aec5be7",
+  "nominal_full_summary_path": "artifacts/week04/01_classical_pointgoal_benchmark/model_1500/full/summary/pointgoal_full_model_1500.json",
+  "nominal_full_summary_sha256": "36d8de1c1146d38a1f772d415d6d2b41f67e927d723e8e8607b04a9b23528024",
+  "controller_id": "constrained",
+  "conditions": [
+    {
+      "id": "low_friction_0p3",
+      "factor": "foot_friction",
+      "foot_friction": 0.3
+    },
+    {
+      "id": "delay_40ms",
+      "factor": "actuator_delay",
+      "actuator_delay_ms": 40
+    },
+    {
+      "id": "motor_80pct",
+      "factor": "motor_strength_proxy",
+      "bam_voltage_scale": 0.8
+    }
+  ],
+  "selections": {
+    "smoke": [
+      "w04e008"
+    ],
+    "quick": [
+      "w04e000",
+      "w04e001",
+      "w04e002",
+      "w04e003",
+      "w04e004",
+      "w04e005",
+      "w04e006",
+      "w04e007",
+      "w04e008",
+      "w04e009"
+    ],
+    "full": [
+      "w04e010",
+      "w04e011",
+      "w04e012",
+      "w04e013",
+      "w04e014",
+      "w04e015",
+      "w04e016",
+      "w04e017",
+      "w04e018",
+      "w04e019",
+      "w04e020",
+      "w04e021",
+      "w04e022",
+      "w04e023",
+      "w04e024",
+      "w04e025",
+      "w04e026",
+      "w04e027",
+      "w04e028",
+      "w04e029",
+      "w04e030",
+      "w04e031",
+      "w04e032",
+      "w04e033",
+      "w04e034"
+    ]
+  },
+  "smoke_timeout_s": 5.0,
+  "quick_gate": {
+    "minimum_success_rate": 1.0,
+    "maximum_fall_rate": 0.0,
+    "maximum_timeout_rate": 0.0,
+    "maximum_invalid_state_rate": 0.0,
+    "maximum_post_arrival_redeparture_rate": 0.0,
+    "note": "Quick is a strict implementation and safety gate; its episodes are not pooled into formal OOD results."
+  },
+  "full_gate": {
+    "minimum_success_rate": 1.0,
+    "maximum_fall_rate": 0.0,
+    "maximum_timeout_rate": 0.0,
+    "maximum_invalid_state_rate": 0.0,
+    "maximum_post_arrival_redeparture_rate": 0.0,
+    "note": "Each OOD condition is evaluated independently against the paired nominal episodes; conditions are never pooled."
+  }
+}

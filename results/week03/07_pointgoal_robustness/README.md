@@ -2,21 +2,24 @@
 
 ## 结论
 
-本项实验按“代表性 OOD 快筛 → actuator delay 阈值定位 → 冻结完整矩阵”推进，最终
-完成 `14 条件 × 25 Episode = 350 Episode` 的完整 PointGoal 仿真鲁棒性评测。
+本项实验按“代表性 OOD 快筛 → actuator delay 阈值定位 → 冻结完整矩阵”推进。初版
+`pointgoal_ood_v1` 的 Ground friction 注入只修改双足；floor 保持 `1.0` 时，MuJoCo
+同优先级接触取较大摩擦值，因此 `0.3/0.5/0.7/0.9` 的实际接触摩擦仍为 `1.0`。旧四行
+摩擦结果不再作为低摩擦证据保留。
 
-`model_1500.onnx` 在 Nominal、全部 Ground friction、BAM voltage proxy、backlash
-以及 delay `20/40 ms` 条件下均为 `25/25` 到达、0 跌倒、0 超时。只有 delay
-`60/80 ms` 未通过完整 Gate：
+2026-09-22 已用独立冻结的 `pointgoal_contact_friction_v2` 重跑 Nominal 加五个接触摩擦
+条件，完成 `6 条件 × 25 Episode = 150 Episode`。每个摩擦系数同时写入并从 MuJoCo
+运行时读回 floor、左脚和右脚。修正后，`model_1500.onnx` 在 Nominal、全部接触摩擦、
+BAM voltage proxy、backlash 以及 delay `20/40 ms` 条件下均为 `25/25` 到达、0 跌倒、
+0 超时。只有 delay `60/80 ms` 未通过完整 Gate：
 
 - `60 ms`：`8/25` 到达、`17/25` 跌倒；
 - `80 ms`：`0/25` 到达、`25/25` 跌倒。
 
-因此 14 个条件中有 12 个通过，硬任务/安全失效阈值位于 `(40,60] ms`。完整矩阵
-没有发现第二个独立于延迟的任务失败因素，但这只能证明当前冻结仿真扰动范围内的
-PointGoal OOD 表现。项目没有实机，本结果不构成 Sim2Real 或真机鲁棒性结论。
-
-![完整 PointGoal 鲁棒性矩阵](figures/pointgoal_robustness_full.png)
+因此修正后的 14 条件证据中仍有 12 条通过，硬任务/安全失效阈值位于 `(40,60] ms`。
+接触摩擦 v2 没有出现任务或安全失败，但不同摩擦系数会改变轨迹质量；这只能证明当前
+冻结仿真扰动范围内的 PointGoal OOD 表现。项目没有实机，本结果不构成 Sim2Real 或
+真机鲁棒性结论。
 
 ## 评测协议
 
@@ -40,7 +43,8 @@ artifacts/week03/08_pointgoal_robustness/model_1500/
 ```
 
 这里的 `08` 是已有本地 artifact 路径，为避免移动约 350 MB 原始数据而保留；Git 中的
-实验报告已经统一归入 Week03/07。
+实验报告已经统一归入 Week03/07。接触摩擦重评测位于其独立子目录
+`contact_friction_v2/`，不覆盖旧 v1 raw artifacts。
 
 ## 第一阶段：代表性 OOD 快筛
 
@@ -50,15 +54,14 @@ artifacts/week03/08_pointgoal_robustness/model_1500/
 | 条件 | 到达 | 跌倒 | 中位 Path Efficiency | `vx` RMSE | `wz` RMSE | Safety Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Nominal | 5/5 | 0/5 | 0.805 | 0.123 | 0.489 | 通过 |
-| Friction 0.3 | 5/5 | 0/5 | 0.805 | 0.123 | 0.489 | 通过 |
+| Contact friction 0.3 v2 | 5/5 | 0/5 | 0.897 | 0.127 | 0.379 | 通过 |
 | Delay 60 ms | 2/5 | 3/5 | 0.583 | 0.177 | 0.952 | **未通过** |
 | Motor proxy 80% | 5/5 | 0/5 | 0.799 | 0.126 | 0.421 | 通过 |
 | Backlash 2 deg | 5/5 | 0/5 | 0.953 | 0.089 | 0.414 | 通过 |
 
-![PointGoal OOD 快筛](figures/pointgoal_ood_quick_sensitivity.png)
-
 快筛把 `60 ms` delay 定位为首要安全缺口，但每条件只有五个 Episode，不能据此判断
-稳定的方向性规律，也不能把其他三个代表条件的通过写成完整鲁棒性结论。
+稳定的方向性规律。此处的 Contact friction 0.3 已替换为修正后的 v2 quick；其余旧
+friction v1 quick 数据只保留在 artifacts 中，不作为低摩擦结论。
 
 ## 第二阶段：Actuator delay 阈值
 
@@ -87,11 +90,11 @@ artifacts/week03/08_pointgoal_robustness/model_1500/
 | 条件 | 到达 | 跌倒 | 中位 Path Efficiency | `vx` RMSE | `wz` RMSE | Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Nominal | 25/25 | 0/25 | 0.806 | 0.123 | 0.486 | 通过 |
-| Friction 0.3 | 25/25 | 0/25 | 0.806 | 0.123 | 0.486 | 通过* |
-| Friction 0.5 | 25/25 | 0/25 | 0.806 | 0.123 | 0.486 | 通过* |
-| Friction 0.7 | 25/25 | 0/25 | 0.806 | 0.123 | 0.486 | 通过* |
-| Friction 0.9 | 25/25 | 0/25 | 0.806 | 0.123 | 0.486 | 通过* |
-| Friction 1.1 | 25/25 | 0/25 | 0.812 | 0.120 | 0.483 | 通过 |
+| Contact friction 0.3 v2 | 25/25 | 0/25 | 0.897 | 0.127 | 0.379 | 通过 |
+| Contact friction 0.5 v2 | 25/25 | 0/25 | 0.757 | 0.134 | 0.547 | 通过 |
+| Contact friction 0.7 v2 | 25/25 | 0/25 | 0.781 | 0.130 | 0.515 | 通过 |
+| Contact friction 0.9 v2 | 25/25 | 0/25 | 0.796 | 0.125 | 0.492 | 通过 |
+| Contact friction 1.1 v2 | 25/25 | 0/25 | 0.812 | 0.120 | 0.483 | 通过 |
 | Delay 20 ms | 25/25 | 0/25 | 0.867 | 0.077 | 0.289 | 通过 |
 | Delay 40 ms | 25/25 | 0/25 | 0.852 | 0.068 | 0.270 | 通过 |
 | Delay 60 ms | 8/25 | 17/25 | 0.570 | 0.202 | 1.017 | **未通过** |
@@ -106,10 +109,23 @@ artifacts/week03/08_pointgoal_robustness/model_1500/
 
 ### Ground friction 的解释边界
 
-Friction `0.3/0.5/0.7/0.9` 的全部 `100` 条对应 CSV 与 Nominal 逐字节一致。运行时
-注入已经生效，但当前速度、平地和短距离目标没有进入摩擦受限滑移状态。因此这些条件
-只能记为“当前协议未触发退化”，不能声称已经证明对真实低摩擦具有泛化能力。
-`friction=1.1` 的轨迹与 Nominal 不同，但仍全部通过。
+初版 `pointgoal_ood_v1` 的 `friction_0p3--0p9` 全部 `100` 条 CSV 与 Nominal 逐字节
+一致，不是“当前协议未触发摩擦受限”的有效实验发现，而是注入范围不完整：只改足端、
+floor 仍为 `1.0`，同优先级接触的有效摩擦保持为 `max(foot, floor)=1.0`。旧
+`friction_1p1` 会变化，是因为 `max(1.1, 1.0)=1.1`；它也不再与旧低摩擦行一起解释。
+
+修正后的 `pointgoal_contact_friction_v2` 对每个系数同时写入 floor、左右足端，并在完整
+summary 的 `runtime.applied_friction` 中读回三个相同值。`0.3/0.5/0.7/0.9/1.1` 各自
+25/25 到达、0 fall、0 timeout、0 invalid state，所有 full gate 通过；但 Path Efficiency
+为 `0.897/0.757/0.781/0.796/0.812`，呈非单调变化。因此本协议支持“这些接触摩擦档位
+下未发生任务或安全失败”，不支持“摩擦越低越好/越差”的单调因果结论，也不能外推到
+真实地面材料、坡度或更激烈动作。
+
+v2 protocol SHA-256 为
+`f46ddae3d7858717f70f2621c317ba68e2b844a22746cf22c65bb61a57077479`；full source summary
+SHA-256 为
+`5766728f544072dc6ed36facac2fb7d1de7b4d7747b9b6d11057af50846e5034`。原始 v2 结果位于
+`artifacts/week03/08_pointgoal_robustness/model_1500/contact_friction_v2/full/`。
 
 ### Motor proxy 与 backlash 的解释边界
 
@@ -201,7 +217,7 @@ Sim2Real-ready。
    Sim2Real-ready。
 3. 若以后独立增强下层鲁棒性，最有证据的单变量候选是 action-delay randomization；
    保持 yaw-only Reward、command sampling 和 curriculum 其余因素不变，并复跑同一
-   350-Episode 矩阵与 Nominal Gate。
+   接触摩擦 v2 与 delay Gate。
 4. 第二层150-Episode正式矩阵已通过；至此关闭第三周的有界鲁棒性扩展，进入
    Week 4，不继续无证据增加仿真扰动种类。
 
@@ -210,5 +226,6 @@ Sim2Real-ready。
 - `summaries/pointgoal_ood_quick_model_1500_processed.json`
 - `summaries/pointgoal_delay_threshold_model_1500_processed.json`
 - `summaries/pointgoal_robustness_full_model_1500_processed.json`
+- `summaries/pointgoal_contact_friction_v2_full_model_1500_processed.json`
 - `summaries/pointgoal_sensor_mass_quick_model_1500_processed.json`
 - `summaries/pointgoal_sensor_mass_full_model_1500_processed.json`

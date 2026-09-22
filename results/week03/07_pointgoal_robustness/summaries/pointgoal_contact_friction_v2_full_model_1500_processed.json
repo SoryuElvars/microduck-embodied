@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "benchmark_kind": "pointgoal_contact_friction_reassessment_v2",
+  "protocol_path": "evaluation/robustness_configs/pointgoal_contact_friction_v2.json",
+  "protocol_sha256": "f46ddae3d7858717f70f2621c317ba68e2b844a22746cf22c65bb61a57077479",
+  "protocol_status": "frozen",
+  "source_summary_path": "artifacts/week03/08_pointgoal_robustness/model_1500/contact_friction_v2/full/summary/pointgoal_robustness_full_model_1500.json",
+  "source_summary_sha256": "5766728f544072dc6ed36facac2fb7d1de7b4d7747b9b6d11057af50846e5034",
+  "run_signature": "f8df770dd90b1f9ab1eb47c68dd7c5dffd8bc334af1745c05e1937fa1bb2ae4c",
+  "policy_sha256": "533b820c13b3782f2c35bfaa7171c29b095d1b5c121c0fe5d8bef80ab37e785d",
+  "microduck_rl_commit": "062921c4c9f65107e391df042f8de424136213c3",
+  "goal_set": "evaluation/goal_sets/pointgoal_pilot_5.json",
+  "episodes_per_condition": 25,
+  "conditions": [
+    {
+      "id": "nominal",
+      "runtime_applied_friction": null,
+      "success": 25,
+      "fall": 0,
+      "timeout": 0,
+      "invalid_state": 0,
+      "median_final_distance_m": 0.18838777463907683,
+      "median_path_efficiency_successes": 0.8062280908968473,
+      "median_tracking_rmse_vx_mps": 0.122833,
+      "median_tracking_rmse_wz_radps": 0.485561,
+      "gate_passed": true
+    },
+    {
+      "id": "contact_friction_0p3",
+      "runtime_applied_friction": {"floor": 0.3, "left_foot_collision": 0.3, "right_foot_collision": 0.3},
+      "success": 25,
+      "fall": 0,
+      "timeout": 0,
+      "invalid_state": 0,
+      "median_final_distance_m": 0.1918772756145305,
+      "median_path_efficiency_successes": 0.8973543244855549,
+      "median_tracking_rmse_vx_mps": 0.1274932446388614,
+      "median_tracking_rmse_wz_radps": 0.37883273797950984,
+      "gate_passed": true
+    },
+    {
+      "id": "contact_friction_0p5",
+      "runtime_applied_friction": {"floor": 0.5, "left_foot_collision": 0.5, "right_foot_collision": 0.5},
+      "success": 25,
+      "fall": 0,
+      "timeout": 0,
+      "invalid_state": 0,
+      "median_final_distance_m": 0.1909913257931995,
+      "median_path_efficiency_successes": 0.7568631939274886,
+      "median_tracking_rmse_vx_mps": 0.13400211025829872,
+      "median_tracking_rmse_wz_radps": 0.5474795976144843,
+      "gate_passed": true
+    },
+    {
+      "id": "contact_friction_0p7",
+      "runtime_applied_friction": {"floor": 0.7, "left_foot_collision": 0.7, "right_foot_collision": 0.7},
+      "success": 25,
+      "fall": 0,
+      "timeout": 0,
+      "invalid_state": 0,
+      "median_final_distance_m": 0.18718141016084813,
+      "median_path_efficiency_successes": 0.780601413801968,
+      "median_tracking_rmse_vx_mps": 0.12986368845150204,
+      "median_tracking_rmse_wz_radps": 0.515093782478903,
+      "gate_passed": true
+    },
+    {
+      "id": "contact_friction_0p9",
+      "runtime_applied_friction": {"floor": 0.9, "left_foot_collision": 0.9, "right_foot_collision": 0.9},
+      "success": 25,
+      "fall": 0,
+      "timeout": 0,
+      "invalid_state": 0,
+      "median_final_distance_m": 0.18946140097201264,
+      "median_path_efficiency_successes": 0.7960946725031016,
+      "median_tracking_rmse_vx_mps": 0.12491986300476601,
+      "median_tracking_rmse_wz_radps": 0.4922709851450228,
+      "gate_passed": true
+    },
+    {
+      "id": "contact_friction_1p1",
+      "runtime_applied_friction": {"floor": 1.1, "left_foot_collision": 1.1, "right_foot_collision": 1.1},
+      "success": 25,
+      "fall": 0,
+      "timeout": 0,
+      "invalid_state": 0,
+      "median_final_distance_m": 0.18881314761865228,
+      "median_path_efficiency_successes": 0.8124897196943929,
+      "median_tracking_rmse_vx_mps": 0.12017336684414891,
+      "median_tracking_rmse_wz_radps": 0.4832284206024773,
+      "gate_passed": true
+    }
+  ],
+  "supersedes": {
+    "source_protocol": "evaluation/robustness_configs/pointgoal_ood_v1.json",
+    "scope": "Only the v1 friction_0p3 through friction_1p1 interpretation.",
+    "reason": "The old runtime injection changed feet only. With floor at 1.0 and equal geom priority, MuJoCo used the element-wise maximum, so low-friction contact was not created."
+  },
+  "interpretation_boundary": "All five corrected contact-friction conditions pass this frozen PointGoal task and safety gate. Their non-monotonic trajectory metrics do not establish a monotonic friction-performance relationship or real-world generalization."
+}

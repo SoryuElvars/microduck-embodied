@@ -9,6 +9,7 @@ from pathlib import Path
 from evaluation.locomotion_benchmark import (
     DEFAULT_COMMAND_SET,
     PROJECT_ROOT,
+    FRICTION_GEOM_NAMES,
     RuntimePerturbation,
     load_command_set,
     path_for_record,
@@ -407,6 +408,12 @@ class CommandSetTests(unittest.TestCase):
         self.assertLessEqual(first["z"], 0.13)
         self.assertGreaterEqual(first["yaw"], -math.pi)
         self.assertLessEqual(first["yaw"], math.pi)
+
+    def test_low_friction_targets_floor_and_both_feet(self) -> None:
+        self.assertEqual(
+            FRICTION_GEOM_NAMES,
+            ("floor", "left_foot_collision", "right_foot_collision")
+        )
 
 
 if __name__ == "__main__":

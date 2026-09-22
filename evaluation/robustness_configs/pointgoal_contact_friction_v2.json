@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "protocol_status": "frozen",
+  "description": "Contact-friction reassessment for the frozen model_1500 ONNX policy and frozen Classical Navigator. Each friction value is applied at runtime to floor, left_foot_collision, and right_foot_collision; the summary records MuJoCo readback values.",
+  "goal_set_path": "evaluation/goal_sets/pointgoal_pilot_5.json",
+  "output_subdir": "contact_friction_v2",
+  "quick": {
+    "episodes_per_goal": 1,
+    "condition_ids": [
+      "nominal",
+      "contact_friction_0p3",
+      "contact_friction_0p5",
+      "contact_friction_0p7",
+      "contact_friction_0p9",
+      "contact_friction_1p1"
+    ],
+    "safety_gate": {
+      "maximum_fall_rate": 0.0,
+      "maximum_invalid_state_rate": 0.0,
+      "note": "The 30-episode quick screen checks all contact-friction injections. Conditions remain separate and are not pooled."
+    }
+  },
+  "full": {
+    "episodes_per_goal": 5,
+    "condition_ids": [
+      "nominal",
+      "contact_friction_0p3",
+      "contact_friction_0p5",
+      "contact_friction_0p7",
+      "contact_friction_0p9",
+      "contact_friction_1p1"
+    ],
+    "acceptance_gate": {
+      "minimum_overall_success_rate": 0.8,
+      "minimum_per_goal_success_rate": 0.6,
+      "maximum_fall_rate": 0.0,
+      "maximum_timeout_rate": 0.2,
+      "maximum_invalid_state_rate": 0.0,
+      "maximum_absolute_mirror_success_rate_gap": 0.4,
+      "note": "All criteria are evaluated independently per condition. Do not pool contact-friction conditions into the nominal success rate."
+    }
+  },
+  "conditions": [
+    {"id": "nominal", "factor": "nominal"},
+    {"id": "contact_friction_0p3", "factor": "foot_friction", "foot_friction": 0.3},
+    {"id": "contact_friction_0p5", "factor": "foot_friction", "foot_friction": 0.5},
+    {"id": "contact_friction_0p7", "factor": "foot_friction", "foot_friction": 0.7},
+    {"id": "contact_friction_0p9", "factor": "foot_friction", "foot_friction": 0.9},
+    {"id": "contact_friction_1p1", "factor": "foot_friction", "foot_friction": 1.1}
+  ]
+}

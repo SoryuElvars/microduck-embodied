@@ -1,4 +1,4 @@
-# Week 4 Classical PointGoal Benchmark v1：开发与快筛记录
+# Week 4 Classical PointGoal Benchmark v1：正式评测记录
 
 ## 当前结论
 
@@ -7,13 +7,15 @@ Classical PointGoal Benchmark v1 的代码、冻结场景清单、双 Controller
 `goal_tolerance` 从 `0.20 m` 改为 `0.15 m`；成功半径仍为 `0.20 m`，模型、场景、seeds、
 增益、速度上限、timeout 和 Gate 均未改变。
 
-2026-09-21 完成同一组 10 个随机场景 × 2 Controller quick screen。两者均为 10/10
-到达、0 跌倒、0 超时、0 invalid state，且 post-arrival re-departure rate 从此前的
-100% 降为 0%。这说明 `0.15 m` 停止阈值为制动和步态漂移提供了足够余量，解决了本轮
-quick 暴露的重新出圈问题。
+2026-09-21 完成同一组 10 个随机场景 × 2 Controller quick screen，两个 Controller
+均通过 safety Gate。参数冻结后，2026-09-22 完成 200 个共享随机场景 × 2 Controller，
+共 400 个正式 Controller-Episode。
 
-这仍是 quick 证据，不是正式 Controller 胜负结论。quick 通过后，两个 Controller
-参数和协议已冻结；尚未运行 200 个共享场景 × 2 Controller 的 `--full`。
+正式结果中，Naive P 为 198/200 成功、2 timeout；Constrained 为 200/200 成功。两者
+均为 0 fall、0 invalid state、0 post-arrival re-departure。Constrained 同时降低了路径长度、
+提高了 Path Efficiency，并大幅减少 `vx/wz` 饱和和到达后的净位移，因此选为第四周胜出
+Classical Controller。Naive P 的优势是多数共同成功场景完成更快，且最终停得约 1 cm
+更靠近目标；这些 trade-off 在下文保留，不把 200/200 简化成所有指标都更优。
 
 ## 冻结输入与版本
 
@@ -28,6 +30,7 @@ quick 暴露的重新出圈问题。
 | Policy SHA-256 | `533b820c13b3782f2c35bfaa7171c29b095d1b5c121c0fe5d8bef80ab37e785d` |
 | `microduck_rl` commit | `062921c4c9f65107e391df042f8de424136213c3` |
 | Quick run signature（冻结前记录） | `ef0e2f22a14b0ed9a7538487bbf0bc2e587fdb0d70bafc56d02ccb98b5da531e` |
+| Full run signature | `fa5ea0fe5726b47447262b29d7ed614d4f927a7674050f67303494d806e4a9d2` |
 | Navigator action | `[vx, 0, wz]` |
 | 共享速度上限 | `vx <= 0.25 m/s`，`abs(wz) <= 0.5 rad/s` |
 | 共享停止阈值 | `goal_tolerance = 0.15 m` |
@@ -95,6 +98,54 @@ Quick 使用 `w04e000--w04e009` 和 reset seeds `40000--40009`。目标距离范
 两组 Success 都是 10/10，因此 Success 胜负为 0/0，10 场均为平局。Quick 样本只用于
 发现明显安全或实现问题，不能把这些中位差包装成统计显著性结论。
 
+### Formal / full
+
+Formal 使用冻结清单的全部 200 个 EpisodeSpec。每个 Episode 都固定 Start Position、
+Start Yaw、Goal Position、reset seed、20 秒 timeout、`0.20 m` 成功半径、`0.5 s`
+连续保持和 `2.0 s` post-arrival 观察；两个 Controller 使用同一 Episode 顺序。
+
+| 指标 | Naive P | Constrained |
+|---|---:|---:|
+| 共享场景数 | 200 | 200 |
+| Success | 198/200（99.0%） | 200/200（100%） |
+| Success Rate Wilson 95% CI | 96.43%–99.73% | 98.12%–100% |
+| Fall / Timeout / Invalid | 0 / 2 / 0 | 0 / 0 / 0 |
+| Median Final Distance | 0.1488 m | 0.1588 m |
+| Median absolute Final Heading Error（诊断） | 0.0148 rad | 0.0138 rad |
+| Median Path Length to Arrival | 2.0143 m | 1.9192 m |
+| Median Path Efficiency | 0.7280 | 0.7476 |
+| Median Completion Time（成功场景） | 12.90 s | 13.29 s |
+| Mean `vx` Saturation Fraction | 0.7547 | 0.0005 |
+| Mean `wz` Saturation Fraction | 0.1859 | 0.1577 |
+| Median Post-arrival Displacement | 0.0207 m | 0.0114 m |
+| Median Post-arrival Max Displacement | 0.0257 m | 0.0276 m |
+| Post-arrival Re-departure | 0/198 | 0/200 |
+| Median Post-arrival Max Goal Distance | 0.1675 m | 0.1675 m |
+| Maximum Post-arrival Goal Distance | 0.1714 m | 0.1717 m |
+
+在 200 个配对场景中，Success 胜负为 Constrained 2、Naive P 0、平局 198。因为只有两组
+不一致结果，精确 McNemar 双侧 `p=0.5`；因此不能只凭 99% 与 100% 声称总体成功率已有
+统计显著差异。这里的胜出判断来自成功、安全、路径、饱和和停止稳定性的联合工程证据。
+
+对两者都成功的 198 个场景，`Constrained - Naive P` 的配对统计为：
+
+| 指标 | 配对中位差 | Constrained 更优 / Naive 更优 | 解释 |
+|---|---:|---:|---|
+| Final Distance（全部 200） | +0.0100 m | 2 / 198 | Naive 停得更靠近目标 |
+| Path Length | -0.0358 m | 114 / 84 | Constrained 路径总体更短 |
+| Path Efficiency | +0.0127 | 114 / 84 | Constrained 效率总体更高 |
+| Completion Time | +0.33 s | 59 / 139 | Naive 在多数共同成功场景更快 |
+| `vx` Saturation Fraction（全部 200） | -0.7602 | 200 / 0 | Constrained 大幅减少速度饱和 |
+| `wz` Saturation Fraction（全部 200） | -0.0189 | 167 / 8，另 25 平局 | Constrained 多数场景更少饱和 |
+| Post-arrival Displacement | -0.0093 m | 198 / 0 | Constrained 每个共同成功场景净位移都更小 |
+| Post-arrival Max Displacement | +0.0018 m | 57 / 141 | 瞬时最大位移反而略大 |
+
+Naive P 的两个 timeout 是 `w04e072 / seed 40072` 与 `w04e084 / seed 40084`。二者初始
+目标相对方向分别为 `179.90°` 和 `173.68°`，都属于后方目标；最终距离分别为
+`0.1703 m` 和 `0.1925 m`，已经进入 `0.20 m` 成功圈，但没有在 20 秒截止前完成连续
+`0.5 s` 保持。按初始方向分桶，Naive P 在前方 44/44、侧方 110/110、后方 44/46；
+Constrained 为前方 44/44、侧方 110/110、后方 46/46。
+
 ## `0.20 m -> 0.15 m` 单变量对照
 
 | Controller | 指标 | `tol=0.20 m` | `tol=0.15 m` |
@@ -136,13 +187,18 @@ artifacts/week04/01_classical_pointgoal_benchmark/model_1500_goal_tol020/
 artifacts/week04/01_classical_pointgoal_benchmark/model_1500_pre_stop_latch/
 ```
 
-三者不合并 Episode 数；当前结论只使用 `model_1500/` 下的 `0.15 m` quick。
+三者不合并 Episode 数；正式结论只使用
+`model_1500/full/summary/pointgoal_full_model_1500.json`。可提交 Git 的紧凑正式统计位于
+`summaries/pointgoal_full_model_1500_processed.json`，并记录原始 summary SHA-256、
+协议/模型/run signature、方向分桶、分位数和逐指标配对胜负。
 
 ## 决策边界与下一步
 
-`0.15 m` 候选已经通过静态校验、smoke 和 quick safety Gate，并解决了 quick 中的
-re-departure。两个 Controller 参数与协议状态现已冻结为 `frozen`。下一步由用户启动
-200 共享场景 × 2 Controller 的正式评测；当前尚未运行 `--full`。
+冻结的 400 个正式 Controller-Episode 已运行完成。Constrained 在全部 200 个场景成功，
+无 fall、timeout、invalid state 或 re-departure，并在路径效率、速度饱和和到达后净位移上
+形成一致优势，因此确定为第四周 Classical winner。下一步只对该 Controller 运行计划内的
+Low Friction、40 ms Delay、80% Motor 轻量 OOD；不得把 Naive P 的 formal、quick、smoke
+或第三周结果混入其 OOD 成功率。
 
 ## 复现命令
 
@@ -160,6 +216,11 @@ uv run python \
 uv run python \
   ~/projects/microduck-embodied/evaluation/pointgoal_benchmark.py \
   --quick
-```
 
-`--full` 的协议阶段门现已开放；正式运行仍由用户按冻结协议启动。
+uv run python \
+  ~/projects/microduck-embodied/evaluation/pointgoal_benchmark.py \
+  --full
+
+cd ~/projects/microduck-embodied
+python3 evaluation/analyze_pointgoal_benchmark.py
+```

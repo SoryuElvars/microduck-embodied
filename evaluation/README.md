@@ -277,8 +277,8 @@ uv run python \
 ```
 
 runner 每个 Episode 写入带 run signature 的进度文件并默认断点续跑。协议、场景清单、
-模型、官方 commit、评测代码或运行模式改变后，旧进度会被拒绝。smoke、quick 和以后
-人工冻结后的 full 分别写入
+模型、官方 commit、评测代码或运行模式改变后，旧进度会被拒绝。smoke、quick 和
+冻结后的 full 分别写入
 `artifacts/week04/01_classical_pointgoal_benchmark/model_1500/<mode>/`，不会混合计数。
 
 汇总分别报告 Success、Final Distance、到达前 Path Length/Efficiency、Completion Time、
@@ -288,8 +288,17 @@ Fall/Timeout/Invalid State、`vx/wz` 饱和比例、post-arrival 停止漂移和
 2026-09-21 只把共享 Goal tolerance 从 `0.20 m` 改为 `0.15 m` 后，使用同一组 10 个
 EpisodeSpec 重跑 quick：两个 Controller 都是 10/10 到达、0 fall、0 timeout、
 0 invalid state，post-arrival re-departure rate 均从 100% 降至 0%。两个 Controller
-及协议随后冻结，尚未运行 `--full`。阶段表格、单变量对照、配对差值和决策边界见
+及协议随后冻结。2026-09-22 完成 200 个共享 Episode × 2 Controller 的 `--full`：
+Naive P 为 198/200、2 timeout，Constrained 为 200/200；两者均为 0 fall、0 invalid
+state 和 0 re-departure。正式分位数、方向分桶、配对差值和决策边界见
 `results/week04/01_classical_pointgoal_benchmark/README.md`。
+
+从本地完整 summary 复现可提交 Git 的紧凑正式统计：
+
+```bash
+cd ~/projects/microduck-embodied
+python3 evaluation/analyze_pointgoal_benchmark.py
+```
 
 ## PointGoal Nominal holdout
 
