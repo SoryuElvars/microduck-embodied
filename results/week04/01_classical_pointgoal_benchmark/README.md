@@ -146,6 +146,55 @@ Naive P 的两个 timeout 是 `w04e072 / seed 40072` 与 `w04e084 / seed 40084`�
 `0.5 s` 保持。按初始方向分桶，Naive P 在前方 44/44、侧方 110/110、后方 44/46；
 Constrained 为前方 44/44、侧方 110/110、后方 46/46。
 
+## 图表与典型案例
+
+![198 个共同成功场景上的成对路径效率、完成时间与到达后净位移](figures/paired_controller_metrics.png)
+
+这张成对图只使用两个 Controller 都成功的 198 个共享 Episode，不把 Naive P 的两个
+timeout 当作可比较的完成时间或到达后停止数据。对角线表示二者相同：Constrained 多数
+场景路径效率更高（点在对角线上方），但多数共同成功场景完成较慢；所有点在到达后净位移
+面板中都位于对角线下方，和逐场景配对统计一致。
+
+Naive P 唯一的两次失败恰好是后方目标。下面分别给出完全相同 Start/Goal/seed 下的双
+Controller 轨迹与位置误差；黑色虚线圆/横线为 `0.20 m` 成功半径，`x` 为终止位置。
+
+![w04e072：Naive P timeout 与 Constrained success](figures/case_w04e072.png)
+
+`w04e072` 中 Naive P 先向远离目标的方向形成较大的弧线，虽在超时前进入成功圈，却未
+完成连续 `0.5 s` 保持；Constrained 更早收敛并完成 post-arrival 观察。
+
+![w04e084：第二个后方目标 timeout](figures/case_w04e084.png)
+
+`w04e084` 是同一失败模式的独立共享场景，而不是对 `w04e072` 重复调参。两个案例用于
+说明“99% vs 100%”具体代表什么；它们不替代 200 Episode 的总体结论。
+
+图表可从冻结的 full summary 与原始轨迹重建：
+
+```bash
+cd ~/projects/microduck_rl
+
+uv run python \
+  ~/projects/microduck-embodied/evaluation/plot_classical_pointgoal.py \
+  --summary ~/projects/microduck-embodied/artifacts/week04/01_classical_pointgoal_benchmark/model_1500/full/summary/pointgoal_full_model_1500.json \
+  --output-dir ~/projects/microduck-embodied/results/week04/01_classical_pointgoal_benchmark/figures \
+  --case w04e072 \
+  --case w04e084
+```
+
+### Viewer 演示视频
+
+已录制同一冻结后方目标 `w04e072` 的两段 MuJoCo Viewer 原始画面：
+
+```text
+artifacts/week04/03_classical_pointgoal_demo/
+├── constrained.mp4  # Constrained success
+└── naive_p.mp4      # Naive P timeout
+```
+
+它们与上述典型案例图使用同一个 EpisodeSpec、Start/Goal 和 reset seed。MP4 是本地展示
+原始产物，按仓库约定不纳入 Git；报告保留其可定位路径与场景含义，后续可直接剪辑为第六周
+的 30～60 秒展示视频。
+
 ## `0.20 m -> 0.15 m` 单变量对照
 
 | Controller | 指标 | `tol=0.20 m` | `tol=0.15 m` |

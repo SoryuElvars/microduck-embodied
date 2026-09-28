@@ -426,7 +426,7 @@ seed 和 envs 不变，不同时加 mirror loss。
 - [x] 根据 Nominal、OOD 和 PointGoal 两层结果，将 seed 42 `model_1500.onnx`
   冻结为后续导航阶段的仿真下层基线，并明确记录 `(40,60] ms` 延迟失效边界；
   这不等于 Sim2Real-ready。
-- [ ] 进入 Week 4 Classical PointGoal 正式 benchmark。若以后单独开展下层鲁棒性
+- [x] 进入 Week 4 Classical PointGoal 正式 benchmark。若以后单独开展下层鲁棒性
   增强，则只加入 action-delay randomization，并复跑同一 Nominal 与 350-Episode
   矩阵，不同时修改 yaw-only Reward、command sampling 或多个 curriculum 权重。
 
@@ -754,9 +754,9 @@ Naive P 只增加必要的速度限幅，作为最简单、可解释的传统基
 第四周不重复第三周的完整四因素敏感性矩阵，只对胜出的 Classical Controller 选择
 三个代表条件运行小规模闭环测试：
 
-- [ ] Low Friction
-- [ ] 40 ms Control Delay
-- [ ] 80% Motor Strength
+- [x] Low Friction
+- [x] 40 ms Control Delay
+- [x] 80% Motor Strength
 
 这一步验证底层鲁棒性是否能够转化为 Goal 到达能力。完整的 Classical vs RL
 常规/OOD 统一对比仍保留到第六周。
@@ -770,9 +770,9 @@ Naive P 只增加必要的速度限幅，作为最简单、可解释的传统基
 - [x] 两种传统控制器的统一对比表
 - [x] 冻结同一个 `model_1500.onnx`，不混入底层模型替换变量
 - [x] 200 个随机 Start/Goal 的冻结参数评测结果
-- [ ] 轨迹、位置误差和完成时间图表
-- [ ] 典型成功与失败案例
-- [ ] 随机 Start/Goal 自主导航视频
+- [x] 轨迹、位置误差和完成时间图表：[`Week 4 formal figures`](./results/week04/01_classical_pointgoal_benchmark/README.md#图表与典型案例)
+- [x] 典型成功与失败案例：[`w04e072 / w04e084`](./results/week04/01_classical_pointgoal_benchmark/README.md#图表与典型案例)
+- [x] 随机 Start/Goal 自主导航视频：同一冻结后方目标 `w04e072` 的 Naive P timeout 与 Constrained success 录屏保存在 `artifacts/week04/03_classical_pointgoal_demo/`；原始 MP4 不提交 Git。
 
 ### 验收标准
 

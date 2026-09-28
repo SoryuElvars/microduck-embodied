@@ -776,12 +776,7 @@ def build_parser() -> argparse.ArgumentParser:
     modes.add_argument("--quick", action="store_true")
     modes.add_argument("--full", action="store_true")
     modes.add_argument("--viewer", action="store_true")
-    modes.add_argument("--viewer", action="store_true")
     parser.add_argument("--controller", choices=CONTROLLER_IDS, default="constrained")
-    parser.add_argument(
-        "--episode-id",
-        help="Viewer EpisodeSpec id; defaults to the frozen front smoke scenario.",
-    )
     parser.add_argument(
         "--episode-id",
         help="Viewer EpisodeSpec id; defaults to the frozen front smoke scenario.",
