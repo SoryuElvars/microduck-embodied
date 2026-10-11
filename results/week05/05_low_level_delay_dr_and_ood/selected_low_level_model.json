@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "selection_status": "frozen",
+  "frozen_at": "2026-10-11",
+  "selection_reason": "model_1498 is the only screened Action-Delay-DR checkpoint with all five delay quick conditions passing, and it passed the frozen 500-episode PointGoal OOD matrix with 500/500 arrivals, zero falls, zero timeouts, and zero invalid states.",
+  "low_level_policy": {
+    "path": "/home/elvars/projects/microduck_rl/logs/rsl_rl/velocity_yaw_only_tracking_action_delay_dr/2026-10-11_11-52-04_week05-action-delay-dr-resume249-to1500-seed42/checkpoint_exports/model_1498.onnx",
+    "sha256": "44f61b6653a75506f52b68e890b75156e34ae68a8db9296102c575adeb558e65",
+    "observation_shape": [1, 61],
+    "action_shape": [1, 14],
+    "normalizer": "embedded in the exported ONNX graph"
+  },
+  "high_level_training_torchscript": {
+    "path": "/home/elvars/projects/microduck_rl/logs/rsl_rl/velocity_yaw_only_tracking_action_delay_dr/2026-10-11_11-52-04_week05-action-delay-dr-resume249-to1500-seed42/checkpoint_exports/model_1498_policy_jit.pt",
+    "sha256": "dae48888be814a8d744e8b0a25c58e26ffc0fc58986df6293add151e20cd44c6",
+    "normalizer": "embedded in the exported TorchScript graph",
+    "export_source_checkpoint": "/home/elvars/projects/microduck_rl/logs/rsl_rl/velocity_yaw_only_tracking_action_delay_dr/2026-10-11_11-52-04_week05-action-delay-dr-resume249-to1500-seed42/model_1498.pt"
+  },
+  "training_provenance": {
+    "official_commit": "5b052cc74728ca55cf19261e2b194806d1e991d2",
+    "task": "Mjlab-Velocity-Flat-Action-Delay-DR-MicroDuck",
+    "run_dir": "/home/elvars/projects/microduck_rl/logs/rsl_rl/velocity_yaw_only_tracking_action_delay_dr/2026-10-11_11-52-04_week05-action-delay-dr-resume249-to1500-seed42",
+    "env_config": "params/env.yaml",
+    "agent_config": "params/agent.yaml",
+    "action_delay_training_distribution_ms": [0, 20, 40],
+    "control_frequency_hz": 50.0,
+    "seed": 42
+  },
+  "formal_evidence": {
+    "action_delay": "artifacts/week05/16_low_level_action_delay_dr_formal/",
+    "non_delay_ood": "artifacts/week05/19_low_level_non_delay_ood_formal/",
+    "total_episodes": 500,
+    "arrivals": 500,
+    "falls": 0,
+    "timeouts": 0,
+    "invalid_states": 0
+  },
+  "known_quality_boundary": {
+    "nominal_tracking_rmse": {
+      "vx_mps": 0.155,
+      "wz_radps": 0.537
+    },
+    "old_model_1500_nominal_tracking_rmse": {
+      "vx_mps": 0.123,
+      "wz_radps": 0.486
+    },
+    "note": "The PointGoal OOD gates passed, but the nominal fixed-command locomotion regression remains a separate pending check."
+  },
+  "system_integration_status": "historical_high_policy_incompatible_quick",
+  "historical_high_policy_compatibility_quick": {
+    "high_level_policy_sha256": "554f420964daa7811ca09e1555d9711ffdf4df5a99318056db2cd987448c3642",
+    "protocol": "evaluation/pointgoal_protocols/week04_classical_v1.json",
+    "episodes": 10,
+    "new_low_successes": 8,
+    "old_low_successes": 10,
+    "new_low_falls": 0,
+    "new_low_timeouts": 2,
+    "success_lost_episode_ids": ["w04e002", "w04e009"],
+    "new_low_median_completion_time_s_arrivals": 17.7,
+    "old_low_median_completion_time_s_arrivals": 14.59,
+    "evidence": "artifacts/week05/20_frozen_low_level_high_level_integration/quick/summary.json",
+    "decision": "Do not reuse the historical high-level policy for formal evaluation. Train, select, and evaluate a new Navigator against this frozen low-level policy."
+  },
+  "freeze_rule": "This ONNX, its embedded normalizer, the recorded training configs, and the official commit are immutable for all subsequent integration experiments. Re-exporting ONNX or changing any recorded item defines a new low-level candidate. The historical Week-05 high-level selected_model.json remains bound to model_1500 and must not be rewritten."
+}

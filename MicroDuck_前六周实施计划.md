@@ -558,10 +558,20 @@ Navigator 继续使用仿真真值位姿，避免混入第四周才处理的定�
   0/20/40 ms 评测协议比较；随后以 60/80 ms 的留出 OOD 报告成功、跌倒、tracking error
   与停止漂移。不得只报告延迟条件的改善而忽略 Nominal 退化。
   - 250-iteration 快筛候选 `model_249.onnx` 已完成 PointGoal delay quick：五档均为
-    `0/5` 到达、`0/5` 跌倒、`5/5` timeout，Nominal 也未通过任务 Gate；因此停止升级，
-    未运行 formal，也未替换 `model_1500.onnx`。见
-    `results/week05/14_low_level_action_delay_dr_quick/README.md`。
-- [ ] 若新低层候选通过预先声明的 Nominal 与安全 Gate，冻结其 ONNX/normalizer/config/commit；
+    `0/5` 到达、`0/5` 跌倒、`5/5` timeout，Nominal 也未通过任务 Gate。恢复训练后已
+    对 `250/500/750/1000/1250/1498` checkpoint 使用同一冻结 25-Episode 矩阵快筛；
+    `model_1498.onnx` 为五档均 `5/5` 到达、`0/5` 跌倒、`0/5` timeout，初步通过任务
+    与 quick safety 条件。随后 formal 125 Episode（5 条件 × 5 goal × 5 seed）为
+    `125/125` 到达、0 跌倒、0 超时、0 invalid，五档各自全部 Gate 通过；该证据支持
+    进入低层冻结决策。随后重放接触摩擦、电机代理、backlash、质量/惯量、IMU 与编码器
+    噪声的 375 Episode formal，亦为 `375/375` 到达、0 跌倒、0 超时、0 invalid；与延迟
+    formal 合计为 500 Episode OOD 覆盖。固定指令/速度跟踪回归尚待独立完成，且尚未替换
+    `model_1500.onnx`；见
+    `results/week05/05_low_level_delay_dr_and_ood/README.md`。
+- [x] 将通过当前 PointGoal 安全与 OOD Gate 的 `model_1498.onnx` 冻结为低层候选：ONNX/embedded
+  normalizer/config/commit/哈希见
+  `results/week05/05_low_level_delay_dr_and_ood/selected_low_level_model.json`。固定指令
+  locomotion 回归仍单独保留，且冻结不改写旧高层的历史选择记录；
   由于高层策略依赖低层的命令响应，必须在新冻结低层上重新训练、选择并评测 Navigator，
   不能直接将当前 `model_1200.onnx` 与新低层拼接后宣称同一结果。
 
@@ -903,6 +913,12 @@ Goal 最小距离固定为 `0.4 m`，每个阶段都保留较早阶段样本，�
 `12` 个高层步，Stage 2 从 iteration 300（3600 高层步）开始，Stage 3 从 iteration
 600（7200 高层步）开始；配置与训练记录均未在运行中改动。
 
+上述 `300 / 600` 是旧低层正式训练的历史口径。接入 action-delay DR 新低层后，
+100-iteration 配对诊断显示 K10 仅刚形成 Stage-1 可用行为，因此下一轮训练改为
+每阶段 `500` PPO iterations。K10 的 Stage 2 从 iteration 500（6000 高层步）开始，
+Stage 3 从 iteration 1000（12000 高层步）开始；1500 iterations 中三个阶段各获得
+500 iterations。该调整不追溯改写已完成实验的配置与结论。
+
 ### Reward 设计
 
 正式训练使用六类 Reward，其中近目标超速惩罚是为解决“进入成功圈但未学会减速停稳”
@@ -926,7 +942,7 @@ $$
 `0.5 s` 的实际平面速率均值 `≤0.10 m/s`、有符号角速度均值的绝对值
 `≤0.20 rad/s`，并将该稳定状态连续保持 `0.5 s`。这不增加最终朝向要求，
 也不修改冻结的 Week04 benchmark。阈值标定与旧模型诊断复评见
-`results/week05/03_stable_arrival_gate/README.md`。到达奖励仍为一次性：
+`results/week05/02_stable_arrival/README.md`。到达奖励仍为一次性：
 
 $$
 r_{goal}=+R_g
@@ -982,31 +998,31 @@ Time-out 不等价于摔倒，但说明在给定时间内没有完成任务；�
   保存和导出链路可运行，不是训练效果或 K 值优选证据。
 - [x] 三组分别完成 `64 envs × 100 iterations` Stage 1 训练，并将曲线上传 W&B；
   用 Week04 冻结的 10 个 Episode 做配对 quick。三组均 10/10 到达、无跌倒，
-  但到达后仍有明显运动，K 值暂不冻结；见 `results/week05/02_rl_navigator_quick/README.md`。
+  但到达后仍有明显运动，K 值暂不冻结；见 `results/week05/01_navigator_foundation/README.md`。
 - [x] 用零命令站立轨迹标定速度阈值，只修改训练成功条件；对旧模型的已记录轨迹
   进行停稳诊断复评，三组均 0/10 在记录时段内观察到新条件，Classical Constrained
   为 10/10。再让旧 ONNX 按新条件继续运行到 20 秒做独立 live quick：K2 为 10/10、
   K5 为 0/10、K10 为 3/10，均无跌倒。旧模型未重训，短轨迹复评分数不能当作完整
   Episode 成功率，live 分数也不是重训收益；见
-  `results/week05/03_stable_arrival_gate/README.md`。
+  `results/week05/02_stable_arrival/README.md`。
 - [x] 新停稳条件下完成 K5 的 `64 envs × 100 iterations` Stage 1 快筛训练，核验
   自动导出的 `model_99` ONNX；在 Week04 冻结的 10 个配对场景上分别用位置口径与
   停稳口径评测，均为 0/10、0 跌倒、10 超时，最小距离均停在 `0.20 m` 圈外。
   快筛未通过，不启动 formal/full 或擅改奖励、阈值；见
-  `results/week05/04_stable_k5_retrain_quick/README.md`。
+  `results/week05/02_stable_arrival/README.md`。
 - [x] 新停稳条件下完成 K10 的 `64 envs × 100 iterations` Stage 1 快筛训练并核验
   自动导出的 ONNX；相同配对场景上位置口径 6/10、停稳 live 口径 5/10，
   均无跌倒。停稳成功后 4/5 在额外 2 秒观测期离开成功圈，仍不能视为可靠停车；
-  暂不启动 formal/full，见 `results/week05/05_stable_k10_retrain_quick/README.md`。
+  暂不启动 formal/full，见 `results/week05/02_stable_arrival/README.md`。
 - [x] 只新增实际平面速度的近目标超速惩罚：`0.35 m` 外为零，目标圈边界的参考
   速度为 `0.08 m/s`，权重为 `-0.10`；K10 `64 envs × 5 iterations` CUDA smoke
   已验证采样、PPO、Reward 日志、保存和自动 ONNX 导出。smoke 不代表策略能力，
   尚未启动 100-iteration 快筛或 formal/full；见
-  `results/week05/06_near_goal_speed_reward_smoke/README.md`。
+  `results/week05/03_reward_and_model_selection/README.md`。
 - [x] 近目标超速惩罚 K10 完成 `64 envs × 100 iterations` 快筛训练；Week04 冻结
   10 场景的配对 quick 中位置与停稳 live 均为 10/10、0 跌倒、0 超时，且停稳后
   额外 2 秒均未离开成功圈。此为单因素 quick 通过，不自动启动 formal/full；见
-  `results/week05/07_near_speed_k10_quick_eval/README.md`。
+  `results/week05/03_reward_and_model_selection/README.md`。
 - [x] 对目标圈边界参考速度 `0.08 m/s` 与 `0.09 m/s` 做同预算 K10 对比；正式选择
   `0.08 m/s`，不改变其他 Reward、成功条件或命令约束。
 - [x] 使用冻结 Reward 与三阶段 curriculum 训练 K10 至 1500 iterations，W&B 记录
@@ -1014,10 +1030,10 @@ Time-out 不等价于摔倒，但说明在给定时间内没有完成任务；�
 - [x] 四个 checkpoint 使用 Week04 冻结的 200 EpisodeSpec 分别进行 full 正式评测与
   速度/角速度停稳复核。1200 是唯一达到位置 200/200、0 跌倒、0 超时、0 到达后
   重离开，且停稳复核 200/200 的候选；报告见
-  `results/week05/10_checkpoint_selection_k10/README.md`。
+  `results/week05/03_reward_and_model_selection/README.md`。
 - [x] 冻结 `model_1200.onnx` 作为后续 OOD/Sim2Real 的高层部署候选；高层/低层 ONNX
   SHA-256、K、命令约束、协议哈希与正式证据记录在
-  `results/week05/10_checkpoint_selection_k10/selected_model.json`。
+  `results/week05/03_reward_and_model_selection/selected_model.json`。
 - [x] 实现 progress、goal、near-goal speed、smooth、fall 与独立 timeout 剩余距离项，
   并冻结本次训练权重。
 - [x] 实现随机 Start/Goal 与三阶段累计 Goal curriculum，并冻结切换点。
@@ -1096,7 +1112,7 @@ quick，只有该项全部通过才由用户决定是否 formal：
   10/10、0 跌倒、0 timeout，10%/20% 实际累计丢帧为 92/152；formal 仍须用户决定启动。
 
 四项的代码、readback、smoke、quick 与原始汇总见
-`results/week05/13_high_level_observation_ood/README.md`。失败 quick 的因素不得通过降低
+`results/week05/04_high_level_ood/README.md`。失败 quick 的因素不得通过降低
 阈值或与其他误差混合来绕过 Gate。
 
 `x/y` iid 噪声与 observation latency 属于下一轮候选，先不与上述固定偏置或 dropout
@@ -1117,10 +1133,10 @@ Domain Randomization 是新的训练分支，不是给已冻结 `model_1200.onnx
 
 - [x] 以冻结 `model_1200.onnx` 完成高层命令延迟 `0 / 20 / 40 ms` 的 readback、smoke、
   quick：三档均为 10/10 成功、0 跌倒、0 超时、0 到达后重离开，且 FIFO readback 分别为
-  0/20/40 ms；见 `results/week05/11_high_level_delay_ood/README.md`。
+  0/20/40 ms；见 `results/week05/04_high_level_ood/README.md`。
 - [x] 以 200 ms 决策周期为单位完成高层决策到执行延迟的 readback、smoke 与逐档 quick：
   0/200/400/600 ms 为 10/10 成功，800 ms 为 9/10 且 1 次 timeout，故停止继续升档；见
-  `results/week05/12_high_level_decision_delay_ood/README.md`。这是 quick 级经验边界，
+  `results/week05/04_high_level_ood/README.md`。这是 quick 级经验边界，
   不与任何 formal Episode 合并。
 - [ ] 由用户启动高层命令延迟 `0 / 20 / 40 ms` 的 3 × 200 Episode formal；不得将 quick
   的 10 集结果与正式 Episode 合并。

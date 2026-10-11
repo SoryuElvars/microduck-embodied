@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "protocol_id": "week05_stage1_diagnostic_v1",
+  "protocol_status": "draft",
+  "episode_manifest_status": "frozen",
+  "description": "Diagnostic-only matched-distribution protocol for Week-05 curriculum Stage 1. Not a formal capability benchmark.",
+  "task_definition": {
+    "goal_type": "position_pointgoal",
+    "input": "[delta_x_body, delta_y_body] equivalent to [distance, heading_error]",
+    "navigator_output": "[vx, 0, wz]",
+    "requires_final_yaw": false,
+    "heading_error_note": "Heading error points toward the positional goal; it is not a final-yaw target."
+  },
+  "runtime": {
+    "initial_state_mode": "official_reset",
+    "warmup_s": 1.0,
+    "smoke_timeout_s": 5.0,
+    "navigator_frequency_hz": 10.0
+  },
+  "controllers": {
+    "order": ["naive_p", "constrained"],
+    "shared_limits": {
+      "max_forward_speed_mps": 0.25,
+      "max_yaw_rate_radps": 0.5,
+      "goal_tolerance_m": 0.15
+    },
+    "naive_p": {"distance_gain": 0.8, "heading_gain": 1.2},
+    "constrained": {
+      "distance_gain": 0.8,
+      "heading_gain": 1.2,
+      "min_turn_speed_mps": 0.05,
+      "max_forward_accel_mps2": 0.5,
+      "max_yaw_accel_radps2": 1.0,
+      "heading_slowdown_floor": 0.2,
+      "arrival_hold_time_s": 0.5
+    }
+  },
+  "generation": {
+    "generator": "diagnostic fixed manifest",
+    "generator_version": 1,
+    "episode_count": 10,
+    "simulation_reset_seed_start": 40000,
+    "start_distribution": "official_reset",
+    "goal_distance_m": [0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.6, 0.7],
+    "goal_heading_body_rad": [-0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.75, -1.0, 1.0],
+    "distribution_note": "Matched to Week-05 Stage 1: 0.4-0.8 m, eight goals within body-heading +/-45 deg and two diagnostic goals at +/-1.0 rad."
+  },
+  "selections": {
+    "smoke": {
+      "front": "w05s1e003",
+      "left": "w05s1e009",
+      "right": "w05s1e008",
+      "behind": "w05s1e007"
+    },
+    "quick": [
+      "w05s1e000", "w05s1e001", "w05s1e002", "w05s1e003", "w05s1e004",
+      "w05s1e005", "w05s1e006", "w05s1e007", "w05s1e008", "w05s1e009"
+    ],
+    "full": "all_10_diagnostic_episodes"
+  },
+  "quick_gate": {
+    "maximum_fall_rate": 0.0,
+    "maximum_invalid_state_rate": 0.0,
+    "note": "Quick results are diagnostic and are never pooled with formal results."
+  },
+  "episode_manifest_sha256": "543a00bfae8338681aac3be3208b498ab0b1bcd8fe238d88327c5e7ec74c1cd8",
+  "episodes": [
+    {"episode_id":"w05s1e000","simulation_reset_seed":40000,"start_x":0.125727463,"start_y":0.145480073,"start_yaw":-2.93293778,"goal_x":-0.290251107,"goal_y":0.317124559,"timeout":20.0,"success_radius":0.2,"success_hold_time":0.5,"post_arrival_observation_time":2.0},
+    {"episode_id":"w05s1e001","simulation_reset_seed":40001,"start_x":0.372122737,"start_y":-0.331924946,"start_yaw":0.109093858,"goal_x":0.851114921,"goal_y":-0.475335152,"timeout":20.0,"success_radius":0.2,"success_hold_time":0.5,"post_arrival_observation_time":2.0},
+    {"episode_id":"w05s1e002","simulation_reset_seed":40002,"start_x":0.316294814,"start_y":0.178167512,"start_yaw":0.397914813,"goal_x":0.855558104,"goal_y":0.286311415,"timeout":20.0,"success_radius":0.2,"success_hold_time":0.5,"post_arrival_observation_time":2.0},
+    {"episode_id":"w05s1e003","simulation_reset_seed":40003,"start_x":0.404027449,"start_y":0.091089095,"start_yaw":-1.543508835,"goal_x":0.420397912,"goal_y":-0.508687537,"timeout":20.0,"success_radius":0.2,"success_hold_time":0.5,"post_arrival_observation_time":2.0},
+    {"episode_id":"w05s1e004","simulation_reset_seed":40004,"start_x":0.33021013,"start_y":-0.402750155,"start_yaw":1.229938681,"goal_x":0.421465137,"goal_y":0.240812215,"timeout":20.0,"success_radius":0.2,"success_hold_time":0.5,"post_arrival_observation_time":2.0},
+    {"episode_id":"w05s1e005","simulation_reset_seed":40005,"start_x":0.166024071,"start_y":0.086158549,"start_yaw":-1.015503948,"goal_x":0.737561881,"goal_y":-0.318000493,"timeout":20.0,"success_radius":0.2,"success_hold_time":0.5,"post_arrival_observation_time":2.0},
+    {"episode_id":"w05s1e006","simulation_reset_seed":40006,"start_x":0.302950787,"start_y":-0.451669348,"start_yaw":-2.110150018,"goal_x":0.348407642,"goal_y":-1.20029053,"timeout":20.0,"success_radius":0.2,"success_hold_time":0.5,"post_arrival_observation_time":2.0},
+    {"episode_id":"w05s1e007","simulation_reset_seed":40007,"start_x":-0.447406916,"start_y":0.284706117,"start_yaw":1.888030087,"goal_x":-1.148102125,"goal_y":0.670745266,"timeout":20.0,"success_radius":0.2,"success_hold_time":0.5,"post_arrival_observation_time":2.0},
+    {"episode_id":"w05s1e008","simulation_reset_seed":40008,"start_x":0.144399592,"start_y":0.15320594,"start_yaw":0.630955133,"goal_x":0.704002979,"goal_y":-0.063228922,"timeout":20.0,"success_radius":0.2,"success_hold_time":0.5,"post_arrival_observation_time":2.0},
+    {"episode_id":"w05s1e009","simulation_reset_seed":40009,"start_x":0.292900513,"start_y":0.056376276,"start_yaw":-0.70518433,"goal_x":0.962699516,"goal_y":0.25977071,"timeout":20.0,"success_radius":0.2,"success_hold_time":0.5,"post_arrival_observation_time":2.0}
+  ]
+}

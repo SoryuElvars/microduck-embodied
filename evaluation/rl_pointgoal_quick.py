@@ -207,7 +207,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "low_policy_path": str(low_policy),
         "low_policy_sha256": _sha256(low_policy),
         "reward_available": False,
-        "evaluation_distribution_note": "Week-04 manifest: 1.0-1.8 m, all headings; training Stage 1 uses mostly 0.4-0.8 m/front, Stage 2 expands to 1.3 m/front half-plane, and Stage 3 uses all headings to 1.8 m.",
+        "evaluation_distribution_note": protocol.generation.get(
+            "distribution_note",
+            "Week-04 manifest: 1.0-1.8 m, all headings; training Stage 1 uses mostly 0.4-0.8 m/front, Stage 2 expands to 1.3 m/front half-plane, and Stage 3 uses all headings to 1.8 m.",
+        ),
         "aggregate": aggregate,
         "episodes": episodes,
     }

@@ -5,7 +5,7 @@
   "description": "Continuation of the exploratory sub-decision-period command-transport latency ladder after the independent 60/80 ms quick tier passed. This protocol tests only 100 and 120 ms FIFO delay from the frozen K10 Navigator to frozen locomotion velocity-command input; it is not a 200 ms-quantized high-level decision-delay test.",
   "base_protocol_path": "evaluation/pointgoal_protocols/week04_classical_v1.json",
   "base_protocol_sha256": "69db75465d5958f6c41ff49691cec0ff849cc6c5521ae4c28264f2806aec5be7",
-  "selected_model_path": "results/week05/10_checkpoint_selection_k10/selected_model.json",
+  "selected_model_path": "results/week05/03_reward_and_model_selection/selected_model.json",
   "selected_model_sha256": "edd033eca6dbd38d4f7b160682ab24d80294a97b1d49ea4d79e363cfc7db51ce",
   "conditions": [
     {"id": "command_delay_100ms", "factor": "high_level_command_delay", "command_delay_ms": 100},
