@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "protocol_status": "frozen",
+  "description": "Paired Week-05 quick screen for lower-level episode-fixed action-delay DR checkpoints. Nominal and 20/40 ms are regression conditions; unseen 60/80 ms are stress OOD.",
+  "goal_set_path": "evaluation/goal_sets/pointgoal_pilot_5.json",
+  "quick": {
+    "episodes_per_goal": 1,
+    "condition_ids": [
+      "nominal",
+      "delay_20ms",
+      "delay_40ms",
+      "delay_60ms",
+      "delay_80ms"
+    ],
+    "safety_gate": {
+      "maximum_fall_rate": 0.0,
+      "maximum_invalid_state_rate": 0.0,
+      "note": "Quick safety gate only. Each condition contains five paired episodes; success and timeout are diagnostic, not formal acceptance evidence."
+    }
+  },
+  "full": {
+    "episodes_per_goal": 5,
+    "condition_ids": [
+      "nominal",
+      "delay_20ms",
+      "delay_40ms",
+      "delay_60ms",
+      "delay_80ms"
+    ],
+    "acceptance_gate": {
+      "minimum_overall_success_rate": 0.8,
+      "minimum_per_goal_success_rate": 0.6,
+      "maximum_fall_rate": 0.0,
+      "maximum_timeout_rate": 0.2,
+      "maximum_invalid_state_rate": 0.0,
+      "maximum_absolute_mirror_success_rate_gap": 0.4,
+      "note": "Formal criteria are evaluated independently per delay condition and are not pooled."
+    }
+  },
+  "conditions": [
+    {"id": "nominal", "factor": "nominal"},
+    {"id": "delay_20ms", "factor": "actuator_delay", "actuator_delay_ms": 20},
+    {"id": "delay_40ms", "factor": "actuator_delay", "actuator_delay_ms": 40},
+    {"id": "delay_60ms", "factor": "actuator_delay", "actuator_delay_ms": 60},
+    {"id": "delay_80ms", "factor": "actuator_delay", "actuator_delay_ms": 80}
+  ]
+}

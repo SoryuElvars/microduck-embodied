@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "protocol_id": "week05_rl_high_delay_ood_v1",
+  "protocol_status": "frozen",
+  "description": "One-factor FIFO delay from the K10 RL Navigator output to frozen locomotion-policy velocity-command input. The delay is not the lower-level actuator delay used in Week 03.",
+  "base_protocol_path": "evaluation/pointgoal_protocols/week04_classical_v1.json",
+  "base_protocol_sha256": "69db75465d5958f6c41ff49691cec0ff849cc6c5521ae4c28264f2806aec5be7",
+  "selected_model_path": "results/week05/10_checkpoint_selection_k10/selected_model.json",
+  "selected_model_sha256": "edd033eca6dbd38d4f7b160682ab24d80294a97b1d49ea4d79e363cfc7db51ce",
+  "conditions": [
+    {"id": "command_delay_0ms", "factor": "high_level_command_delay", "command_delay_ms": 0},
+    {"id": "command_delay_20ms", "factor": "high_level_command_delay", "command_delay_ms": 20},
+    {"id": "command_delay_40ms", "factor": "high_level_command_delay", "command_delay_ms": 40}
+  ],
+  "smoke_episode_id": "w04e008",
+  "quick_episode_ids": [
+    "w04e000", "w04e001", "w04e002", "w04e003", "w04e004",
+    "w04e005", "w04e006", "w04e007", "w04e008", "w04e009"
+  ],
+  "quick_gate": {
+    "minimum_success_rate": 1.0,
+    "maximum_fall_rate": 0.0,
+    "maximum_invalid_state_rate": 0.0,
+    "note": "The frozen nominal model is 10/10 on this quick selection. Any timeout, fall, or invalid state blocks formal escalation."
+  },
+  "full_gate": {
+    "minimum_success_rate": 0.99,
+    "maximum_fall_rate": 0.0,
+    "maximum_invalid_state_rate": 0.0,
+    "maximum_post_arrival_redeparture_rate": 0.0,
+    "note": "Formal is user-launched only after every quick condition passes."
+  }
+}

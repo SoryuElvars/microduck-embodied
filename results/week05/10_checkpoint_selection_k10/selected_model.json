@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "selection_status": "frozen",
+  "selected_at": "2026-10-10",
+  "selection_reason": "Only checkpoint with 200/200 frozen position successes, zero falls, zero timeouts, zero post-arrival redepartures, and 200/200 observed stable arrivals.",
+  "high_level_policy": {
+    "path": "/home/elvars/projects/microduck_rl/logs/rsl_rl/pointgoal_navigation_k10/2026-10-10_16-29-47_week05-near-speed008-k10-formal-seed42/checkpoint_exports/model_1200.onnx",
+    "sha256": "554f420964daa7811ca09e1555d9711ffdf4df5a99318056db2cd987448c3642",
+    "k": 10,
+    "navigator_frequency_hz": 5.0,
+    "observation_shape": [1, 7],
+    "action_shape": [1, 2]
+  },
+  "low_level_policy": {
+    "path": "/home/elvars/projects/microduck-embodied/artifacts/week03/06_yaw_only_tracking_candidate/models/model_1500.onnx",
+    "sha256": "533b820c13b3782f2c35bfaa7171c29b095d1b5c121c0fe5d8bef80ab37e785d"
+  },
+  "command_contract": {
+    "max_forward_speed_mps": 0.25,
+    "max_yaw_rate_radps": 0.5,
+    "max_forward_accel_mps2": 0.5,
+    "max_yaw_accel_radps2": 1.0
+  },
+  "formal_evidence": {
+    "position_summary": "artifacts/week05/10_checkpoint_selection_k10/iter_1200/position_v1/full/summary.json",
+    "stable_rescore_summary": "artifacts/week05/10_checkpoint_selection_k10/iter_1200/stable_rescore_v1/full/summary.json",
+    "protocol_sha256": "69db75465d5958f6c41ff49691cec0ff849cc6c5521ae4c28264f2806aec5be7",
+    "episode_manifest_sha256": "b2d4c62121e0c1b4f290094079512c09cf7f6eaf8e1918622f12483c2292337c",
+    "official_commit": "062921c4c9f65107e391df042f8de424136213c3",
+    "run_signature": "6ea20d1eca0f2eca02853deddb2e864401da6a6f91b1a6595220ec5dfe8bdd0a"
+  },
+  "freeze_rule": "Future Week-05 OOD and Sim2Real evaluations must verify these SHA-256 values before execution. A changed ONNX, K, command contract, low-level policy, or protocol is a new experiment rather than an extension of this result."
+}

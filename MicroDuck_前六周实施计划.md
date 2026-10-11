@@ -28,6 +28,9 @@ MuJoCo
   + Hierarchical RL Architecture
 ```
 
+> 进度说明（2026-10-10）：上图中的 `Domain Randomization` 是第 5/6 周待完成目标，
+> 不是当前已完成能力；目前只有 Nominal 训练、正式选模和既往的 Reality-gap/OOD 评测证据。
+
 ## 2. 总体进度表
 
 | 周次 | 核心任务 | 必须完成的结果 | 对简历的价值 |
@@ -36,14 +39,14 @@ MuJoCo
 | 第 2 周 | 理解并评测 Locomotion | Observation/Action/Reward 梳理 + Benchmark | 从“运行 Demo”升级为“分析策略” |
 | 第 3 周 | 底层筛选、轻量 PointGoal pilot、单变量再训练与鲁棒性实验 | 用闭环失败证据确定训练因素，完成新旧候选复测并冻结导航底层 | 形成从任务诊断到策略改进的实验闭环 |
 | 第 4 周 | PointGoal + 传统控制对比 | Naive P 与受限 Go-to-Goal 在随机 Start/Goal 下统一评测 | 完成第一个自己的核心模块 |
-| 第 5 周 | RL Navigator | PPO：Goal → 速度指令 | 形成分层 RL 系统 |
-| 第 6 周 | 对比实验与项目整理 | Classical vs RL + OOD + README + 视频 | 达到可正式投递的项目版本 |
+| 第 5 周 | RL Navigator | PPO：Goal → 速度指令；完成 Nominal formal checkpoint 选择 | 形成分层 RL 系统；高层 OOD/域随机化尚未完成 |
+| 第 6 周 | 对比实验与项目整理 | Classical vs RL + OOD + README + 视频 | 达到可正式投递的项目版本；不得将未做的域随机化写成已完成 |
 
 里程碑：
 
 - **第 3 周结束：** M1 已形成可展示结果，开始整理简历第一版。
 - **第 4 周结束：** M2 Classical 版本跑通，开始投递第一批实习。
-- **第 5 周结束：** RL Navigator 有稳定结果，更新简历。
+- **第 5 周结束：** RL Navigator 的 Nominal 正式结果已冻结；高层 OOD 与域随机化训练完成后，才更新为含 Sim2Real 训练证据的简历表述。
 - **第 6 周结束：** 完成正式展示版，扩大投递范围。
 
 ---
@@ -477,8 +480,8 @@ seed 43 先整体变慢并在 1999 出现右侧启动崩塌。训练方法的早
 快筛显示，friction 0.3、motor 80% 和 backlash 未立即退化，但 delay 60 ms 导致
 3/5 跌倒，并同步放大停止漂移、`vx/wz` tracking error 和 yaw 振荡。后续配对评测
 确认 0/20/40 ms 均为 25/25、0 跌倒，60 ms 为 8/25 且有 17 次跌倒；完整矩阵将
-失效边界定位在 `(40,60] ms`。action-delay randomization 只保留为以后单因素增强
-候选，不在当前阶段立即重新训练。
+失效边界定位在 `(40,60] ms`。因此 action-delay domain randomization 已从“以后候选”
+升级为完成当前高层 OOD baseline 后的优先低层训练项；它与高层随机化是两个独立实验。
 
 ### 5.5 `model_1500.onnx` 鲁棒性参数
 
@@ -537,6 +540,30 @@ Navigator 继续使用仿真真值位姿，避免混入第四周才处理的定�
 
 400-Episode 随机速度指令只代表 Nominal 指令覆盖；若物理参数或 observation 没有
 改变，不能将它单独称为鲁棒性测试。
+
+### 5.7 低层 locomotion 的延迟 Domain Randomization（进行中）
+
+现有 `model_1500.onnx` 在 delay 60 ms 的 25 Episode 中有 17 次跌倒，而 40 ms 仍为
+0 跌倒。这表示延迟安全裕量只有一个底层 20 ms 控制步，不能称为“对延迟不敏感”。
+高层 Navigator 的随机化只能学习在可观测误差后修正路径，不能修复低层因延迟失步而
+跌倒，因此低层延迟随机化是系统 Sim2Real 的基础训练项。
+
+- [x] 保留 `model_1500.onnx` 为不随机化 Control，不在原 checkpoint 上继续训练或覆盖。
+- [x] 在低层训练环境中实现与已完成 delay OOD **同一注入位置与语义**的 FIFO control-delay
+  模型，并以 readback、单测和短 smoke 验证实际施加延迟；不能仅在配置中写参数。
+- [x] 第一轮只随机化一个因素：每个 episode 固定采样 `0 / 20 / 40 ms` 延迟；其余 Reward、
+  command distribution、PPO、地面/电机参数保持 Control 一致。`60 / 80 ms` 留作不参与
+  第一轮训练的压力 OOD，而不是拿训练样本冒充泛化测试。
+- [ ] 训练新的低层候选后，先按现有 Nominal locomotion、固定指令、PointGoal pilot 和
+  0/20/40 ms 评测协议比较；随后以 60/80 ms 的留出 OOD 报告成功、跌倒、tracking error
+  与停止漂移。不得只报告延迟条件的改善而忽略 Nominal 退化。
+  - 250-iteration 快筛候选 `model_249.onnx` 已完成 PointGoal delay quick：五档均为
+    `0/5` 到达、`0/5` 跌倒、`5/5` timeout，Nominal 也未通过任务 Gate；因此停止升级，
+    未运行 formal，也未替换 `model_1500.onnx`。见
+    `results/week05/14_low_level_action_delay_dr_quick/README.md`。
+- [ ] 若新低层候选通过预先声明的 Nominal 与安全 Gate，冻结其 ONNX/normalizer/config/commit；
+  由于高层策略依赖低层的命令响应，必须在新冻结低层上重新训练、选择并评测 Navigator，
+  不能直接将当前 `model_1200.onnx` 与新低层拼接后宣称同一结果。
 
 ### 当前冻结模型汇总
 
@@ -814,7 +841,7 @@ Naive P 只增加必要的速度限幅，作为最简单、可解释的传统基
 ```text
 High-level PPO
       ↓
-Velocity Command
+Bounded / rate-limited Velocity Command [vx, 0, wz]
       ↓
 Frozen Low-level PPO
       ↓
@@ -823,79 +850,302 @@ MicroDuck
 
 ### 状态与动作设计
 
-高层策略：
+高层策略与 Week 4 的 `Navigator` 接口保持一致：
 
 $$
-\pi_{nav}: o_t \rightarrow (v_x,v_y,\omega)
+\pi_{nav}: o_t \rightarrow (v_x^*,\omega^*)
 $$
 
-建议 Observation：
+冻结的第一版 Observation 为 7 维：
 
 $$
-o_t=[\Delta x,\Delta y,\Delta\theta,v_x,v_y,\omega]
+o_t=[\Delta x_b,\Delta y_b,v_{x,b},v_{y,b},\omega_b,
+v_{x,t-1}^{cmd},\omega_{t-1}^{cmd}]
 $$
 
-建议 Action：
+其中 `goal - robot` 的世界系位置差旋转到机器人 body frame，距离和朝向误差均可由
+`Δx_body / Δy_body` 推导，因此不在 Observation 中重复。最后两维使用**上一控制步实际
+施加的限幅后命令**，而不是 PPO 的原始输出。
+
+PPO 输出 2 维归一化 Action，经线性映射、上下限和与 Week 4 Constrained Controller
+相同的 rate limit 后形成：
 
 $$
-a_t=[v_x^*,v_y^*,\omega^*]
+a_t=[v_x^*,0,\omega^*],\quad
+v_x^*\in[0,0.25]\ \mathrm{m/s},\quad
+\omega^*\in[-0.5,0.5]\ \mathrm{rad/s}
 $$
 
-第一版推荐简化为：
+线加速度上限为 `0.5 m/s²`，角加速度上限为 `1.0 rad/s²`。这里不加入 Classical
+Navigator 的近目标减速、余弦转向降速或强制停车规则；这些行为由 RL 自己学习，只有
+共享的输出安全包络被固定。
 
-$$
-a_t=[v_x^*,\omega^*],\qquad v_y=0
-$$
+冻结底层仍以 `20 ms` 更新一次；高层命令保持 `K` 个底层控制步。第一轮只把
+`K=2 / 5 / 10` 作为单变量候选（高层分别为 `25 / 10 / 5 Hz`），先做等预算 smoke / quick，
+再冻结优胜值，不能把三者 Episode 合并成一个成功率。quick screen 固定为每个 K
+`64 envs × 100 iterations`、同一 `seed=42`，每 25 iterations 保存一次 checkpoint；三组
+每 iteration 都覆盖 `2.4 s` 仿真物理时间，并全部停留在 Stage 1。若 100 iterations 后
+差异不明确，只允许三组按相同预算一起延长到 200 iterations。
+
+Week 05 的训练 logger 显式固定为 W&B，项目名为 `mjlab_microduck`；除不计入能力结论的
+机械性 smoke 外，后续 quick 和正式训练不得用命令行覆盖成 TensorBoard。
+
+### Goal curriculum
+
+Goal 最小距离固定为 `0.4 m`，每个阶段都保留较早阶段样本，避免进入下一阶段后遗忘：
+
+- Stage 1：大多数目标位于 `0.4～0.8 m`、相对朝向 `±45°` 内，并保留少量对称的
+  `±45°` 外目标；
+- Stage 2：距离扩大到 `1.3 m`，以前方 `±90°` 为主，增加后方目标占比；
+- Stage 3：覆盖全方向 `±180°`，距离扩大到 `1.8 m`。
+
+正式 K10 训练已将切换点冻结为每阶段 300 PPO iterations。由于每个 iteration 有
+`12` 个高层步，Stage 2 从 iteration 300（3600 高层步）开始，Stage 3 从 iteration
+600（7200 高层步）开始；配置与训练记录均未在运行中改动。
 
 ### Reward 设计
 
-保持简单，只使用四类主要奖励：
+正式训练使用六类 Reward，其中近目标超速惩罚是为解决“进入成功圈但未学会减速停稳”
+而新增的单因素密集项：
 
 $$
-r=r_{progress}+r_{goal}+r_{smooth}+r_{fall}
+r=5r_{progress}+10r_{goal}-0.10r_{near\_speed}
+-0.2r_{a_v}-0.05r_{a_\omega}-10r_{fall}-2r_{timeout}
 $$
 
-进度奖励：
+成功半径固定为 `r_s=0.20 m`。进度奖励使用成功半径外的有效距离，避免策略在成功区内
+靠来回移动继续刷进度：
 
 $$
-r_{progress}=d_{t-1}-d_t
+d_t^{eff}=\max(0,d_t-r_s),\qquad
+r_{progress}=k_p(d_{t-1}^{eff}-d_t^{eff})
 $$
 
-到达奖励：
+初版在成功半径内连续保持 `0.5 s` 后给一次到达奖励并结束 Episode。
+快筛发现它只约束位置，不要求到达后停稳；后续单变量版本改为同时要求最近
+`0.5 s` 的实际平面速率均值 `≤0.10 m/s`、有符号角速度均值的绝对值
+`≤0.20 rad/s`，并将该稳定状态连续保持 `0.5 s`。这不增加最终朝向要求，
+也不修改冻结的 Week04 benchmark。阈值标定与旧模型诊断复评见
+`results/week05/03_stable_arrival_gate/README.md`。到达奖励仍为一次性：
 
 $$
-r_{goal}=+R
+r_{goal}=+R_g
 $$
 
-动作平滑惩罚：
+新增的近目标超速项只惩罚实际平面速度超过“随距离缩小的目标速度”的部分，不在成功圈
+外奖励停车，也不在远处干扰 progress：
 
 $$
-r_{smooth}=-\lambda\lVert a_t-a_{t-1}\rVert^2
+b(d)=\operatorname{clip}\left(\frac{d-0.20}{0.35-0.20},0,1\right)
 $$
 
-摔倒惩罚：
+$$
+v_{target}(d)=0.08+(0.20-0.08)b(d)
+$$
+
+$$
+r_{near\_speed}=(1-b(d))\left[\max\left(\frac{\lVert[v_x,v_y]\rVert-v_{target}(d)}{0.10},0\right)\right]^2
+$$
+
+因此：距离 `>=0.35 m` 时该项为零；接近成功圈边界时实际平面速度高于
+`0.08 m/s` 才产生惩罚。其权重为 `-0.10`，目标是在保留远处快速接近能力的同时，
+让策略自行学习近目标减速，而不是在 Navigator 部署端增加 Classical 停车规则。
+
+动作平滑根据实际施加的线速度、角速度命令差分计算加速度，并乘以控制周期，使不同
+`K` 的累计代价具有可比较的物理时间尺度：
+
+$$
+r_{smooth}=-\Delta t\left[
+\lambda_v\left(\frac{\Delta v_x^{cmd}}{\Delta t}\right)^2+
+\lambda_\omega\left(\frac{\Delta\omega^{cmd}}{\Delta t}\right)^2
+\right]
+$$
+
+摔倒沿用官方 `fell_over / bad_orientation` 判定，给一次负奖励并结束 Episode：
 
 $$
 r_{fall}=-R_f
 $$
 
+Time-out 不等价于摔倒，但说明在给定时间内没有完成任务；增加随最终有效距离变化的负
+项，使剩得越远的 time-out 越差。正式配置已冻结：progress `+5.0`、一次性 goal bonus
+`+10.0`、近目标超速 `-0.10`、线/角命令加速度项 `-0.20/-0.05`、摔倒 `-10.0`、timeout
+剩余距离项 `-2.0`。后续若改变其中任一项，必须作为新的训练实验，不得追加到本次 Run。
+
 ### 任务清单
 
-- [ ] 冻结 M1 Low-level Locomotion Policy。
-- [ ] 定义高层 Observation 和 Action Space。
-- [ ] 完成 PointGoal Navigation 训练环境。
-- [ ] 实现四项简洁 Reward。
-- [ ] 随机化 Start 和 Goal。
-- [ ] 记录训练曲线、成功率和失败原因。
-- [ ] 使用与传统控制器一致的评测接口。
-- [ ] 不在本周扩展成包含大量奖励项的复杂 Reward。
+- [x] 冻结 M1 Low-level Locomotion Policy，并从 `model_1500.pt` 导出训练侧批量
+  TorchScript（含 observation normalizer）；部署与 benchmark 继续使用冻结 ONNX。
+- [x] 定义高层 Observation 和 Action Space，并完成独立运行时合约单测。
+- [x] 完成 PointGoal Navigation 训练环境骨架，并通过 `K=2 / 5 / 10` 的 1-env
+  reset/step 以及各自独立的 `64 envs × 5 iterations` CUDA smoke；这只证明采样、更新、
+  保存和导出链路可运行，不是训练效果或 K 值优选证据。
+- [x] 三组分别完成 `64 envs × 100 iterations` Stage 1 训练，并将曲线上传 W&B；
+  用 Week04 冻结的 10 个 Episode 做配对 quick。三组均 10/10 到达、无跌倒，
+  但到达后仍有明显运动，K 值暂不冻结；见 `results/week05/02_rl_navigator_quick/README.md`。
+- [x] 用零命令站立轨迹标定速度阈值，只修改训练成功条件；对旧模型的已记录轨迹
+  进行停稳诊断复评，三组均 0/10 在记录时段内观察到新条件，Classical Constrained
+  为 10/10。再让旧 ONNX 按新条件继续运行到 20 秒做独立 live quick：K2 为 10/10、
+  K5 为 0/10、K10 为 3/10，均无跌倒。旧模型未重训，短轨迹复评分数不能当作完整
+  Episode 成功率，live 分数也不是重训收益；见
+  `results/week05/03_stable_arrival_gate/README.md`。
+- [x] 新停稳条件下完成 K5 的 `64 envs × 100 iterations` Stage 1 快筛训练，核验
+  自动导出的 `model_99` ONNX；在 Week04 冻结的 10 个配对场景上分别用位置口径与
+  停稳口径评测，均为 0/10、0 跌倒、10 超时，最小距离均停在 `0.20 m` 圈外。
+  快筛未通过，不启动 formal/full 或擅改奖励、阈值；见
+  `results/week05/04_stable_k5_retrain_quick/README.md`。
+- [x] 新停稳条件下完成 K10 的 `64 envs × 100 iterations` Stage 1 快筛训练并核验
+  自动导出的 ONNX；相同配对场景上位置口径 6/10、停稳 live 口径 5/10，
+  均无跌倒。停稳成功后 4/5 在额外 2 秒观测期离开成功圈，仍不能视为可靠停车；
+  暂不启动 formal/full，见 `results/week05/05_stable_k10_retrain_quick/README.md`。
+- [x] 只新增实际平面速度的近目标超速惩罚：`0.35 m` 外为零，目标圈边界的参考
+  速度为 `0.08 m/s`，权重为 `-0.10`；K10 `64 envs × 5 iterations` CUDA smoke
+  已验证采样、PPO、Reward 日志、保存和自动 ONNX 导出。smoke 不代表策略能力，
+  尚未启动 100-iteration 快筛或 formal/full；见
+  `results/week05/06_near_goal_speed_reward_smoke/README.md`。
+- [x] 近目标超速惩罚 K10 完成 `64 envs × 100 iterations` 快筛训练；Week04 冻结
+  10 场景的配对 quick 中位置与停稳 live 均为 10/10、0 跌倒、0 超时，且停稳后
+  额外 2 秒均未离开成功圈。此为单因素 quick 通过，不自动启动 formal/full；见
+  `results/week05/07_near_speed_k10_quick_eval/README.md`。
+- [x] 对目标圈边界参考速度 `0.08 m/s` 与 `0.09 m/s` 做同预算 K10 对比；正式选择
+  `0.08 m/s`，不改变其他 Reward、成功条件或命令约束。
+- [x] 使用冻结 Reward 与三阶段 curriculum 训练 K10 至 1500 iterations，W&B 记录
+  每 iteration 曲线；在 Stage 3 开始的 iteration 600、900、1200、1499 导出 ONNX。
+- [x] 四个 checkpoint 使用 Week04 冻结的 200 EpisodeSpec 分别进行 full 正式评测与
+  速度/角速度停稳复核。1200 是唯一达到位置 200/200、0 跌倒、0 超时、0 到达后
+  重离开，且停稳复核 200/200 的候选；报告见
+  `results/week05/10_checkpoint_selection_k10/README.md`。
+- [x] 冻结 `model_1200.onnx` 作为后续 OOD/Sim2Real 的高层部署候选；高层/低层 ONNX
+  SHA-256、K、命令约束、协议哈希与正式证据记录在
+  `results/week05/10_checkpoint_selection_k10/selected_model.json`。
+- [x] 实现 progress、goal、near-goal speed、smooth、fall 与独立 timeout 剩余距离项，
+  并冻结本次训练权重。
+- [x] 实现随机 Start/Goal 与三阶段累计 Goal curriculum，并冻结切换点。
+- [x] 记录训练曲线、成功率和失败原因。
+- [x] 使用与传统控制器一致的冻结 EpisodeSpec 评测接口。
+- [x] 未在本周扩展成包含大量奖励项的复杂 Reward；近目标超速项是唯一为停车缺口
+  引入并单因素验证的密集奖励。
+
+### 7.1 高层 Navigator 的 Sim2Real proxy 与 OOD
+
+第三周已经量化了冻结低层 `model_1500.onnx` 在动力学、低层 actor observation
+扰动和低层 action delay 下的边界；它不能替代 RL Navigator 的鲁棒性证据。当时
+Navigator 的 RobotState 与 GoalState 仍来自仿真真值。本周必须单独评测高层决策链路
+面对状态估计、目标定位和命令路径误差时的表现。
+
+训练与 OOD 的顺序固定如下：
+
+1. 先只在 Nominal 仿真中训练高层 PPO；不把多种噪声、延迟或 Reward 改动混入首个
+   baseline。
+2. 冻结候选高层 checkpoint、底层 ONNX/Normalizer、动作范围、rate limit、训练/评测
+   代码版本和 Nominal 结果。
+3. 对冻结 checkpoint 运行独立 OOD。每次只引入一个高层因素，且使用与 Nominal
+   完全相同的 EpisodeSpec、seeds、终止条件和真值评测指标。
+4. 任一 OOD 条件先完成实际注入 readback 的 smoke，再完成配对 quick；quick 未通过
+   safety Gate 时停止升级。只有 quick 通过后，才由用户启动 formal/full。
+
+**当前状态（2026-10-10）：** 上述第 1、2 步已完成，`model_1200.onnx` 已经在 Nominal
+200-Episode 正式协议上冻结。第 3 步已完成命令路径与观测侧的 quick 级 OOD：`0/20/40 ms`
+命令传输延迟均通过，200 ms 量化的高层决策延迟在 600 ms 通过、800 ms 首次 timeout 失败；
+yaw `+5°`、RobotState/GoalState 固定 `x/y` 偏差均触发 timeout，而 10%/20% 高层状态
+dropout 通过。所有 formal 均尚未运行。因此项目仍只有 Reality-gap **评测**经历，尚未完成
+高层或低层的 domain-randomized **训练**，简历不得将 Domain Randomization 写成既有成果。
+
+第一轮只测试 **高层 VelocityCommand 延迟**，而不是重新运行第三周的低层 action
+delay。它定义为“RL Navigator 产生命令”到“冻结 Locomotion Policy 接收到命令”之间
+的 FIFO 延迟；每个控制步须记录 configured/applied delay、命令生成时刻、命令实际应用
+时刻与序号。`0 / 20 / 40 ms` 是首轮**命令传输**档位：它们小于 5 Hz Navigator 的 200 ms
+决策周期，不能被称为“少做一拍高层决策”，且不应与第三周低层 action delay 混淆。离散的
+**高层决策到执行延迟**必须使用 200 ms 的整数倍；其 quick 已测得 0/200/400/600 ms 通过，
+800 ms 因 1/10 timeout 首次失败，故当前 quick 边界为 `(600,800] ms`。
+
+高层策略的输入应来自观测侧的 `RobotState` / `GoalState`，而评测成功、路径和安全
+指标始终由未扰动的仿真真值计算：
+
+```text
+true RobotState + true GoalState
+          ↓  observation / goal estimator model
+observed RobotState + observed GoalState
+          ↓
+       RL Navigator
+          ↓  FIFO command-delay model
+Frozen Locomotion Policy → MuJoCo
+```
+
+这可防止“带偏差观测认为已到达”被误记为真实成功。命令延迟 quick 的硬安全 Gate 为
+`Fall Rate = 0` 和 `invalid-state rate = 0`；同时报告 Success Rate、Timeout Rate、
+Completion Time、Path Efficiency、最终距离、到达后 re-departure 和相对 Nominal 的
+配对差值。Completion Time 上升或 Path Efficiency 下降可作为如实报告的性能退化；
+Success/Timeout 的明显退化必须在进入 formal 前由预先声明的任务 Gate 判定，不能在
+观察结果后临时放宽。任何 Fall 或 invalid state 都阻止 formal。
+
+在命令延迟完成并冻结结论后，按相同单因素流程依次考虑。下列四项是独立 OOD
+评测，不得在同一 episode 叠加；每项均先静态校验、readback、smoke、10 EpisodeSpec
+quick，只有该项全部通过才由用户决定是否 formal：
+
+- [x] **Navigator yaw 固定偏差：** `0 / ±5° / ±10°`。只更改 Navigator 收到的
+  `RobotState.yaw_rad`，从而持续旋转 `dx_body/dy_body`；`+5°` 为 9/10、1 timeout，
+  其余四档为 10/10，故 quick 不通过且不升级 formal。
+- [x] **机器人定位固定偏差：** world-frame `x/y` 的 `±5 cm / ±10 cm`，四个轴向分别
+  测试；所有非零条件为 3/10--7/10 成功、均以 timeout 失败且无跌倒，故不升级 formal。
+- [x] **GoalState 固定偏差：** world-frame goal `x/y` 的 `±5 cm / ±10 cm`，四个轴向
+  分别测试；所有非零条件为 3/10--7/10 成功、均以 timeout 失败且无跌倒，且与 RobotState
+  偏差呈相对位置镜像，故不升级 formal。
+- [x] **高层 RobotState dropout：** 在每次 5 Hz Navigator 更新时，以 `0/10%/20%` 概率
+  丢弃新 RobotState 并保持上一帧；GoalState 与真值指标不保持、不延迟。三个条件均为
+  10/10、0 跌倒、0 timeout，10%/20% 实际累计丢帧为 92/152；formal 仍须用户决定启动。
+
+四项的代码、readback、smoke、quick 与原始汇总见
+`results/week05/13_high_level_observation_ood/README.md`。失败 quick 的因素不得通过降低
+阈值或与其他误差混合来绕过 Gate。
+
+`x/y` iid 噪声与 observation latency 属于下一轮候选，先不与上述固定偏置或 dropout
+混合，避免无法归因。
+
+这些条件均是仿真中的 Sim2Real proxy / OOD 证据，不构成真机 Sim2Real 成功声明。若某个
+条件在冻结 OOD 中稳定退化，才单独建立“该因素的 domain-randomized 高层训练”对照；保留
+Nominal-trained baseline，不同时改变 Reward、动作范围或其他扰动。
+
+### 7.2 高层 Domain Randomization（在高层 OOD baseline 与低层重选后执行）
+
+Domain Randomization 是新的训练分支，不是给已冻结 `model_1200.onnx` 增加一个运行时开关。
+它在每个 episode/reset 从预先声明的训练分布采样扰动参数，让高层 PPO 在变化的状态估计或
+命令路径中学习；训练完成后必须重新进行 Nominal 与未参与训练的 OOD 评测。当前先运行
+`model_1200` 的高层 OOD，以记录旧低层上的系统 baseline；随后优先完成 5.7 的低层延迟
+随机化。若低层候选胜出，应先在新低层上重训并冻结新的 Navigator，再开始高层随机化，
+否则高层策略改变与低层命令响应改变会混淆归因。
+
+- [x] 以冻结 `model_1200.onnx` 完成高层命令延迟 `0 / 20 / 40 ms` 的 readback、smoke、
+  quick：三档均为 10/10 成功、0 跌倒、0 超时、0 到达后重离开，且 FIFO readback 分别为
+  0/20/40 ms；见 `results/week05/11_high_level_delay_ood/README.md`。
+- [x] 以 200 ms 决策周期为单位完成高层决策到执行延迟的 readback、smoke 与逐档 quick：
+  0/200/400/600 ms 为 10/10 成功，800 ms 为 9/10 且 1 次 timeout，故停止继续升档；见
+  `results/week05/12_high_level_decision_delay_ood/README.md`。这是 quick 级经验边界，
+  不与任何 formal Episode 合并。
+- [ ] 由用户启动高层命令延迟 `0 / 20 / 40 ms` 的 3 × 200 Episode formal；不得将 quick
+  的 10 集结果与正式 Episode 合并。
+- [ ] 完成 5.7 的低层延迟随机化选型；若其改变冻结低层，先完成新的 Navigator Nominal
+  训练与 checkpoint 选择，再开始本节的高层随机化训练。
+- [ ] 根据冻结 OOD 的退化证据，选择**一个**首要随机化因素；不预先宣称延迟、偏置或噪声
+  哪一个一定有效。
+- [ ] 新建独立的 K10 domain-randomized Run：保持低层 ONNX、Reward、K、动作范围和
+  curriculum 不变，只在训练时按声明分布采样该因素。命令延迟应在 Navigator 输出与低层
+  接收之间实现 FIFO；固定偏置应每 episode 采样一次，iid 噪声才每控制步采样。
+- [ ] 使用与 Nominal baseline 相同的 200 EpisodeSpec 重新评测，并使用留出的 OOD 强度、
+  组合或 seeds 评测；训练中见过的扰动样本不能直接当作泛化证据。
+- [ ] 只有新模型在 Nominal 不出现不可接受退化、且冻结 OOD 相对 `model_1200` 有明确改善时，
+  才将“Domain Randomization 训练与鲁棒性提升”写入 README 和简历；否则如实保留失败结论。
 
 ### 本周交付物
 
-- [ ] RL Navigator 训练代码与配置
-- [ ] 可加载的 Navigation Policy Checkpoint
-- [ ] 训练曲线
-- [ ] 随机 Start/Goal 的独立评测结果
+- [x] RL Navigator 训练代码与配置
+- [x] 可加载的冻结 Navigation Policy Checkpoint：K10 `model_1200.onnx`
+- [x] W&B 训练曲线与 checkpoint sweep
+- [x] 随机 Start/Goal 的 200-Episode 独立正式评测结果
+- [x] 高层命令延迟 `0 / 20 / 40 ms` 的 readback、smoke 与 quick OOD 结果
+- [x] 高层离散决策延迟 `0 / 200 / 400 / 600 / 800 ms` 的 readback、smoke 与 quick OOD 结果
+- [ ] 高层命令延迟 `0 / 20 / 40 ms` 的 3 × 200 Episode formal OOD 结果
+- [ ] 单因素高层 Domain Randomization 训练及其 Nominal/OOD 对照结果
 - [ ] 典型成功与失败视频
 
 ### 验收标准
@@ -940,6 +1190,9 @@ OOD 环境至少包括：
 - [ ] Low Friction
 - [ ] 40 ms Control Delay
 - [ ] Motor Weakness
+- [ ] 高层命令延迟、状态/目标偏置或噪声的单因素 OOD；先完成 Week05 冻结
+  `model_1200` 的鲁棒性基线，再决定是否将其纳入 Classical vs RL 对比。
+- [ ] 高层 Domain Randomization 对照模型；不能把 OOD 评测本身写成随机化训练。
 
 实验要求：
 
@@ -1100,10 +1353,10 @@ results/
 
 ### M2：Goal-conditioned Navigation
 
-- [ ] RobotState / GoalState / VelocityCommand / Navigator 接口清楚
-- [ ] Classical Go-to-Goal Baseline 完成
-- [ ] 随机 Start/Goal 的 200 Episode 评测完成
-- [ ] Frozen Locomotion + RL Navigator 完成
+- [x] RobotState / GoalState / VelocityCommand / Navigator 接口清楚
+- [x] Classical Go-to-Goal Baseline 完成
+- [x] 随机 Start/Goal 的 200 Episode 评测完成
+- [x] Frozen Locomotion + RL Navigator 完成（K10 `model_1200.onnx` 已冻结）
 - [ ] Classical vs RL 的 500 Episode 统一对比完成
 - [ ] OOD 对比完成
 

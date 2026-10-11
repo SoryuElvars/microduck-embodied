@@ -4,6 +4,7 @@ from navigation.classical_navigator import (
     ConstrainedGoToGoalConfig,
     ConstrainedGoToGoalNavigator,
 )
+from navigation.rl_navigator import RLNavigator, RLNavigatorConfig
 from navigation.types import GoalState, Navigator, RobotState, VelocityCommand
 
 __all__ = [
@@ -11,6 +12,8 @@ __all__ = [
     "ConstrainedGoToGoalNavigator",
     "GoalState",
     "Navigator",
+    "RLNavigator",
+    "RLNavigatorConfig",
     "RobotState",
     "VelocityCommand",
 ]
